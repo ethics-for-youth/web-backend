@@ -1,22 +1,33 @@
-const { createRegistration, getGenderCount } = require('../models/registrationModel');
+const { registerUser } = require('../models/RegistrationModel');
 
-const MAX_BOYS = 50;
-const MAX_GIRLS = 50;
+const handleRegistration = async (req, res) => {
+  const {
+    fullName, age, email, phone, gender, communication, additionalInfo,
+  } = req.body;
 
-const register = async (req, res) => {
-  const { name, email, gender } = req.body;
-
-  if (!name || !email || !gender) {
-    return res.status(400).json({ message: "All fields required" });
+  if (!fullName || !age || !email || !phone || !gender) {
+    return res.status(400).json({ error: 'Please fill all required fields.' });
   }
 
-  const count = await getGenderCount(gender);
-  if ((gender === 'boy' && count >= MAX_BOYS) || (gender === 'girl' && count >= MAX_GIRLS)) {
-    return res.status(400).json({ message: `${gender}s quota full.` });
-  }
+  try {
+    const savedUser = await registerUser({
+      fullName,
+      age,
+      email,
+      phone,
+      gender,
+      communication,
+      additionalInfo,
+    });
 
-  const user = await createRegistration({ name, email, gender });
-  res.status(201).json({ message: 'Registered', user });
+    res.status(201).json({
+      message: 'Registration successful',
+      data: savedUser,
+    });
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.status(500).json({ error: 'Failed to register user.' });
+  }
 };
 
-module.exports = { register };
+module.exports = { handleRegistration };

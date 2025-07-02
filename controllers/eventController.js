@@ -11,6 +11,7 @@ const addEvent = async (req, res) => {
   res.status(201).json({ message: 'Event added', event });
 };
 
+
 const fetchEvents = async (req, res) => {
   const { type } = req.query;
   const events = await getEvents(type);

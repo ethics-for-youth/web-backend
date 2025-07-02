@@ -1,34 +1,28 @@
+const dynamoDB = require('../config/dynamoClient.js');
 const { v4: uuidv4 } = require('uuid');
-const db = require('../config/dynamoClient');
-const tableName = process.env.REGISTRATION_TABLE;
 
-const createRegistration = async (data) => {
-  const item = {
+const TABLE_NAME =  process.env.REGISTRATION_TABLE;
+
+const registerUser = async (data) => {
+  const Item = {
     id: uuidv4(),
-    name: data.name,
+    fullName: data.fullName,
+    age: data.age,
     email: data.email,
+    phone: data.phone,
     gender: data.gender,
-    registeredAt: new Date().toISOString(),
+    communication: data.communication || [],
+    additionalInfo: data.additionalInfo || '',
+    createdAt: new Date().toISOString(),
   };
 
   const params = {
-    TableName: tableName,
-    Item: item,
+    TableName: TABLE_NAME,
+    Item,
   };
 
-  await db.put(params).promise();
-  return item;
+  await dynamoDB.put(params).promise();
+  return Item;
 };
 
-const getGenderCount = async (gender) => {
-  const params = {
-    TableName: tableName,
-    FilterExpression: 'gender = :g',
-    ExpressionAttributeValues: { ':g': gender },
-  };
-
-  const result = await db.scan(params).promise();
-  return result.Items.length;
-};
-
-module.exports = { createRegistration, getGenderCount };
+module.exports = { registerUser };
