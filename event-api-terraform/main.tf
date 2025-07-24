@@ -36,15 +36,44 @@ resource "aws_iam_role_policy_attachment" "dynamodb_access" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
 }
 
-resource "aws_apigatewayv2_api" "api" {
-  name          = "EventAPI"
-  protocol_type = "HTTP"
+resource "aws_api_gateway_rest_api" "api" {
+  name        = "EventAPI"
+  description = "REST API for Events"
 }
 
-resource "aws_apigatewayv2_stage" "default" {
-  api_id      = aws_apigatewayv2_api.api.id
-  name        = "$default"
-  auto_deploy = true
+resource "aws_api_gateway_resource" "events" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  parent_id   = aws_api_gateway_rest_api.api.root_resource_id
+  path_part   = "events"
+}
+
+resource "aws_api_gateway_resource" "event_id" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  parent_id   = aws_api_gateway_resource.events.id
+  path_part   = "{id}"
+}
+
+resource "aws_api_gateway_deployment" "deployment" {
+  depends_on  = [
+    module.create_event,
+    module.get_event,
+    module.list_events,
+    module.update_event,
+    module.delete_event
+  ]
+  rest_api_id = aws_api_gateway_rest_api.api.id
+}
+
+resource "aws_api_gateway_stage" "dev" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  deployment_id = aws_api_gateway_deployment.deployment.id
+  stage_name    = "dev"
+}
+
+resource "aws_api_gateway_stage" "prod" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  deployment_id = aws_api_gateway_deployment.deployment.id
+  stage_name    = "prod"
 }
 
 locals {
@@ -57,11 +86,13 @@ module "create_event" {
   lambda_zip        = "lambda_functions/createEvent.zip"
   handler           = "index.handler"
   runtime           = "nodejs18.x"
-  api_id            = aws_apigatewayv2_api.api.id
-  route_key         = "POST /events"
-  api_execution_arn = aws_apigatewayv2_api.api.execution_arn
+  rest_api_id       = aws_api_gateway_rest_api.api.id
+  resource_id       = aws_api_gateway_resource.events.id
+  http_method       = "POST"
+  api_execution_arn = aws_api_gateway_rest_api.api.execution_arn
   lambda_role       = aws_iam_role.lambda_role.arn
-  lambda_layers     = [local.aws_sdk_v2_layer] 
+  lambda_layers     = [local.aws_sdk_v2_layer]
+  resource_path     = "events"
 }
 
 module "get_event" {
@@ -70,11 +101,13 @@ module "get_event" {
   lambda_zip        = "lambda_functions/getEvent.zip"
   handler           = "index.handler"
   runtime           = "nodejs18.x"
-  api_id            = aws_apigatewayv2_api.api.id
-  route_key         = "GET /events/{id}"
-  api_execution_arn = aws_apigatewayv2_api.api.execution_arn
+  rest_api_id       = aws_api_gateway_rest_api.api.id
+  resource_id       = aws_api_gateway_resource.event_id.id
+  http_method       = "GET"
+  api_execution_arn = aws_api_gateway_rest_api.api.execution_arn
   lambda_role       = aws_iam_role.lambda_role.arn
-  lambda_layers     = [local.aws_sdk_v2_layer] 
+  lambda_layers     = [local.aws_sdk_v2_layer]
+  resource_path     = "events/{id}"
 }
 
 module "list_events" {
@@ -83,11 +116,13 @@ module "list_events" {
   lambda_zip        = "lambda_functions/listEvents.zip"
   handler           = "index.handler"
   runtime           = "nodejs18.x"
-  api_id            = aws_apigatewayv2_api.api.id
-  route_key         = "GET /events"
-  api_execution_arn = aws_apigatewayv2_api.api.execution_arn
+  rest_api_id       = aws_api_gateway_rest_api.api.id
+  resource_id       = aws_api_gateway_resource.events.id
+  http_method       = "GET"
+  api_execution_arn = aws_api_gateway_rest_api.api.execution_arn
   lambda_role       = aws_iam_role.lambda_role.arn
-  lambda_layers     = [local.aws_sdk_v2_layer] 
+  lambda_layers     = [local.aws_sdk_v2_layer]
+  resource_path     = "events"
 }
 
 module "update_event" {
@@ -96,11 +131,13 @@ module "update_event" {
   lambda_zip        = "lambda_functions/updateEvent.zip"
   handler           = "index.handler"
   runtime           = "nodejs18.x"
-  api_id            = aws_apigatewayv2_api.api.id
-  route_key         = "PATCH /events/{id}"
-  api_execution_arn = aws_apigatewayv2_api.api.execution_arn
+  rest_api_id       = aws_api_gateway_rest_api.api.id
+  resource_id       = aws_api_gateway_resource.event_id.id
+  http_method       = "PATCH"
+  api_execution_arn = aws_api_gateway_rest_api.api.execution_arn
   lambda_role       = aws_iam_role.lambda_role.arn
-  lambda_layers     = [local.aws_sdk_v2_layer] 
+  lambda_layers     = [local.aws_sdk_v2_layer]
+  resource_path     = "events/{id}"
 }
 
 module "delete_event" {
@@ -109,9 +146,11 @@ module "delete_event" {
   lambda_zip        = "lambda_functions/deleteEvent.zip"
   handler           = "index.handler"
   runtime           = "nodejs18.x"
-  api_id            = aws_apigatewayv2_api.api.id
-  route_key         = "DELETE /events/{id}"
-  api_execution_arn = aws_apigatewayv2_api.api.execution_arn
+  rest_api_id       = aws_api_gateway_rest_api.api.id
+  resource_id       = aws_api_gateway_resource.event_id.id
+  http_method       = "DELETE"
+  api_execution_arn = aws_api_gateway_rest_api.api.execution_arn
   lambda_role       = aws_iam_role.lambda_role.arn
-  lambda_layers     = [local.aws_sdk_v2_layer] 
+  lambda_layers     = [local.aws_sdk_v2_layer]
+  resource_path     = "events/{id}"
 }

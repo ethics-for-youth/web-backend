@@ -10,3 +10,4 @@ node_modules/
 
 # AWS credentials
 .aws/
+event-api-terraform/openapi.yaml
