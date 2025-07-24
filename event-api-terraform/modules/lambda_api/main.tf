@@ -13,7 +13,7 @@ resource "aws_lambda_permission" "apigw_permission" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.lambda.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${var.api_execution_arn}/*/${var.http_method}/${var.resource_path}"
+  source_arn    = "${var.api_execution_arn}/*/${var.http_method}/*"
 }
 
 resource "aws_api_gateway_method" "method" {
@@ -32,6 +32,7 @@ resource "aws_api_gateway_integration" "lambda_integration" {
   uri                     = aws_lambda_function.lambda.invoke_arn
 }
 
+# Response for 200 (optional CORS headers)
 resource "aws_api_gateway_method_response" "response_200" {
   rest_api_id = var.rest_api_id
   resource_id = var.resource_id
@@ -54,53 +55,4 @@ resource "aws_api_gateway_integration_response" "integration_response_200" {
   }
 
   depends_on = [aws_api_gateway_integration.lambda_integration]
-}
-
-resource "aws_api_gateway_method" "options_method" {
-  rest_api_id   = var.rest_api_id
-  resource_id   = var.resource_id
-  http_method   = "OPTIONS"
-  authorization = "NONE"
-}
-
-resource "aws_api_gateway_integration" "options_integration" {
-  rest_api_id = var.rest_api_id
-  resource_id = var.resource_id
-  http_method = aws_api_gateway_method.options_method.http_method
-  type        = "MOCK"
-  request_templates = {
-    "application/json" = "{\"statusCode\": 200}"
-  }
-}
-
-resource "aws_api_gateway_method_response" "options_response_200" {
-  rest_api_id = var.rest_api_id
-  resource_id = var.resource_id
-  http_method = aws_api_gateway_method.options_method.http_method
-  status_code = "200"
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin"  = true
-    "method.response.header.Access-Control-Allow-Methods" = true
-    "method.response.header.Access-Control-Allow-Headers" = true
-  }
-
-  response_models = {
-    "application/json" = "Empty"
-  }
-}
-
-resource "aws_api_gateway_integration_response" "options_integration_response_200" {
-  rest_api_id = var.rest_api_id
-  resource_id = var.resource_id
-  http_method = aws_api_gateway_method.options_method.http_method
-  status_code = aws_api_gateway_method_response.options_response_200.status_code
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
-    "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,PATCH,DELETE,OPTIONS'"
-    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,Authorization'"
-  }
-
-  depends_on = [aws_api_gateway_integration.options_integration]
 }
