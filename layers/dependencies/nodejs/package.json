@@ -1,0 +1,11 @@
+{
+  "name": "lambda-dependencies",
+  "version": "1.0.0",
+  "description": "Shared dependencies for Lambda functions",
+  "dependencies": {
+    "aws-sdk": "^2.1000.0",
+    "lodash": "^4.17.21",
+    "joi": "^17.6.0",
+    "bcrypt": "^5.0.1"
+  }
+}

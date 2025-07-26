@@ -1,0 +1,21 @@
+# Terraform
+terraform/backend-setup/.terraform/providers/
+terraform/.terraform/
+# Lambda packages
+*.zip
+
+# Node.js (only in layers)
+layers/dependencies/nodejs/node_modules/
+npm-debug.log*
+
+# Environment variables
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
