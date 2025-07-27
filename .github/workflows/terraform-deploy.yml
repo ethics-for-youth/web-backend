@@ -10,7 +10,7 @@ on:
       aws-region:
         required: false
         type: string
-        default: 'ap-south-1'
+        default: ${{ vars.AWS_REGION }}
         description: 'AWS region for deployment'
       plan-file:
         required: false

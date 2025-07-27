@@ -18,7 +18,7 @@ permissions:
   issues: write
 
 env:
-  AWS_REGION: ap-south-1
+  AWS_REGION: ${{ vars.AWS_REGION }}
 
 jobs:
   validate:
