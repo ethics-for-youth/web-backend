@@ -8,6 +8,8 @@ on:
       - 'lambda_functions/**'
       - 'layers/**'
       - 'scripts/**'
+      - '.github/workflows/terraform-plan.yml'
+      - '.github/workflows/terraform-validate.yml'
       - '.github/workflows/terraform-deploy.yml'
       - '.github/workflows/deploy-prod.yml'
 

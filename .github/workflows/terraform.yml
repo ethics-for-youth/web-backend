@@ -10,6 +10,8 @@ on:
       - 'scripts/**'
       - '.github/workflows/terraform.yml'
       - '.github/workflows/terraform-deploy.yml'
+      - '.github/workflows/terraform-plan.yml'
+      - '.github/workflows/terraform-validate.yml'
       - '.github/workflows/deploy-*.yml'
 
 permissions:
