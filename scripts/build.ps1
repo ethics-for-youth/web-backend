@@ -167,7 +167,8 @@ function Plan-Terraform {
         if ($LASTEXITCODE -ne 0) {
             terraform workspace new $Env
         }
-        terraform plan
+        terraform plan -out=plan.out
+        Write-Status "Plan saved to terraform/plan.out"
     }
     
     Set-Location ".."
@@ -202,7 +203,15 @@ function Apply-Terraform {
         if ($LASTEXITCODE -ne 0) {
             terraform workspace new $Env
         }
-        terraform apply -auto-approve
+        
+        # Check if plan file exists
+        if (Test-Path "plan.out") {
+            Write-Status "Applying saved plan from plan.out"
+            terraform apply plan.out
+        } else {
+            Write-Status "No saved plan found, applying with auto-approve"
+            terraform apply -auto-approve
+        }
     }
     
     Set-Location ".."

@@ -158,7 +158,8 @@ plan_terraform() {
     else
         # Manual workspace management
         terraform workspace select "$env" || terraform workspace new "$env"
-        terraform plan
+        terraform plan -out=plan.out
+        print_status "Plan saved to terraform/plan.out"
     fi
     
     cd ..
@@ -191,7 +192,15 @@ apply_terraform() {
     else
         # Manual workspace management
         terraform workspace select "$env" || terraform workspace new "$env"
-        terraform apply -auto-approve
+        
+        # Check if plan file exists
+        if [ -f "plan.out" ]; then
+            print_status "Applying saved plan from plan.out"
+            terraform apply plan.out
+        else
+            print_status "No saved plan found, applying with auto-approve"
+            terraform apply -auto-approve
+        fi
     fi
     
     cd ..
