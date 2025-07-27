@@ -175,6 +175,10 @@ validate_terraform() {
         print_status "Initializing main configuration..."
         terraform init
     fi
+    
+    # Select a valid workspace for validation (use dev as default)
+    print_status "Selecting workspace for validation..."
+    terraform workspace select dev 2>/dev/null || terraform workspace new dev
     terraform validate
     
     cd ..

@@ -180,6 +180,13 @@ function Test-TerraformConfig {
         Write-Status "Initializing main configuration..."
         terraform init
     }
+    
+    # Select a valid workspace for validation (use dev as default)
+    Write-Status "Selecting workspace for validation..."
+    terraform workspace select dev 2>$null
+    if ($LASTEXITCODE -ne 0) {
+        terraform workspace new dev
+    }
     terraform validate
     
     Set-Location ".."
