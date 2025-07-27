@@ -1,6 +1,6 @@
 # Main Terraform Infrastructure - Multi-Environment with Workspaces
 
-This directory contains the main Terraform configuration for the web backend infrastructure, including Lambda functions, API Gateway, and supporting resources. It uses Terraform workspaces to manage multiple environments (dev, qa, prod).
+This directory contains the main Terraform configuration for the EFY web backend infrastructure, including Lambda functions, API Gateway, and supporting resources. It uses Terraform workspaces to manage multiple environments (dev, qa, prod).
 
 ## Prerequisites
 
@@ -26,17 +26,23 @@ cd terraform/backend-setup
 ## Infrastructure Components
 
 ### Lambda Layers
-- **Dependencies Layer**: Shared dependencies for Lambda functions
-- **Utility Layer**: Shared utility functions for Lambda functions
+- **Dependencies Layer**: Shared dependencies for Lambda functions (aws-sdk, lodash, joi, bcrypt)
+- **Utility Layer**: Shared utility functions for Lambda functions (response helpers, validation, JSON parsing)
 
 ### Lambda Functions
-- **get-xyz**: GET endpoint handler
-- **post-xyz**: POST endpoint handler
+- **get-xyz**: GET /xyz endpoint handler
+  - Returns success response with message, requestId, and timestamp
+  - Uses utility layer for standardized response formatting
+- **post-xyz**: POST /xyz endpoint handler
+  - Accepts JSON body with required 'name' field
+  - Validates input using utility functions
+  - Returns success response with received data
 
 ### API Gateway
 - REST API with `/xyz` endpoint
 - GET and POST methods
-- Lambda integration
+- Lambda integration with proper permissions
+- CORS headers configured in utility layer
 
 ## Workspace Management
 
@@ -66,6 +72,33 @@ cd terraform
 
 # Destroy resources for dev environment
 .\workspace.ps1 destroy dev
+```
+
+#### Linux/Mac (Bash)
+```bash
+# Navigate to the terraform directory
+cd terraform
+
+# Make script executable (first time only)
+chmod +x workspace.sh
+
+# Initialize and set up workspace for dev environment
+./workspace.sh init dev
+
+# Plan changes for dev environment
+./workspace.sh plan dev
+
+# Apply changes for dev environment
+./workspace.sh apply dev
+
+# List all workspaces
+./workspace.sh list
+
+# Show current workspace
+./workspace.sh show
+
+# Destroy resources for dev environment
+./workspace.sh destroy dev
 ```
 
 ### Manual Workspace Commands
@@ -168,6 +201,112 @@ cd terraform
 .\workspace.ps1 apply prod
 ```
 
+## Current Lambda Functions
+
+### GET /xyz Function
+```javascript
+// lambda_functions/get_xyz/index.js
+const { successResponse, errorResponse } = require('/opt/nodejs/utils');
+
+exports.handler = async (event) => {
+    try {
+        console.log('Event: ', JSON.stringify(event, null, 2));
+        
+        // Sample business logic
+        const data = {
+            message: 'GET XYZ function executed successfully!',
+            requestId: event.requestContext?.requestId,
+            timestamp: new Date().toISOString()
+        };
+        
+        return successResponse(data);
+        
+    } catch (error) {
+        console.error('Error in get_xyz function:', error);
+        return errorResponse(error, 500);
+    }
+};
+```
+
+### POST /xyz Function
+```javascript
+// lambda_functions/post_xyz/index.js
+const { successResponse, errorResponse, validateRequired, parseJSON } = require('/opt/nodejs/utils');
+
+exports.handler = async (event) => {
+    try {
+        console.log('Event: ', JSON.stringify(event, null, 2));
+        
+        // Parse request body
+        const body = parseJSON(event.body || '{}');
+        
+        // Validate required fields (example)
+        validateRequired(body, ['name']);
+        
+        // Sample business logic
+        const data = {
+            message: 'POST XYZ function executed successfully!',
+            receivedData: body,
+            requestId: event.requestContext?.requestId,
+            timestamp: new Date().toISOString()
+        };
+        
+        return successResponse(data, 'Data created successfully');
+        
+    } catch (error) {
+        console.error('Error in post_xyz function:', error);
+        return errorResponse(error, error.message.includes('Missing required') ? 400 : 500);
+    }
+};
+```
+
+## Shared Utility Functions
+
+The utility layer provides common functions used across Lambda functions:
+
+```javascript
+// layers/utility/nodejs/utils.js
+const response = (statusCode, body, headers = {}) => {
+    return {
+        statusCode,
+        headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Content-Type',
+            'Access-Control-Allow-Methods': 'OPTIONS,POST,GET',
+            ...headers
+        },
+        body: JSON.stringify(body)
+    };
+};
+
+const successResponse = (data, message = 'Success') => {
+    return response(200, { success: true, message, data });
+};
+
+const errorResponse = (error, statusCode = 400) => {
+    return response(statusCode, { 
+        success: false, 
+        error: error.message || error 
+    });
+};
+
+const validateRequired = (obj, fields) => {
+    const missing = fields.filter(field => !obj[field]);
+    if (missing.length > 0) {
+        throw new Error(`Missing required fields: ${missing.join(', ')}`);
+    }
+};
+
+const parseJSON = (str) => {
+    try {
+        return JSON.parse(str);
+    } catch (e) {
+        throw new Error('Invalid JSON format');
+    }
+};
+```
+
 ## Outputs
 
 After applying the configuration, you'll get:
@@ -193,6 +332,7 @@ After applying the configuration, you'll get:
 - **State Locking**: DynamoDB table prevents concurrent modifications
 - **IAM Roles**: Lambda functions use least-privilege IAM roles
 - **API Gateway**: Proper Lambda permissions and integrations
+- **CORS**: Proper CORS headers configured in utility layer
 
 ## Troubleshooting
 
@@ -228,6 +368,7 @@ terraform/
 ├── variables.tf            # Variable definitions
 ├── outputs.tf              # Output definitions
 ├── workspace.ps1           # Workspace management script (Windows)
+├── workspace.sh            # Workspace management script (Linux/Mac)
 ├── modules/                # Terraform modules
 │   ├── lambda/            # Lambda function module
 │   ├── lambda_layer/      # Lambda layer module

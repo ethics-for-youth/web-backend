@@ -38,7 +38,7 @@ show_usage() {
     echo "  validate        - Validate Terraform configuration (main only)"
     echo "  validate-all    - Validate both backend and main Terraform configuration"
     echo "  plan <env>      - Plan Terraform changes for environment (dev|qa|prod)"
-    echo "  apply <env>     - Apply Terraform changes for environment"
+    echo "  apply <env> [plan-file] - Apply Terraform changes for environment (optionally with plan file)"
     echo "  destroy <env>   - Destroy resources for environment"
     echo "  deploy <env>    - Deploy to environment"
     echo "  help            - Show this help message"
@@ -158,7 +158,8 @@ plan_terraform() {
     else
         # Manual workspace management
         terraform workspace select "$env" || terraform workspace new "$env"
-        terraform plan
+        terraform plan -out=plan.out
+        print_status "Plan saved to terraform/plan.out"
     fi
     
     cd ..
@@ -167,6 +168,7 @@ plan_terraform() {
 # Function to apply Terraform changes
 apply_terraform() {
     local env=$1
+    local plan_file=$2
     
     if [ -z "$env" ]; then
         print_error "Environment is required for apply command"
@@ -187,11 +189,28 @@ apply_terraform() {
     # Use workspace script if available
     if [ -f "workspace.sh" ]; then
         chmod +x workspace.sh
-        ./workspace.sh apply "$env"
+        if [ -n "$plan_file" ] && [ -f "../$plan_file" ]; then
+            print_status "Applying saved plan from $plan_file"
+            terraform workspace select "$env" || terraform workspace new "$env"
+            terraform apply "../$plan_file"
+        else
+            ./workspace.sh apply "$env"
+        fi
     else
         # Manual workspace management
         terraform workspace select "$env" || terraform workspace new "$env"
-        terraform apply -auto-approve
+        
+        # Check if plan file exists
+        if [ -n "$plan_file" ] && [ -f "../$plan_file" ]; then
+            print_status "Applying saved plan from $plan_file"
+            terraform apply "../$plan_file"
+        elif [ -f "plan.out" ]; then
+            print_status "Applying saved plan from plan.out"
+            terraform apply plan.out
+        else
+            print_status "No saved plan found, applying with auto-approve"
+            terraform apply -auto-approve
+        fi
     fi
     
     cd ..
@@ -273,7 +292,7 @@ main() {
             plan_terraform "$environment"
             ;;
         "apply")
-            apply_terraform "$environment"
+            apply_terraform "$environment" "$3"
             ;;
         "destroy")
             destroy_terraform "$environment"

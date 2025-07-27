@@ -10,8 +10,12 @@ on:
       aws-region:
         required: false
         type: string
-        default: 'ap-south-1'
+        default: ${{ vars.AWS_REGION }}
         description: 'AWS region for deployment'
+      plan-file:
+        required: false
+        type: string
+        description: 'Name of the plan file artifact to download and apply'
     secrets:
       aws-access-key-id:
         required: true
@@ -42,8 +46,22 @@ jobs:
     - name: Make build script executable
       run: chmod +x scripts/build.sh
       
+    - name: Download plan file
+      if: inputs.plan-file != ''
+      uses: actions/download-artifact@v4
+      with:
+        name: terraform-plan-${{ inputs.environment }}
+        path: .
+      
     - name: Deploy to ${{ inputs.environment }} environment
-      run: ./scripts/build.sh deploy ${{ inputs.environment }}
+      run: |
+        if [ -f "${{ inputs.plan-file }}" ]; then
+          echo "Applying saved plan file: ${{ inputs.plan-file }}"
+          ./scripts/build.sh apply ${{ inputs.environment }} ${{ inputs.plan-file }}
+        else
+          echo "No plan file found, running full deploy"
+          ./scripts/build.sh deploy ${{ inputs.environment }}
+        fi
       
     - name: Get deployment outputs
       run: |

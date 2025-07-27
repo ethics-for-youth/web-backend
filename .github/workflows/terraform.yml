@@ -10,6 +10,8 @@ on:
       - 'scripts/**'
       - '.github/workflows/terraform.yml'
       - '.github/workflows/terraform-deploy.yml'
+      - '.github/workflows/terraform-plan.yml'
+      - '.github/workflows/terraform-validate.yml'
       - '.github/workflows/deploy-*.yml'
 
 permissions:
@@ -18,7 +20,7 @@ permissions:
   issues: write
 
 env:
-  AWS_REGION: ap-south-1
+  AWS_REGION: ${{ vars.AWS_REGION }}
 
 jobs:
   validate:
@@ -81,10 +83,12 @@ jobs:
       with:
         script: |
           const planOutput = process.env.PLAN_OUTPUT || 'No changes. Infrastructure is up-to-date.';
+          // Remove ANSI color codes and escape sequences
+          const cleanOutput = planOutput.replace(/\u001b\[[0-9;]*m/g, '');
           const output = `#### Terraform Plan for Dev Environment 📋
           
           \`\`\`
-          ${planOutput}
+          ${cleanOutput}
           \`\`\`
           
           *This plan was generated automatically for the dev environment.*`;
@@ -132,10 +136,12 @@ jobs:
       with:
         script: |
           const planOutput = process.env.PLAN_OUTPUT || 'No changes. Infrastructure is up-to-date.';
+          // Remove ANSI color codes and escape sequences
+          const cleanOutput = planOutput.replace(/\u001b\[[0-9;]*m/g, '');
           const output = `#### Terraform Plan for QA Environment 📋
           
           \`\`\`
-          ${planOutput}
+          ${cleanOutput}
           \`\`\`
           
           *This plan was generated automatically for the qa environment.*`;
@@ -183,10 +189,12 @@ jobs:
       with:
         script: |
           const planOutput = process.env.PLAN_OUTPUT || 'No changes. Infrastructure is up-to-date.';
+          // Remove ANSI color codes and escape sequences
+          const cleanOutput = planOutput.replace(/\u001b\[[0-9;]*m/g, '');
           const output = `#### Terraform Plan for Production Environment 📋
           
           \`\`\`
-          ${planOutput}
+          ${cleanOutput}
           \`\`\`
           
           *This plan was generated automatically for the production environment.*`;

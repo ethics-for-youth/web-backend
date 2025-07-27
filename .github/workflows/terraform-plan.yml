@@ -1,0 +1,57 @@
+name: Terraform Plan
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+        description: 'Environment to plan for (dev, qa, prod)'
+      aws-region:
+        required: false
+        type: string
+        default: ${{ vars.AWS_REGION }}
+        description: 'AWS region for planning'
+    secrets:
+      aws-access-key-id:
+        required: true
+      aws-secret-access-key:
+        required: true
+
+jobs:
+  plan:
+    name: Plan Terraform Changes
+    runs-on: ubuntu-latest
+    outputs:
+      plan-file: ${{ steps.plan.outputs.plan-file }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: "1.5.0"
+        
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.aws-access-key-id }}
+        aws-secret-access-key: ${{ secrets.aws-secret-access-key }}
+        aws-region: ${{ inputs.aws-region }}
+        
+    - name: Make build script executable
+      run: chmod +x scripts/build.sh
+      
+    - name: Plan Terraform changes
+      id: plan
+      run: |
+        ./scripts/build.sh plan ${{ inputs.environment }}
+        echo "plan-file=terraform-plan-${{ inputs.environment }}.tfplan" >> $GITHUB_OUTPUT
+      
+    - name: Upload plan file
+      uses: actions/upload-artifact@v4
+      with:
+        name: terraform-plan-${{ inputs.environment }}
+        path: terraform-plan-${{ inputs.environment }}.tfplan
+        retention-days: 1 

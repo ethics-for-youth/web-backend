@@ -8,44 +8,39 @@ on:
       - 'lambda_functions/**'
       - 'layers/**'
       - 'scripts/**'
+      - '.github/workflows/terraform-plan.yml'
+      - '.github/workflows/terraform-validate.yml'
       - '.github/workflows/terraform-deploy.yml'
       - '.github/workflows/deploy-prod.yml'
 
 env:
-  AWS_REGION: ap-south-1
+  AWS_REGION: ${{ vars.AWS_REGION }}
 
 jobs:
   validate:
-    name: Validate Terraform
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/terraform-validate.yml
     if: contains(github.event.head_commit.message, '[deploy-prod]')
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
-      with:
-        terraform_version: "1.5.0"
-        
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
-        
-    - name: Make build script executable
-      run: chmod +x scripts/build.sh
-      
-    - name: Validate Terraform configuration
-      run: ./scripts/build.sh validate
+    with:
+      aws-region: ${{ vars.AWS_REGION }}
+    secrets:
+      aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+  plan:
+    uses: ./.github/workflows/terraform-plan.yml
+    needs: validate
+    if: contains(github.event.head_commit.message, '[deploy-prod]')
+    with:
+      environment: prod
+      aws-region: ${{ vars.AWS_REGION }}
+    secrets:
+      aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
   wait-for-approval:
     name: Wait for Production Deployment Approval
     runs-on: ubuntu-latest
-    needs: validate
+    needs: [validate, plan]
     if: contains(github.event.head_commit.message, '[deploy-prod]')
     outputs:
       approved: ${{ steps.approval.outputs.approved }}
@@ -62,11 +57,12 @@ jobs:
   deploy:
     name: Deploy to Production
     uses: ./.github/workflows/terraform-deploy.yml
-    needs: [validate, wait-for-approval]
+    needs: [validate, plan, wait-for-approval]
     if: contains(github.event.head_commit.message, '[deploy-prod]') && needs.wait-for-approval.outputs.approved == 'true'
     with:
       environment: prod
       aws-region: ${{ vars.AWS_REGION }}
+      plan-file: ${{ needs.plan.outputs.plan-file }}
     secrets:
       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
       aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }} 
