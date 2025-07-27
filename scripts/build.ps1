@@ -39,7 +39,7 @@ function Show-Usage {
     Write-Host "  validate        - Validate Terraform configuration (main only)"
     Write-Host "  validate-all    - Validate both backend and main Terraform configuration"
     Write-Host "  plan <env>      - Plan Terraform changes for environment (dev|qa|prod)"
-    Write-Host "  apply <env>     - Apply Terraform changes for environment"
+    Write-Host "  apply <env> [plan-file] - Apply Terraform changes for environment (optionally with plan file)"
     Write-Host "  destroy <env>   - Destroy resources for environment"
     Write-Host "  deploy <env>    - Deploy to environment"
     Write-Host "  help            - Show this help message"
@@ -176,7 +176,7 @@ function Plan-Terraform {
 
 # Function to apply Terraform changes
 function Apply-Terraform {
-    param([string]$Env)
+    param([string]$Env, [string]$PlanFile)
     
     if (-not $Env) {
         Write-Error "Environment is required for apply command"
@@ -196,7 +196,16 @@ function Apply-Terraform {
     
     # Use workspace script if available
     if (Test-Path "workspace.ps1") {
-        .\workspace.ps1 apply $Env
+        if ($PlanFile -and (Test-Path "../$PlanFile")) {
+            Write-Status "Applying saved plan from $PlanFile"
+            terraform workspace select $Env 2>$null
+            if ($LASTEXITCODE -ne 0) {
+                terraform workspace new $Env
+            }
+            terraform apply "../$PlanFile"
+        } else {
+            .\workspace.ps1 apply $Env
+        }
     } else {
         # Manual workspace management
         terraform workspace select $Env 2>$null
@@ -205,7 +214,10 @@ function Apply-Terraform {
         }
         
         # Check if plan file exists
-        if (Test-Path "plan.out") {
+        if ($PlanFile -and (Test-Path "../$PlanFile")) {
+            Write-Status "Applying saved plan from $PlanFile"
+            terraform apply "../$PlanFile"
+        } elseif (Test-Path "plan.out") {
             Write-Status "Applying saved plan from plan.out"
             terraform apply plan.out
         } else {
@@ -294,7 +306,7 @@ function Main {
             Plan-Terraform $Environment
         }
         "apply" {
-            Apply-Terraform $Environment
+            Apply-Terraform $Environment $args[2]
         }
         "destroy" {
             Destroy-Terraform $Environment

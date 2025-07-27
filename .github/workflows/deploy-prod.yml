@@ -42,10 +42,49 @@ jobs:
     - name: Validate Terraform configuration
       run: ./scripts/build.sh validate
 
+  plan:
+    name: Plan Terraform Changes
+    runs-on: ubuntu-latest
+    needs: validate
+    if: contains(github.event.head_commit.message, '[deploy-prod]')
+    outputs:
+      plan-file: ${{ steps.plan.outputs.plan-file }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: "1.5.0"
+        
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+        
+    - name: Make build script executable
+      run: chmod +x scripts/build.sh
+      
+    - name: Plan Terraform changes
+      id: plan
+      run: |
+        ./scripts/build.sh plan prod
+        echo "plan-file=terraform-plan-prod.tfplan" >> $GITHUB_OUTPUT
+      
+    - name: Upload plan file
+      uses: actions/upload-artifact@v4
+      with:
+        name: terraform-plan-prod
+        path: terraform-plan-prod.tfplan
+        retention-days: 1
+
   wait-for-approval:
     name: Wait for Production Deployment Approval
     runs-on: ubuntu-latest
-    needs: validate
+    needs: [validate, plan]
     if: contains(github.event.head_commit.message, '[deploy-prod]')
     outputs:
       approved: ${{ steps.approval.outputs.approved }}
@@ -62,11 +101,12 @@ jobs:
   deploy:
     name: Deploy to Production
     uses: ./.github/workflows/terraform-deploy.yml
-    needs: [validate, wait-for-approval]
+    needs: [validate, plan, wait-for-approval]
     if: contains(github.event.head_commit.message, '[deploy-prod]') && needs.wait-for-approval.outputs.approved == 'true'
     with:
       environment: prod
       aws-region: ${{ vars.AWS_REGION }}
+      plan-file: ${{ needs.plan.outputs.plan-file }}
     secrets:
       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
       aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }} 
