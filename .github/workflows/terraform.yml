@@ -174,7 +174,7 @@ jobs:
     - name: Make build script executable
       run: chmod +x scripts/build.sh
       
-b    - name: Plan Terraform changes for prod
+    - name: Plan Terraform changes for prod
       id: plan-prod
       run: ./scripts/build.sh plan prod
       
