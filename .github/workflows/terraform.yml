@@ -12,6 +12,11 @@ on:
       - '.github/workflows/terraform-deploy.yml'
       - '.github/workflows/deploy-*.yml'
 
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
 env:
   AWS_REGION: ap-south-1
 
@@ -67,9 +72,6 @@ jobs:
     - name: Make build script executable
       run: chmod +x scripts/build.sh
       
-    - name: Build Lambda layers
-      run: ./scripts/build.sh build-layers
-      
     - name: Plan Terraform changes for dev
       id: plan-dev
       run: ./scripts/build.sh plan dev
@@ -120,9 +122,6 @@ jobs:
         
     - name: Make build script executable
       run: chmod +x scripts/build.sh
-      
-    - name: Build Lambda layers
-      run: ./scripts/build.sh build-layers
       
     - name: Plan Terraform changes for qa
       id: plan-qa
@@ -175,10 +174,7 @@ jobs:
     - name: Make build script executable
       run: chmod +x scripts/build.sh
       
-    - name: Build Lambda layers
-      run: ./scripts/build.sh build-layers
-      
-    - name: Plan Terraform changes for prod
+b    - name: Plan Terraform changes for prod
       id: plan-prod
       run: ./scripts/build.sh plan prod
       

@@ -34,14 +34,13 @@ show_usage() {
     echo "Usage: $0 <command> [options]"
     echo ""
     echo "Commands:"
-    echo "  build-layers    - Build Lambda layers (dependencies and utility)"
     echo "  clean           - Clean build artifacts"
     echo "  validate        - Validate Terraform configuration (main only)"
     echo "  validate-all    - Validate both backend and main Terraform configuration"
     echo "  plan <env>      - Plan Terraform changes for environment (dev|qa|prod)"
     echo "  apply <env>     - Apply Terraform changes for environment"
     echo "  destroy <env>   - Destroy resources for environment"
-    echo "  deploy <env>    - Build layers and deploy to environment"
+    echo "  deploy <env>    - Deploy to environment"
     echo "  help            - Show this help message"
     echo ""
     echo "Examples:"
@@ -75,64 +74,11 @@ check_requirements() {
     print_status "All requirements satisfied"
 }
 
-# Function to build Lambda layers
-build_layers() {
-    print_header "Building Lambda Layers"
-    
-    # Create layers directory if it doesn't exist
-    mkdir -p layers
-    
-    # Build dependencies layer
-    print_status "Building dependencies layer..."
-    if [ -d "layers/dependencies/nodejs" ]; then
-        cd layers/dependencies/nodejs
-        zip -r ../../../layers/dependencies.zip . -q
-        cd ../../../
-        print_status "Dependencies layer built: layers/dependencies.zip"
-    else
-        print_warning "Dependencies layer directory not found. Creating empty layer..."
-        mkdir -p layers/dependencies/nodejs
-        echo '{"name": "dependencies-layer"}' > layers/dependencies/nodejs/package.json
-        cd layers/dependencies/nodejs
-        zip -r ../../../layers/dependencies.zip . -q
-        cd ../../../
-        print_status "Empty dependencies layer created: layers/dependencies.zip"
-    fi
-    
-    # Build utility layer
-    print_status "Building utility layer..."
-    if [ -d "layers/utility/nodejs" ]; then
-        cd layers/utility/nodejs
-        zip -r ../../../layers/utility.zip . -q
-        cd ../../../
-        print_status "Utility layer built: layers/utility.zip"
-    else
-        print_warning "Utility layer directory not found. Creating empty layer..."
-        mkdir -p layers/utility/nodejs
-        echo '{"name": "utility-layer"}' > layers/utility/nodejs/package.json
-        cd layers/utility/nodejs
-        zip -r ../../../layers/utility.zip . -q
-        cd ../../../
-        print_status "Empty utility layer created: layers/utility.zip"
-    fi
-    
-    print_status "All Lambda layers built successfully"
-}
+
 
 # Function to clean build artifacts
 clean_build() {
     print_header "Cleaning Build Artifacts"
-    
-    # Remove layer zip files
-    if [ -f "layers/dependencies.zip" ]; then
-        rm layers/dependencies.zip
-        print_status "Removed layers/dependencies.zip"
-    fi
-    
-    if [ -f "layers/utility.zip" ]; then
-        rm layers/utility.zip
-        print_status "Removed layers/utility.zip"
-    fi
     
     # Remove Terraform build artifacts
     if [ -d "terraform/builds" ]; then
@@ -296,9 +242,6 @@ deploy_to_environment() {
     
     print_header "Deploying to $env Environment"
     
-    # Build layers first
-    build_layers
-    
     # Validate configuration
     validate_terraform
     
@@ -317,9 +260,6 @@ main() {
     check_requirements
     
     case $command in
-        "build-layers")
-            build_layers
-            ;;
         "clean")
             clean_build
             ;;

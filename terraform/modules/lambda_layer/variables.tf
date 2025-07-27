@@ -3,8 +3,8 @@ variable "layer_name" {
   type        = string
 }
 
-variable "layer_zip_path" {
-  description = "Path to the layer zip file"
+variable "source_dir" {
+  description = "Path to the layer source directory"
   type        = string
 }
 

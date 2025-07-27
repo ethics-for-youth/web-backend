@@ -35,14 +35,13 @@ function Show-Usage {
     Write-Host "Usage: .\build.ps1 <command> [options]"
     Write-Host ""
     Write-Host "Commands:"
-    Write-Host "  build-layers    - Build Lambda layers (dependencies and utility)"
     Write-Host "  clean           - Clean build artifacts"
     Write-Host "  validate        - Validate Terraform configuration (main only)"
     Write-Host "  validate-all    - Validate both backend and main Terraform configuration"
     Write-Host "  plan <env>      - Plan Terraform changes for environment (dev|qa|prod)"
     Write-Host "  apply <env>     - Apply Terraform changes for environment"
     Write-Host "  destroy <env>   - Destroy resources for environment"
-    Write-Host "  deploy <env>    - Build layers and deploy to environment"
+    Write-Host "  deploy <env>    - Deploy to environment"
     Write-Host "  help            - Show this help message"
     Write-Host ""
     Write-Host "Examples:"
@@ -77,65 +76,11 @@ function Test-Requirements {
 }
 
 # Function to build Lambda layers
-function Build-Layers {
-    Write-Header "Building Lambda Layers"
-    
-    # Create layers directory if it doesn't exist
-    if (-not (Test-Path "layers")) {
-        New-Item -ItemType Directory -Path "layers" -Force | Out-Null
-    }
-    
-    # Build dependencies layer
-    Write-Status "Building dependencies layer..."
-    if (Test-Path "layers/dependencies/nodejs") {
-        Set-Location "layers/dependencies/nodejs"
-        Compress-Archive -Path "." -DestinationPath "../../../layers/dependencies.zip" -Force
-        Set-Location "../../../"
-        Write-Status "Dependencies layer built: layers/dependencies.zip"
-    } else {
-        Write-Warning "Dependencies layer directory not found. Creating empty layer..."
-        New-Item -ItemType Directory -Path "layers/dependencies/nodejs" -Force | Out-Null
-        '{"name": "dependencies-layer"}' | Out-File -FilePath "layers/dependencies/nodejs/package.json" -Encoding UTF8
-        Set-Location "layers/dependencies/nodejs"
-        Compress-Archive -Path "." -DestinationPath "../../../layers/dependencies.zip" -Force
-        Set-Location "../../../"
-        Write-Status "Empty dependencies layer created: layers/dependencies.zip"
-    }
-    
-    # Build utility layer
-    Write-Status "Building utility layer..."
-    if (Test-Path "layers/utility/nodejs") {
-        Set-Location "layers/utility/nodejs"
-        Compress-Archive -Path "." -DestinationPath "../../../layers/utility.zip" -Force
-        Set-Location "../../../"
-        Write-Status "Utility layer built: layers/utility.zip"
-    } else {
-        Write-Warning "Utility layer directory not found. Creating empty layer..."
-        New-Item -ItemType Directory -Path "layers/utility/nodejs" -Force | Out-Null
-        '{"name": "utility-layer"}' | Out-File -FilePath "layers/utility/nodejs/package.json" -Encoding UTF8
-        Set-Location "layers/utility/nodejs"
-        Compress-Archive -Path "." -DestinationPath "../../../layers/utility.zip" -Force
-        Set-Location "../../../"
-        Write-Status "Empty utility layer created: layers/utility.zip"
-    }
-    
-    Write-Status "All Lambda layers built successfully"
-}
+
 
 # Function to clean build artifacts
 function Clear-Build {
     Write-Header "Cleaning Build Artifacts"
-    
-    # Remove layer zip files
-    if (Test-Path "layers/dependencies.zip") {
-        Remove-Item "layers/dependencies.zip" -Force
-        Write-Status "Removed layers/dependencies.zip"
-    }
-    
-    if (Test-Path "layers/utility.zip") {
-        Remove-Item "layers/utility.zip" -Force
-        Write-Status "Removed layers/utility.zip"
-    }
     
     # Remove Terraform build artifacts
     if (Test-Path "terraform/builds") {
@@ -310,9 +255,6 @@ function Deploy-ToEnvironment {
     
     Write-Header "Deploying to $Env Environment"
     
-    # Build layers first
-    Build-Layers
-    
     # Validate configuration
     Test-TerraformConfig
     
@@ -330,9 +272,6 @@ function Main {
     Test-Requirements
     
     switch ($Command) {
-        "build-layers" {
-            Build-Layers
-        }
         "clean" {
             Clear-Build
         }
