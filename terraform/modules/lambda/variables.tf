@@ -35,3 +35,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "dynamodb_table_arns" {
+  description = "List of DynamoDB table ARNs that the Lambda function needs access to"
+  type        = list(string)
+  default     = []
+}

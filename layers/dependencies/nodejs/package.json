@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "Shared dependencies for Lambda functions",
   "dependencies": {
-    "aws-sdk": "^2.1000.0",
+    "@aws-sdk/client-dynamodb": "^3.x",
+    "@aws-sdk/lib-dynamodb": "^3.x",
     "lodash": "^4.17.21",
     "joi": "^17.6.0",
     "bcrypt": "^5.0.1"

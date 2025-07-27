@@ -55,3 +55,28 @@ resource "aws_iam_role_policy_attachment" "lambda_basic" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
   role       = aws_iam_role.lambda_role.name
 }
+
+# DynamoDB permissions for the Lambda function
+resource "aws_iam_role_policy" "lambda_dynamodb" {
+  count = length(var.dynamodb_table_arns) > 0 ? 1 : 0
+  name  = "${var.function_name}-dynamodb-policy"
+  role  = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:Scan",
+          "dynamodb:Query"
+        ]
+        Resource = var.dynamodb_table_arns
+      }
+    ]
+  })
+}

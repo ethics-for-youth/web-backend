@@ -1,10 +1,11 @@
 openapi: 3.0.0
 info:
   title: EFY Web Backend API
-  description: API documentation for EFY Web Backend Lambda functions
-  version: 1.0.0
+  description: API documentation for Ethics For Youth (EFY) platform - Youth-driven Islamic educational events, competitions, and volunteer activities
+  version: 2.0.0
   contact:
-    name: Infrastructure Team
+    name: EFY Infrastructure Team
+    email: tech@ethicsforyouth.org
 servers:
   - url: https://{api-id}.execute-api.ap-south-1.amazonaws.com/default
     description: Default API Gateway stage
@@ -12,15 +13,19 @@ servers:
       api-id:
         description: API Gateway ID
         example: "abc123def4"
+
 paths:
-  /xyz:
+  # Events Endpoints
+  /events:
     get:
-      summary: Get XYZ data
-      description: Retrieves XYZ data with request information
-      operationId: getXyz
+      summary: Get all events
+      description: Retrieves a list of all events
+      operationId: getEvents
+      tags:
+        - Events
       responses:
         '200':
-          description: Successful response
+          description: Events retrieved successfully
           content:
             application/json:
               schema:
@@ -31,22 +36,64 @@ paths:
                     example: true
                   message:
                     type: string
-                    example: "Success"
+                    example: "Events retrieved successfully"
                   data:
                     type: object
                     properties:
-                      message:
-                        type: string
-                        example: "GET XYZ function executed successfully!"
-                      requestId:
-                        type: string
-                        example: "12345678-1234-1234-1234-123456789012"
-                      timestamp:
-                        type: string
-                        format: date-time
-                        example: "2024-01-01T12:00:00.000Z"
+                      events:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Event'
+                      count:
+                        type: integer
+                        example: 5
         '500':
-          description: Internal server error
+          $ref: '#/components/responses/InternalServerError'
+    
+    post:
+      summary: Create a new event
+      description: Creates a new event for the EFY platform
+      operationId: createEvent
+      tags:
+        - Events
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - description
+                - date
+                - location
+              properties:
+                title:
+                  type: string
+                  example: "Islamic History Workshop"
+                description:
+                  type: string
+                  example: "Learn about the golden age of Islamic civilization"
+                date:
+                  type: string
+                  format: date-time
+                  example: "2024-02-15T14:00:00Z"
+                location:
+                  type: string
+                  example: "Community Center, Room 101"
+                category:
+                  type: string
+                  example: "educational"
+                maxParticipants:
+                  type: integer
+                  example: 50
+                registrationDeadline:
+                  type: string
+                  format: date-time
+                  example: "2024-02-10T23:59:59Z"
+      responses:
+        '200':
+          description: Event created successfully
           content:
             application/json:
               schema:
@@ -54,14 +101,426 @@ paths:
                 properties:
                   success:
                     type: boolean
-                    example: false
-                  error:
+                    example: true
+                  message:
                     type: string
-                    example: "Internal server error"
+                    example: "Event created successfully"
+                  data:
+                    type: object
+                    properties:
+                      event:
+                        $ref: '#/components/schemas/Event'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /events/{id}:
+    get:
+      summary: Get event by ID
+      description: Retrieves a specific event by its ID
+      operationId: getEventById
+      tags:
+        - Events
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "event_1706123456_abc123"
+      responses:
+        '200':
+          description: Event retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Event retrieved successfully"
+                  data:
+                    type: object
+                    properties:
+                      event:
+                        $ref: '#/components/schemas/Event'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    
+    put:
+      summary: Update an event
+      description: Updates an existing event
+      operationId: updateEvent
+      tags:
+        - Events
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "event_1706123456_abc123"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                date:
+                  type: string
+                  format: date-time
+                location:
+                  type: string
+                category:
+                  type: string
+                maxParticipants:
+                  type: integer
+                registrationDeadline:
+                  type: string
+                  format: date-time
+                status:
+                  type: string
+                  enum: [active, cancelled, completed]
+      responses:
+        '200':
+          description: Event updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Event updated successfully"
+                  data:
+                    type: object
+                    properties:
+                      event:
+                        $ref: '#/components/schemas/Event'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    
+    delete:
+      summary: Delete an event
+      description: Deletes an event
+      operationId: deleteEvent
+      tags:
+        - Events
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "event_1706123456_abc123"
+      responses:
+        '200':
+          description: Event deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Event deleted successfully"
+                  data:
+                    type: object
+                    properties:
+                      deletedEventId:
+                        type: string
+                        example: "event_1706123456_abc123"
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # Competitions Endpoints
+  /competitions:
+    get:
+      summary: Get all competitions
+      description: Retrieves a list of all competitions
+      operationId: getCompetitions
+      tags:
+        - Competitions
+      responses:
+        '200':
+          description: Competitions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Competitions retrieved successfully"
+                  data:
+                    type: object
+                    properties:
+                      competitions:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Competition'
+                      count:
+                        type: integer
+                        example: 3
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    
     post:
-      summary: Create XYZ data
-      description: Creates new XYZ data with validation
-      operationId: postXyz
+      summary: Create a new competition
+      description: Creates a new competition
+      operationId: createCompetition
+      tags:
+        - Competitions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - description
+                - category
+                - startDate
+                - endDate
+              properties:
+                title:
+                  type: string
+                  example: "Quran Recitation Competition"
+                description:
+                  type: string
+                  example: "Annual Quran recitation competition for youth"
+                category:
+                  type: string
+                  example: "religious"
+                startDate:
+                  type: string
+                  format: date-time
+                  example: "2024-03-01T09:00:00Z"
+                endDate:
+                  type: string
+                  format: date-time
+                  example: "2024-03-01T17:00:00Z"
+                registrationDeadline:
+                  type: string
+                  format: date-time
+                  example: "2024-02-25T23:59:59Z"
+                rules:
+                  type: array
+                  items:
+                    type: string
+                  example: ["Participants must be between 13-25 years old", "Maximum 5 minutes recitation"]
+                prizes:
+                  type: array
+                  items:
+                    type: string
+                  example: ["First Place: $500", "Second Place: $300", "Third Place: $200"]
+                maxParticipants:
+                  type: integer
+                  example: 50
+      responses:
+        '200':
+          description: Competition created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Competition created successfully"
+                  data:
+                    type: object
+                    properties:
+                      competition:
+                        $ref: '#/components/schemas/Competition'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /competitions/{id}:
+    get:
+      summary: Get competition by ID
+      description: Retrieves a specific competition by its ID
+      operationId: getCompetitionById
+      tags:
+        - Competitions
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "comp_1706123456_xyz789"
+      responses:
+        '200':
+          description: Competition retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Competition retrieved successfully"
+                  data:
+                    type: object
+                    properties:
+                      competition:
+                        $ref: '#/components/schemas/Competition'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /competitions/{id}/register:
+    post:
+      summary: Register for a competition
+      description: Register a participant for a specific competition
+      operationId: registerForCompetition
+      tags:
+        - Competitions
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "comp_1706123456_xyz789"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - participantName
+                - email
+              properties:
+                participantName:
+                  type: string
+                  example: "Ahmed Abdullah"
+                email:
+                  type: string
+                  format: email
+                  example: "ahmed.abdullah@example.com"
+                phone:
+                  type: string
+                  example: "+1234567890"
+      responses:
+        '200':
+          description: Successfully registered for competition
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Successfully registered for competition"
+                  data:
+                    type: object
+                    properties:
+                      participant:
+                        $ref: '#/components/schemas/Participant'
+                      competition:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          title:
+                            type: string
+                          totalParticipants:
+                            type: integer
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /competitions/{id}/results:
+    get:
+      summary: Get competition results
+      description: Retrieves results for a specific competition (returns mock data)
+      operationId: getCompetitionResults
+      tags:
+        - Competitions
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "comp_1706123456_xyz789"
+      responses:
+        '200':
+          description: Competition results retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Competition results retrieved successfully"
+                  data:
+                    type: object
+                    properties:
+                      results:
+                        $ref: '#/components/schemas/CompetitionResults'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # Volunteers Endpoints
+  /volunteers/join:
+    post:
+      summary: Submit volunteer application
+      description: Submit a request to join as a volunteer
+      operationId: joinVolunteers
+      tags:
+        - Volunteers
       requestBody:
         required: true
         content:
@@ -70,22 +529,42 @@ paths:
               type: object
               required:
                 - name
+                - email
+                - skills
+                - availability
               properties:
                 name:
                   type: string
-                  description: Required name field
-                  example: "test-name"
-                description:
+                  example: "Fatima Rahman"
+                email:
                   type: string
-                  description: Optional description
-                  example: "Test description"
-                metadata:
-                  type: object
-                  description: Optional metadata object
-                  additionalProperties: true
+                  format: email
+                  example: "fatima.rahman@example.com"
+                phone:
+                  type: string
+                  example: "+1234567890"
+                skills:
+                  type: array
+                  items:
+                    type: string
+                  example: ["Event Management", "Social Media", "Teaching"]
+                availability:
+                  type: string
+                  example: "Weekends and evenings"
+                experience:
+                  type: string
+                  example: "Volunteered at local mosque events for 2 years"
+                motivation:
+                  type: string
+                  example: "Want to contribute to Islamic education for youth"
+                preferredRoles:
+                  type: array
+                  items:
+                    type: string
+                  example: ["Event Coordinator", "Content Creator"]
       responses:
         '200':
-          description: Created successfully
+          description: Volunteer application submitted successfully
           content:
             application/json:
               schema:
@@ -96,38 +575,43 @@ paths:
                     example: true
                   message:
                     type: string
-                    example: "Data created successfully"
+                    example: "Volunteer application submitted successfully"
                   data:
                     type: object
                     properties:
-                      message:
-                        type: string
-                        example: "POST XYZ function executed successfully!"
-                      receivedData:
+                      volunteer:
                         type: object
-                        description: The data that was received in the request
-                      requestId:
-                        type: string
-                        example: "12345678-1234-1234-1234-123456789012"
-                      timestamp:
-                        type: string
-                        format: date-time
-                        example: "2024-01-01T12:00:00.000Z"
+                        properties:
+                          id:
+                            type: string
+                            example: "volunteer_1706123456_vol123"
+                          name:
+                            type: string
+                            example: "Fatima Rahman"
+                          email:
+                            type: string
+                            example: "fatima.rahman@example.com"
+                          status:
+                            type: string
+                            example: "pending"
+                          appliedAt:
+                            type: string
+                            format: date-time
         '400':
-          description: Bad request - missing required fields
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: false
-                  error:
-                    type: string
-                    example: "Missing required fields: name"
+          $ref: '#/components/responses/BadRequest'
         '500':
-          description: Internal server error
+          $ref: '#/components/responses/InternalServerError'
+
+  /volunteers:
+    get:
+      summary: Get all volunteers
+      description: Retrieves a list of volunteers with basic metadata
+      operationId: getVolunteers
+      tags:
+        - Volunteers
+      responses:
+        '200':
+          description: Volunteers retrieved successfully
           content:
             application/json:
               schema:
@@ -135,12 +619,480 @@ paths:
                 properties:
                   success:
                     type: boolean
-                    example: false
-                  error:
+                    example: true
+                  message:
                     type: string
-                    example: "Internal server error"
+                    example: "Volunteers retrieved successfully"
+                  data:
+                    type: object
+                    properties:
+                      volunteers:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/VolunteerBasic'
+                      count:
+                        type: integer
+                        example: 12
+                      statusBreakdown:
+                        type: object
+                        properties:
+                          pending:
+                            type: integer
+                            example: 3
+                          approved:
+                            type: integer
+                            example: 8
+                          active:
+                            type: integer
+                            example: 5
+                          inactive:
+                            type: integer
+                            example: 1
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /volunteers/{id}:
+    put:
+      summary: Update volunteer status
+      description: Update volunteer status (approve, assign role, etc.)
+      operationId: updateVolunteer
+      tags:
+        - Volunteers
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "volunteer_1706123456_vol123"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [pending, approved, active, inactive]
+                  example: "approved"
+                assignedRole:
+                  type: string
+                  example: "Event Coordinator"
+                team:
+                  type: string
+                  example: "Events Team"
+                notes:
+                  type: string
+                  example: "Great communication skills, perfect for events"
+                approvedBy:
+                  type: string
+                  example: "admin@efy.org"
+      responses:
+        '200':
+          description: Volunteer updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Volunteer updated successfully"
+                  data:
+                    type: object
+                    properties:
+                      volunteer:
+                        $ref: '#/components/schemas/VolunteerBasic'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # Suggestions Endpoints
+  /suggestions:
+    post:
+      summary: Submit a suggestion
+      description: Submit an idea or feedback
+      operationId: submitSuggestion
+      tags:
+        - Suggestions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - description
+                - category
+              properties:
+                title:
+                  type: string
+                  example: "Mobile App Development"
+                description:
+                  type: string
+                  example: "Develop a mobile app to better engage youth with Islamic content"
+                category:
+                  type: string
+                  enum: [event, competition, technology, outreach, education]
+                  example: "technology"
+                submitterName:
+                  type: string
+                  example: "Omar Hassan"
+                submitterEmail:
+                  type: string
+                  format: email
+                  example: "omar.hassan@example.com"
+                priority:
+                  type: string
+                  enum: [low, medium, high]
+                  example: "medium"
+                tags:
+                  type: array
+                  items:
+                    type: string
+                  example: ["mobile", "technology", "youth-engagement"]
+      responses:
+        '200':
+          description: Suggestion submitted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Suggestion submitted successfully"
+                  data:
+                    type: object
+                    properties:
+                      suggestion:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            example: "suggestion_1706123456_sug456"
+                          title:
+                            type: string
+                            example: "Mobile App Development"
+                          category:
+                            type: string
+                            example: "technology"
+                          submitterName:
+                            type: string
+                            example: "Omar Hassan"
+                          status:
+                            type: string
+                            example: "submitted"
+                          submittedAt:
+                            type: string
+                            format: date-time
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    
+    get:
+      summary: Get all suggestions
+      description: Retrieves all submitted suggestions with optional filtering
+      operationId: getSuggestions
+      tags:
+        - Suggestions
+      parameters:
+        - name: category
+          in: query
+          description: Filter by category
+          schema:
+            type: string
+            enum: [event, competition, technology, outreach, education]
+        - name: status
+          in: query
+          description: Filter by status
+          schema:
+            type: string
+            enum: [submitted, under-review, approved, rejected, implemented]
+      responses:
+        '200':
+          description: Suggestions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Suggestions retrieved successfully"
+                  data:
+                    type: object
+                    properties:
+                      suggestions:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Suggestion'
+                      count:
+                        type: integer
+                        example: 8
+                      categoryBreakdown:
+                        type: object
+                        additionalProperties:
+                          type: integer
+                        example:
+                          technology: 3
+                          event: 2
+                          education: 3
+                      statusBreakdown:
+                        type: object
+                        additionalProperties:
+                          type: integer
+                        example:
+                          submitted: 5
+                          under-review: 2
+                          approved: 1
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
 components:
   schemas:
+    Event:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "event_1706123456_abc123"
+        title:
+          type: string
+          example: "Islamic History Workshop"
+        description:
+          type: string
+          example: "Learn about the golden age of Islamic civilization"
+        date:
+          type: string
+          format: date-time
+          example: "2024-02-15T14:00:00Z"
+        location:
+          type: string
+          example: "Community Center, Room 101"
+        category:
+          type: string
+          example: "educational"
+        maxParticipants:
+          type: integer
+          example: 50
+        registrationDeadline:
+          type: string
+          format: date-time
+          example: "2024-02-10T23:59:59Z"
+        status:
+          type: string
+          enum: [active, cancelled, completed]
+          example: "active"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Competition:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "comp_1706123456_xyz789"
+        title:
+          type: string
+          example: "Quran Recitation Competition"
+        description:
+          type: string
+          example: "Annual Quran recitation competition for youth"
+        category:
+          type: string
+          example: "religious"
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        registrationDeadline:
+          type: string
+          format: date-time
+        rules:
+          type: array
+          items:
+            type: string
+        prizes:
+          type: array
+          items:
+            type: string
+        maxParticipants:
+          type: integer
+        status:
+          type: string
+          enum: [open, closed, completed]
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/Participant'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Participant:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "participant_1706123456_part789"
+        name:
+          type: string
+          example: "Ahmed Abdullah"
+        email:
+          type: string
+          format: email
+          example: "ahmed.abdullah@example.com"
+        phone:
+          type: string
+          example: "+1234567890"
+        registeredAt:
+          type: string
+          format: date-time
+
+    CompetitionResults:
+      type: object
+      properties:
+        competitionId:
+          type: string
+        competitionTitle:
+          type: string
+        status:
+          type: string
+          example: "completed"
+        totalParticipants:
+          type: integer
+          example: 15
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              position:
+                type: integer
+              participant:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  email:
+                    type: string
+                  score:
+                    type: integer
+              prize:
+                type: string
+        announcedAt:
+          type: string
+          format: date-time
+        note:
+          type: string
+
+    VolunteerBasic:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "volunteer_1706123456_vol123"
+        name:
+          type: string
+          example: "Fatima Rahman"
+        email:
+          type: string
+          format: email
+          example: "fatima.rahman@example.com"
+        status:
+          type: string
+          enum: [pending, approved, active, inactive]
+          example: "approved"
+        skills:
+          type: array
+          items:
+            type: string
+        assignedRole:
+          type: string
+          example: "Event Coordinator"
+        team:
+          type: string
+          example: "Events Team"
+        appliedAt:
+          type: string
+          format: date-time
+        approvedAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Suggestion:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "suggestion_1706123456_sug456"
+        title:
+          type: string
+          example: "Mobile App Development"
+        description:
+          type: string
+          example: "Develop a mobile app to better engage youth with Islamic content"
+        category:
+          type: string
+          enum: [event, competition, technology, outreach, education]
+          example: "technology"
+        submitterName:
+          type: string
+          example: "Omar Hassan"
+        submitterEmail:
+          type: string
+          format: email
+          example: "omar.hassan@example.com"
+        priority:
+          type: string
+          enum: [low, medium, high]
+          example: "medium"
+        tags:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          enum: [submitted, under-review, approved, rejected, implemented]
+          example: "submitted"
+        votes:
+          type: integer
+          example: 5
+        submittedAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
     Error:
       type: object
       properties:
@@ -150,6 +1102,7 @@ components:
         error:
           type: string
           description: Error message
+
     Success:
       type: object
       properties:
@@ -162,13 +1115,52 @@ components:
         data:
           type: object
           description: Response data
+
+  responses:
+    BadRequest:
+      description: Bad request - missing required fields or invalid data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error: "Missing required fields: title, description"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error: "Resource not found"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error: "Internal server error"
+
   securitySchemes:
     ApiKeyAuth:
       type: apiKey
       in: header
       name: X-API-Key
+
 tags:
-  - name: xyz
-    description: XYZ data operations
-security:
-  - ApiKeyAuth: []
+  - name: Events
+    description: Islamic educational events and workshops
+  - name: Competitions
+    description: Competitions and contests for youth engagement
+  - name: Volunteers
+    description: Volunteer management and applications
+  - name: Suggestions
+    description: Community suggestions and feedback
+
+# All endpoints are public - no authentication required

@@ -1,0 +1,10 @@
+{
+  "name": "competitions-get-by-id",
+  "version": "1.0.0",
+  "description": "Lambda function to get a specific competition by ID",
+  "main": "index.js",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.x",
+    "@aws-sdk/lib-dynamodb": "^3.x"
+  }
+}

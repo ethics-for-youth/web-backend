@@ -1,0 +1,10 @@
+{
+  "name": "volunteers-put",
+  "version": "1.0.0",
+  "description": "Lambda function to update volunteer status",
+  "main": "index.js",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.x",
+    "@aws-sdk/lib-dynamodb": "^3.x"
+  }
+}
