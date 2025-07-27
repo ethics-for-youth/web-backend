@@ -114,18 +114,58 @@ validate_terraform() {
         cd ../../
     fi
     
-    # Validate main configuration
+    # Validate main configuration with local backend for CI
     print_status "Validating main configuration..."
-    # Initialize if not already done
-    if [[ ! -d ".terraform" ]]; then
-        print_status "Initializing main configuration..."
-        terraform init
+    
+    # Use local backend for validation if in CI environment or no AWS credentials
+    if [[ -n "$CI" ]] || ! aws sts get-caller-identity &>/dev/null; then
+        print_status "Using local backend for validation..."
+        # Temporarily modify backend.tf to use local backend
+        if [[ -f "backend.tf" ]]; then
+            mv backend.tf backend.tf.bak
+            # Create a temporary backend.tf with local backend
+            cat > backend.tf << EOF
+terraform {
+  required_version = ">= 1.0"
+  
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.1"
+    }
+    archive = {
+      source  = "hashicorp/archive"
+      version = "~> 2.2"
+    }
+  }
+
+  # Local backend for validation
+  backend "local" {
+    path = "terraform.tfstate"
+  }
+}
+EOF
+        fi
     fi
     
-    # Select a valid workspace for validation (use dev as default)
-    print_status "Selecting workspace for validation..."
-    terraform workspace select dev 2>/dev/null || terraform workspace new dev
+    # Initialize if not already done or .terraform directory doesn't exist
+    if [[ ! -d ".terraform" ]]; then
+        print_status "Initializing main configuration..."
+        terraform init -input=false
+    fi
+    
+    # Validate configuration
+    print_status "Running terraform validate..."
     terraform validate
+    
+    # Restore original backend configuration if it was backed up
+    if [[ -f "backend.tf.bak" ]]; then
+        mv backend.tf.bak backend.tf
+    fi
     
     cd ..
     print_status "Terraform validation completed successfully"

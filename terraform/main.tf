@@ -2,11 +2,11 @@
 locals {
   valid_workspaces = ["dev", "qa", "prod"]
   
-  # Validate that current workspace is valid
-  workspace_validation = can(regex("^(dev|qa|prod)$", terraform.workspace)) ? null : file("ERROR: Invalid workspace '${terraform.workspace}'. Valid workspaces are: ${join(", ", local.valid_workspaces)}")
+  # Validate that current workspace is valid (allow default for validation)
+  workspace_validation = can(regex("^(dev|qa|prod|default)$", terraform.workspace)) ? null : file("ERROR: Invalid workspace '${terraform.workspace}'. Valid workspaces are: ${join(", ", local.valid_workspaces)}")
   
-  # Get current environment from workspace
-  current_environment = terraform.workspace
+  # Get current environment from workspace (default to dev for validation)
+  current_environment = terraform.workspace == "default" ? "dev" : terraform.workspace
   
   # Get environment-specific configuration
   env_config = var.environment_configs[local.current_environment]
