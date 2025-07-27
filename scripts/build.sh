@@ -86,7 +86,7 @@ build_layers() {
     print_status "Building dependencies layer..."
     if [ -d "layers/dependencies/nodejs" ]; then
         cd layers/dependencies/nodejs
-        zip -r ../../../dependencies.zip . -q
+        zip -r ../../../layers/dependencies.zip . -q
         cd ../../../
         print_status "Dependencies layer built: layers/dependencies.zip"
     else
@@ -94,7 +94,7 @@ build_layers() {
         mkdir -p layers/dependencies/nodejs
         echo '{"name": "dependencies-layer"}' > layers/dependencies/nodejs/package.json
         cd layers/dependencies/nodejs
-        zip -r ../../../dependencies.zip . -q
+        zip -r ../../../layers/dependencies.zip . -q
         cd ../../../
         print_status "Empty dependencies layer created: layers/dependencies.zip"
     fi
@@ -103,7 +103,7 @@ build_layers() {
     print_status "Building utility layer..."
     if [ -d "layers/utility/nodejs" ]; then
         cd layers/utility/nodejs
-        zip -r ../../../utility.zip . -q
+        zip -r ../../../layers/utility.zip . -q
         cd ../../../
         print_status "Utility layer built: layers/utility.zip"
     else
@@ -111,7 +111,7 @@ build_layers() {
         mkdir -p layers/utility/nodejs
         echo '{"name": "utility-layer"}' > layers/utility/nodejs/package.json
         cd layers/utility/nodejs
-        zip -r ../../../utility.zip . -q
+        zip -r ../../../layers/utility.zip . -q
         cd ../../../
         print_status "Empty utility layer created: layers/utility.zip"
     fi

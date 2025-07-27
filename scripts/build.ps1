@@ -89,7 +89,7 @@ function Build-Layers {
     Write-Status "Building dependencies layer..."
     if (Test-Path "layers/dependencies/nodejs") {
         Set-Location "layers/dependencies/nodejs"
-        Compress-Archive -Path "." -DestinationPath "../../../dependencies.zip" -Force
+        Compress-Archive -Path "." -DestinationPath "../../../layers/dependencies.zip" -Force
         Set-Location "../../../"
         Write-Status "Dependencies layer built: layers/dependencies.zip"
     } else {
@@ -97,7 +97,7 @@ function Build-Layers {
         New-Item -ItemType Directory -Path "layers/dependencies/nodejs" -Force | Out-Null
         '{"name": "dependencies-layer"}' | Out-File -FilePath "layers/dependencies/nodejs/package.json" -Encoding UTF8
         Set-Location "layers/dependencies/nodejs"
-        Compress-Archive -Path "." -DestinationPath "../../../dependencies.zip" -Force
+        Compress-Archive -Path "." -DestinationPath "../../../layers/dependencies.zip" -Force
         Set-Location "../../../"
         Write-Status "Empty dependencies layer created: layers/dependencies.zip"
     }
@@ -106,7 +106,7 @@ function Build-Layers {
     Write-Status "Building utility layer..."
     if (Test-Path "layers/utility/nodejs") {
         Set-Location "layers/utility/nodejs"
-        Compress-Archive -Path "." -DestinationPath "../../../utility.zip" -Force
+        Compress-Archive -Path "." -DestinationPath "../../../layers/utility.zip" -Force
         Set-Location "../../../"
         Write-Status "Utility layer built: layers/utility.zip"
     } else {
@@ -114,7 +114,7 @@ function Build-Layers {
         New-Item -ItemType Directory -Path "layers/utility/nodejs" -Force | Out-Null
         '{"name": "utility-layer"}' | Out-File -FilePath "layers/utility/nodejs/package.json" -Encoding UTF8
         Set-Location "layers/utility/nodejs"
-        Compress-Archive -Path "." -DestinationPath "../../../utility.zip" -Force
+        Compress-Archive -Path "." -DestinationPath "../../../layers/utility.zip" -Force
         Set-Location "../../../"
         Write-Status "Empty utility layer created: layers/utility.zip"
     }
