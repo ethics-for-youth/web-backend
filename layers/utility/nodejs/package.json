@@ -1,0 +1,7 @@
+{
+  "name": "lambda-utility",
+  "version": "1.0.0",
+  "description": "Shared utility functions for Lambda functions",
+  "main": "utils.js",
+  "dependencies": {}
+}
