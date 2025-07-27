@@ -53,6 +53,15 @@ jobs:
         name: terraform-plan-${{ inputs.environment }}
         path: .
       
+    - name: Debug plan file
+      run: |
+        echo "Plan file input: '${{ inputs.plan-file }}'"
+        echo "Expected plan file: terraform-plan-${{ inputs.environment }}.tfplan"
+        echo "Current directory contents:"
+        ls -la
+        echo "Checking for plan files:"
+        find . -name "*.tfplan" -type f || echo "No .tfplan files found"
+        
     - name: Deploy to ${{ inputs.environment }} environment
       run: |
         if [ -f "${{ inputs.plan-file }}" ]; then
