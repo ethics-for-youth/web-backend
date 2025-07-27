@@ -2,7 +2,7 @@
 data "archive_file" "lambda_zip" {
   type        = "zip"
   source_dir  = var.source_dir
-  output_path = "${path.module}/../../builds/${var.function_name}.zip"
+  output_path = "${path.root}/terraform/builds/${var.function_name}.zip"
   
   # This ensures Terraform detects code changes
   excludes = ["function.zip"]
