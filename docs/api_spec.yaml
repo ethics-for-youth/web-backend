@@ -1,14 +1,23 @@
 openapi: 3.0.0
 info:
-  title: My API
-  description: API documentation for Lambda functions
+  title: EFY Web Backend API
+  description: API documentation for EFY Web Backend Lambda functions
   version: 1.0.0
+  contact:
+    name: Infrastructure Team
 servers:
-  - url: https://api.example.com/v1
+  - url: https://{api-id}.execute-api.ap-south-1.amazonaws.com/default
+    description: Default API Gateway stage
+    variables:
+      api-id:
+        description: API Gateway ID
+        example: "abc123def4"
 paths:
   /xyz:
     get:
       summary: Get XYZ data
+      description: Retrieves XYZ data with request information
+      operationId: getXyz
       responses:
         '200':
           description: Successful response
@@ -17,29 +26,149 @@ paths:
               schema:
                 type: object
                 properties:
+                  success:
+                    type: boolean
+                    example: true
                   message:
                     type: string
-                  requestId:
+                    example: "Success"
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "GET XYZ function executed successfully!"
+                      requestId:
+                        type: string
+                        example: "12345678-1234-1234-1234-123456789012"
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2024-01-01T12:00:00.000Z"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
                     type: string
+                    example: "Internal server error"
     post:
       summary: Create XYZ data
+      description: Creates new XYZ data with validation
+      operationId: postXyz
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  description: Required name field
+                  example: "test-name"
+                description:
+                  type: string
+                  description: Optional description
+                  example: "Test description"
+                metadata:
+                  type: object
+                  description: Optional metadata object
+                  additionalProperties: true
       responses:
-        '201':
+        '200':
           description: Created successfully
           content:
             application/json:
               schema:
                 type: object
                 properties:
+                  success:
+                    type: boolean
+                    example: true
                   message:
                     type: string
+                    example: "Data created successfully"
                   data:
                     type: object
-                  requestId:
+                    properties:
+                      message:
+                        type: string
+                        example: "POST XYZ function executed successfully!"
+                      receivedData:
+                        type: object
+                        description: The data that was received in the request
+                      requestId:
+                        type: string
+                        example: "12345678-1234-1234-1234-123456789012"
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2024-01-01T12:00:00.000Z"
+        '400':
+          description: Bad request - missing required fields
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
                     type: string
+                    example: "Missing required fields: name"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Internal server error"
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          description: Error message
+    Success:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          description: Success message
+        data:
+          type: object
+          description: Response data
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+tags:
+  - name: xyz
+    description: XYZ data operations
+security:
+  - ApiKeyAuth: []
