@@ -194,17 +194,6 @@ plan_terraform() {
         show_usage
         exit 1
     fi
-
-    #show directories recursively
-    print_status "Debug: files:"
-    find layers/ -type f -print
-    find lambda_functions/ -type f -print
-    
-    build_layers # debug
-    
-    print_status "Debug After Build: files:"
-    find layers/ -type f -print
-    find lambda_functions/ -type f -print
     
     print_header "Planning Terraform Changes for $env"
     

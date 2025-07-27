@@ -29,7 +29,7 @@ module "dependencies_layer" {
   source = "./modules/lambda_layer"
   
   layer_name      = "${var.project_name}-${local.current_environment}-dependencies-layer"
-  layer_zip_path  = "./layers/dependencies.zip"
+  layer_zip_path  = "../layers/dependencies.zip"
   description     = "Shared dependencies for Lambda functions - ${local.current_environment}"
 }
 
@@ -38,7 +38,7 @@ module "utility_layer" {
   source = "./modules/lambda_layer"
   
   layer_name      = "${var.project_name}-${local.current_environment}-utility-layer"
-  layer_zip_path  = "./layers/utility.zip"
+  layer_zip_path  = "../layers/utility.zip"
   description     = "Shared utility functions for Lambda functions - ${local.current_environment}"
 }
 
