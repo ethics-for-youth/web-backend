@@ -37,7 +37,8 @@ function Show-Usage {
     Write-Host "Commands:"
     Write-Host "  build-layers    - Build Lambda layers (dependencies and utility)"
     Write-Host "  clean           - Clean build artifacts"
-    Write-Host "  validate        - Validate Terraform configuration"
+    Write-Host "  validate        - Validate Terraform configuration (main only)"
+    Write-Host "  validate-all    - Validate both backend and main Terraform configuration"
     Write-Host "  plan <env>      - Plan Terraform changes for environment (dev|qa|prod)"
     Write-Host "  apply <env>     - Apply Terraform changes for environment"
     Write-Host "  destroy <env>   - Destroy resources for environment"
@@ -153,20 +154,32 @@ function Clear-Build {
 
 # Function to validate Terraform configuration
 function Test-TerraformConfig {
+    param([bool]$ValidateBackend = $false)
+    
     Write-Header "Validating Terraform Configuration"
     
     Set-Location "terraform"
     
-    # Check if backend setup exists
-    if (Test-Path "../terraform/backend-setup") {
+    # Validate backend setup only if explicitly requested
+    if ($ValidateBackend -and (Test-Path "../terraform/backend-setup")) {
         Write-Status "Validating backend setup..."
         Set-Location "../terraform/backend-setup"
+        # Initialize if not already done
+        if (-not (Test-Path ".terraform")) {
+            Write-Status "Initializing backend setup..."
+            terraform init
+        }
         terraform validate
         Set-Location "../.."
     }
     
     # Validate main configuration
     Write-Status "Validating main configuration..."
+    # Initialize if not already done
+    if (-not (Test-Path ".terraform")) {
+        Write-Status "Initializing main configuration..."
+        terraform init
+    }
     terraform validate
     
     Set-Location ".."
@@ -187,12 +200,21 @@ function Plan-Terraform {
     
     Set-Location "terraform"
     
+    # Initialize if not already done
+    if (-not (Test-Path ".terraform")) {
+        Write-Status "Initializing Terraform..."
+        terraform init
+    }
+    
     # Use workspace script if available
     if (Test-Path "workspace.ps1") {
         .\workspace.ps1 plan $Env
     } else {
         # Manual workspace management
-        terraform workspace select $Env 2>$null || terraform workspace new $Env
+        terraform workspace select $Env 2>$null
+        if ($LASTEXITCODE -ne 0) {
+            terraform workspace new $Env
+        }
         terraform plan
     }
     
@@ -213,12 +235,21 @@ function Apply-Terraform {
     
     Set-Location "terraform"
     
+    # Initialize if not already done
+    if (-not (Test-Path ".terraform")) {
+        Write-Status "Initializing Terraform..."
+        terraform init
+    }
+    
     # Use workspace script if available
     if (Test-Path "workspace.ps1") {
         .\workspace.ps1 apply $Env
     } else {
         # Manual workspace management
-        terraform workspace select $Env 2>$null || terraform workspace new $Env
+        terraform workspace select $Env 2>$null
+        if ($LASTEXITCODE -ne 0) {
+            terraform workspace new $Env
+        }
         terraform apply -auto-approve
     }
     
@@ -239,12 +270,21 @@ function Destroy-Terraform {
     
     Set-Location "terraform"
     
+    # Initialize if not already done
+    if (-not (Test-Path ".terraform")) {
+        Write-Status "Initializing Terraform..."
+        terraform init
+    }
+    
     # Use workspace script if available
     if (Test-Path "workspace.ps1") {
         .\workspace.ps1 destroy $Env
     } else {
         # Manual workspace management
-        terraform workspace select $Env 2>$null || terraform workspace new $Env
+        terraform workspace select $Env 2>$null
+        if ($LASTEXITCODE -ne 0) {
+            terraform workspace new $Env
+        }
         terraform destroy -auto-approve
     }
     
@@ -290,7 +330,10 @@ function Main {
             Clear-Build
         }
         "validate" {
-            Test-TerraformConfig
+            Test-TerraformConfig $false
+        }
+        "validate-all" {
+            Test-TerraformConfig $true
         }
         "plan" {
             Plan-Terraform $Environment

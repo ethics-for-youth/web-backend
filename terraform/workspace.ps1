@@ -199,66 +199,73 @@ function Show-CurrentWorkspace {
 }
 
 # Main script logic
-switch ($Command) {
-    "init" {
-        if (-not $Environment) {
-            Write-Error "Environment is required for init command"
+function Main {
+    param([string]$Command, [string]$Environment)
+    
+    switch ($Command) {
+        "init" {
+            if (-not $Environment) {
+                Write-Error "Environment is required for init command"
+                Show-Usage
+                exit 1
+            }
+            if (Test-Environment $Environment) {
+                Initialize-Workspace $Environment
+            }
+        }
+        "plan" {
+            if (-not $Environment) {
+                Write-Error "Environment is required for plan command"
+                Show-Usage
+                exit 1
+            }
+            if (Test-Environment $Environment) {
+                Plan-Changes $Environment
+            }
+        }
+        "apply" {
+            if (-not $Environment) {
+                Write-Error "Environment is required for apply command"
+                Show-Usage
+                exit 1
+            }
+            if (Test-Environment $Environment) {
+                Apply-Changes $Environment
+            }
+        }
+        "destroy" {
+            if (-not $Environment) {
+                Write-Error "Environment is required for destroy command"
+                Show-Usage
+                exit 1
+            }
+            if (Test-Environment $Environment) {
+                Destroy-Resources $Environment
+            }
+        }
+        "validate" {
+            Validate-Config
+        }
+        "list" {
+            List-Workspaces
+        }
+        "show" {
+            Show-CurrentWorkspace
+        }
+        "help" {
+            Show-Usage
+        }
+        default {
+            if (-not $Command) {
+                Write-Error "No command specified"
+            } else {
+                Write-Error "Unknown command: $Command"
+            }
             Show-Usage
             exit 1
         }
-        if (Test-Environment $Environment) {
-            Initialize-Workspace $Environment
-        }
     }
-    "plan" {
-        if (-not $Environment) {
-            Write-Error "Environment is required for plan command"
-            Show-Usage
-            exit 1
-        }
-        if (Test-Environment $Environment) {
-            Plan-Changes $Environment
-        }
-    }
-    "apply" {
-        if (-not $Environment) {
-            Write-Error "Environment is required for apply command"
-            Show-Usage
-            exit 1
-        }
-        if (Test-Environment $Environment) {
-            Apply-Changes $Environment
-        }
-    }
-    "destroy" {
-        if (-not $Environment) {
-            Write-Error "Environment is required for destroy command"
-            Show-Usage
-            exit 1
-        }
-        if (Test-Environment $Environment) {
-            Destroy-Resources $Environment
-        }
-    }
-    "validate" {
-        Validate-Config
-    }
-    "list" {
-        List-Workspaces
-    }
-    "show" {
-        Show-CurrentWorkspace
-    }
-    "help" {
-        Show-Usage
-    }
-    default {
-        if (-not $Command) {
-            Write-Error "No command specified"
-        } else {
-            Write-Error "Unknown command: $Command"
-        }
-        Show-Usage
-        exit 1
-    }
-} 
+}
+
+# Run main function with all arguments
+Main $Command $Environment 

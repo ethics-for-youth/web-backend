@@ -1,14 +1,6 @@
-name: Terraform Deployment
+name: Terraform Validation and Planning
 
 on:
-  push:
-    branches: [ main, develop ]
-    paths:
-      - 'terraform/**'
-      - 'lambda_functions/**'
-      - 'layers/**'
-      - 'scripts/**'
-      - '.github/workflows/terraform.yml'
   pull_request:
     branches: [ main, develop ]
     paths:
@@ -17,10 +9,11 @@ on:
       - 'layers/**'
       - 'scripts/**'
       - '.github/workflows/terraform.yml'
+      - '.github/workflows/terraform-deploy.yml'
+      - '.github/workflows/deploy-*.yml'
 
 env:
   AWS_REGION: ap-south-1
-  TF_VERSION: "1.5.0"
 
 jobs:
   validate:
@@ -34,7 +27,7 @@ jobs:
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
       with:
-        terraform_version: ${{ env.TF_VERSION }}
+        terraform_version: "1.5.0"
         
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -53,7 +46,7 @@ jobs:
     name: Plan Dev Environment
     runs-on: ubuntu-latest
     needs: validate
-    if: github.event_name == 'pull_request'
+    if: github.base_ref == 'develop'
     
     steps:
     - name: Checkout code
@@ -62,7 +55,7 @@ jobs:
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
       with:
-        terraform_version: ${{ env.TF_VERSION }}
+        terraform_version: "1.5.0"
         
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -82,7 +75,6 @@ jobs:
       
     - name: Comment PR with plan
       uses: actions/github-script@v7
-      if: github.event_name == 'pull_request'
       with:
         script: |
           const output = `#### Terraform Plan for Dev Environment 📋
@@ -99,12 +91,11 @@ jobs:
       env:
         PLAN_OUTPUT: ${{ steps.plan.outputs.stdout }}
 
-  deploy-dev:
-    name: Deploy to Dev
+  plan-qa:
+    name: Plan QA Environment
     runs-on: ubuntu-latest
     needs: validate
-    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
-    environment: dev
+    if: github.base_ref == 'main'
     
     steps:
     - name: Checkout code
@@ -113,7 +104,7 @@ jobs:
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
       with:
-        terraform_version: ${{ env.TF_VERSION }}
+        terraform_version: "1.5.0"
         
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -125,22 +116,35 @@ jobs:
     - name: Make build script executable
       run: chmod +x scripts/build.sh
       
-    - name: Deploy to dev environment
-      run: ./scripts/build.sh deploy dev
+    - name: Build Lambda layers
+      run: ./scripts/build.sh build-layers
       
-    - name: Get deployment outputs
-      run: |
-        cd terraform
-        ./workspace.sh show
-        terraform output
-      id: outputs
+    - name: Plan Terraform changes for qa
+      run: ./scripts/build.sh plan qa
+      
+    - name: Comment PR with plan
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const output = `#### Terraform Plan for QA Environment 📋
+          \`\`\`\n
+          ${process.env.PLAN_OUTPUT || 'No changes. Infrastructure is up-to-date.'}
+          \`\`\`
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          })
+      env:
+        PLAN_OUTPUT: ${{ steps.plan.outputs.stdout }}
 
-  deploy-qa:
-    name: Deploy to QA
+  plan-prod:
+    name: Plan Production Environment
     runs-on: ubuntu-latest
     needs: validate
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    environment: qa
+    if: github.base_ref == 'main'
     
     steps:
     - name: Checkout code
@@ -149,7 +153,7 @@ jobs:
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
       with:
-        terraform_version: ${{ env.TF_VERSION }}
+        terraform_version: "1.5.0"
         
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -161,48 +165,26 @@ jobs:
     - name: Make build script executable
       run: chmod +x scripts/build.sh
       
-    - name: Deploy to qa environment
-      run: ./scripts/build.sh deploy qa
+    - name: Build Lambda layers
+      run: ./scripts/build.sh build-layers
       
-    - name: Get deployment outputs
-      run: |
-        cd terraform
-        ./workspace.sh show
-        terraform output
-      id: outputs
-
-  deploy-prod:
-    name: Deploy to Production
-    runs-on: ubuntu-latest
-    needs: validate
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && contains(github.event.head_commit.message, '[deploy-prod]')
-    environment: production
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - name: Plan Terraform changes for prod
+      run: ./scripts/build.sh plan prod
       
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
+    - name: Comment PR with plan
+      uses: actions/github-script@v7
       with:
-        terraform_version: ${{ env.TF_VERSION }}
-        
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
-        
-    - name: Make build script executable
-      run: chmod +x scripts/build.sh
-      
-    - name: Deploy to production environment
-      run: ./scripts/build.sh deploy prod
-      
-    - name: Get deployment outputs
-      run: |
-        cd terraform
-        ./workspace.sh show
-        terraform output
-      id: outputs 
+        script: |
+          const output = `#### Terraform Plan for Production Environment 📋
+          \`\`\`\n
+          ${process.env.PLAN_OUTPUT || 'No changes. Infrastructure is up-to-date.'}
+          \`\`\`
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          })
+      env:
+        PLAN_OUTPUT: ${{ steps.plan.outputs.stdout }} 

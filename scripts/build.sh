@@ -36,7 +36,8 @@ show_usage() {
     echo "Commands:"
     echo "  build-layers    - Build Lambda layers (dependencies and utility)"
     echo "  clean           - Clean build artifacts"
-    echo "  validate        - Validate Terraform configuration"
+    echo "  validate        - Validate Terraform configuration (main only)"
+    echo "  validate-all    - Validate both backend and main Terraform configuration"
     echo "  plan <env>      - Plan Terraform changes for environment (dev|qa|prod)"
     echo "  apply <env>     - Apply Terraform changes for environment"
     echo "  destroy <env>   - Destroy resources for environment"
@@ -148,20 +149,32 @@ clean_build() {
 
 # Function to validate Terraform configuration
 validate_terraform() {
+    local validate_backend=${1:-false}
+    
     print_header "Validating Terraform Configuration"
     
     cd terraform
     
-    # Check if backend setup exists
-    if [ -d "../terraform/backend-setup" ]; then
+    # Validate backend setup only if explicitly requested
+    if [ "$validate_backend" = "true" ] && [ -d "../terraform/backend-setup" ]; then
         print_status "Validating backend setup..."
         cd ../terraform/backend-setup
+        # Initialize if not already done
+        if [[ ! -d ".terraform" ]]; then
+            print_status "Initializing backend setup..."
+            terraform init
+        fi
         terraform validate
         cd ../../
     fi
     
     # Validate main configuration
     print_status "Validating main configuration..."
+    # Initialize if not already done
+    if [[ ! -d ".terraform" ]]; then
+        print_status "Initializing main configuration..."
+        terraform init
+    fi
     terraform validate
     
     cd ..
@@ -181,6 +194,12 @@ plan_terraform() {
     print_header "Planning Terraform Changes for $env"
     
     cd terraform
+    
+    # Initialize if not already done
+    if [[ ! -d ".terraform" ]]; then
+        print_status "Initializing Terraform..."
+        terraform init
+    fi
     
     # Use workspace script if available
     if [ -f "workspace.sh" ]; then
@@ -209,6 +228,12 @@ apply_terraform() {
     
     cd terraform
     
+    # Initialize if not already done
+    if [[ ! -d ".terraform" ]]; then
+        print_status "Initializing Terraform..."
+        terraform init
+    fi
+    
     # Use workspace script if available
     if [ -f "workspace.sh" ]; then
         chmod +x workspace.sh
@@ -235,6 +260,12 @@ destroy_terraform() {
     print_header "Destroying Terraform Resources for $env"
     
     cd terraform
+    
+    # Initialize if not already done
+    if [[ ! -d ".terraform" ]]; then
+        print_status "Initializing Terraform..."
+        terraform init
+    fi
     
     # Use workspace script if available
     if [ -f "workspace.sh" ]; then
@@ -289,7 +320,10 @@ main() {
             clean_build
             ;;
         "validate")
-            validate_terraform
+            validate_terraform false
+            ;;
+        "validate-all")
+            validate_terraform true
             ;;
         "plan")
             plan_terraform "$environment"
