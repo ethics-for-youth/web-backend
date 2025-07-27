@@ -2,10 +2,10 @@
 data "archive_file" "lambda_zip" {
   type        = "zip"
   source_dir  = var.source_dir
-  output_path = "${var.source_dir}/${var.function_name}.zip"
+  output_path = "./builds/${var.function_name}.zip"
   
   # This ensures Terraform detects code changes
-  excludes = ["function.zip"]
+  excludes = ["*.zip"]
 }
 
 resource "aws_lambda_function" "this" {
