@@ -47,7 +47,6 @@ jobs:
       run: chmod +x scripts/build.sh
       
     - name: Download plan file
-      if: inputs.plan-file != ''
       uses: actions/download-artifact@v4
       with:
         name: terraform-plan-${{ inputs.environment }}

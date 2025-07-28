@@ -54,4 +54,4 @@ jobs:
       with:
         name: terraform-plan-${{ inputs.environment }}
         path: terraform-plan-${{ inputs.environment }}.tfplan
-        retention-days: 1 
+        retention-days: 1
