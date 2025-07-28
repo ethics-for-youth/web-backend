@@ -167,8 +167,8 @@ function Plan-Terraform {
         if ($LASTEXITCODE -ne 0) {
             terraform workspace new $Env
         }
-        terraform plan -out=terraform-plan-$Env.out
-        Write-Status "Plan saved to terraform/terraform-plan-$Env.out"
+        terraform plan -out=terraform-plan-$Env.tfplan
+        Write-Status "Plan saved to terraform/terraform-plan-$Env.tfplan"
     }
     
     Set-Location ".."
