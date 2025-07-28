@@ -43,9 +43,12 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
         
-    - name: Make build script executable
-      run: chmod +x scripts/build.sh
-      
+    - name: Make scripts executable
+      run: |
+        chmod +x scripts/build.sh
+        chmod +x terraform/workspace.sh
+        chmod +x terraform/backend-setup/workspace.sh
+        
     - name: Validate Terraform configuration
       run: ./scripts/build.sh validate
 
@@ -71,9 +74,12 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
         
-    - name: Make build script executable
-      run: chmod +x scripts/build.sh
-      
+    - name: Make scripts executable
+      run: |
+        chmod +x scripts/build.sh
+        chmod +x terraform/workspace.sh
+        chmod +x terraform/backend-setup/workspace.sh
+        
     - name: Plan Terraform changes for dev
       id: plan-dev
       run: ./scripts/build.sh plan dev
@@ -124,9 +130,12 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
         
-    - name: Make build script executable
-      run: chmod +x scripts/build.sh
-      
+    - name: Make scripts executable
+      run: |
+        chmod +x scripts/build.sh
+        chmod +x terraform/workspace.sh
+        chmod +x terraform/backend-setup/workspace.sh
+        
     - name: Plan Terraform changes for qa
       id: plan-qa
       run: ./scripts/build.sh plan qa
@@ -177,9 +186,12 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
         
-    - name: Make build script executable
-      run: chmod +x scripts/build.sh
-      
+    - name: Make scripts executable
+      run: |
+        chmod +x scripts/build.sh
+        chmod +x terraform/workspace.sh
+        chmod +x terraform/backend-setup/workspace.sh
+        
     - name: Plan Terraform changes for prod
       id: plan-prod
       run: ./scripts/build.sh plan prod
