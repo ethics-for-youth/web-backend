@@ -25,7 +25,7 @@ resource "aws_api_gateway_integration" "get_xyz" {
 
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
-  uri                     = var.get_lambda_arn
+  uri                     = var.get_lambda_invoke_arn
 }
 
 # POST method for /xyz
@@ -43,7 +43,7 @@ resource "aws_api_gateway_integration" "post_xyz" {
 
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
-  uri                     = var.post_lambda_arn
+  uri                     = var.post_lambda_invoke_arn
 }
 
 # Lambda permissions for API Gateway

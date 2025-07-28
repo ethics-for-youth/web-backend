@@ -78,10 +78,12 @@ module "post_xyz_lambda" {
 module "api_gateway" {
   source = "./modules/api_gateway"
   
-  api_name        = "${var.project_name}-${local.current_environment}-api"
-  get_lambda_arn  = module.get_xyz_lambda.lambda_invoke_arn
-  post_lambda_arn = module.post_xyz_lambda.lambda_invoke_arn
-  region          = var.aws_region
+  api_name              = "${var.project_name}-${local.current_environment}-api"
+  get_lambda_arn        = module.get_xyz_lambda.lambda_arn
+  post_lambda_arn       = module.post_xyz_lambda.lambda_arn
+  get_lambda_invoke_arn = module.get_xyz_lambda.lambda_invoke_arn
+  post_lambda_invoke_arn = module.post_xyz_lambda.lambda_invoke_arn
+  region                = var.aws_region
   
   tags = local.common_tags
 }
