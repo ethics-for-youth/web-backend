@@ -73,7 +73,7 @@ jobs:
     name: Deploy to Dev
     uses: ./.github/workflows/terraform-deploy.yml
     needs: [validate, plan, wait-for-approval]
-    if: ${{ github.event.inputs.skip_approval || needs.wait-for-approval.outputs.approved == 'true' }}
+    if: ${{ always() && (github.event.inputs.skip_approval == 'true' || needs.wait-for-approval.outputs.approved == 'true') && needs.plan.result == 'success' }}
     with:
       environment: dev
       aws-region: ${{ vars.AWS_REGION }}

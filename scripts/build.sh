@@ -155,11 +155,16 @@ plan_terraform() {
     if [ -f "workspace.sh" ]; then
         chmod +x workspace.sh
         ./workspace.sh plan "$env"
+        # The workspace script now creates the plan file in the correct location
+        print_status "Plan saved to terraform-plan-${env}.tfplan"
     else
-        # Manual workspace management
+        # Manual workspace management with consistent plan file naming
         terraform workspace select "$env" || terraform workspace new "$env"
-        terraform plan -out=plan.out
-        print_status "Plan saved to terraform/plan.out"
+        local plan_file="terraform-plan-${env}.tfplan"
+        terraform plan -out="$plan_file"
+        # Copy plan file to parent directory for CI/CD pipeline
+        cp "$plan_file" "../$plan_file"
+        print_status "Plan saved to $plan_file and copied to parent directory"
     fi
     
     cd ..
@@ -189,21 +194,36 @@ apply_terraform() {
     # Use workspace script if available
     if [ -f "workspace.sh" ]; then
         chmod +x workspace.sh
+        # Select the correct workspace first
+        terraform workspace select "$env" || terraform workspace new "$env"
+        
         if [ -n "$plan_file" ] && [ -f "../$plan_file" ]; then
             print_status "Applying saved plan from $plan_file"
-            terraform workspace select "$env" || terraform workspace new "$env"
             terraform apply "../$plan_file"
+        elif [ -n "$plan_file" ] && [ -f "$plan_file" ]; then
+            print_status "Applying saved plan from $plan_file (local path)"
+            terraform apply "$plan_file"
+        elif [ -f "terraform-plan-${env}.tfplan" ]; then
+            print_status "Applying saved plan from terraform-plan-${env}.tfplan"
+            terraform apply "terraform-plan-${env}.tfplan"
         else
+            print_status "No saved plan found, running full apply"
             ./workspace.sh apply "$env"
         fi
     else
         # Manual workspace management
         terraform workspace select "$env" || terraform workspace new "$env"
         
-        # Check if plan file exists
+        # Check if plan file exists (prioritize passed plan file)
         if [ -n "$plan_file" ] && [ -f "../$plan_file" ]; then
             print_status "Applying saved plan from $plan_file"
             terraform apply "../$plan_file"
+        elif [ -n "$plan_file" ] && [ -f "$plan_file" ]; then
+            print_status "Applying saved plan from $plan_file (local path)"
+            terraform apply "$plan_file"
+        elif [ -f "terraform-plan-${env}.tfplan" ]; then
+            print_status "Applying saved plan from terraform-plan-${env}.tfplan"
+            terraform apply "terraform-plan-${env}.tfplan"
         elif [ -f "plan.out" ]; then
             print_status "Applying saved plan from plan.out"
             terraform apply plan.out

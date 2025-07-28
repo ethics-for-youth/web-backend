@@ -128,7 +128,16 @@ plan_changes() {
     fi
     
     print_status "Running terraform plan..."
-    terraform plan
+    # Generate plan file for CI/CD pipeline
+    local plan_file="terraform-plan-${env}.tfplan"
+    terraform plan -out="$plan_file"
+    
+    # Also copy to the expected location for build script compatibility
+    if [[ -f "$plan_file" ]]; then
+        cp "$plan_file" "../$plan_file"
+        print_status "Plan file saved as: $plan_file"
+        print_status "Plan file copied to parent directory for CI/CD pipeline"
+    fi
 }
 
 # Function to apply changes

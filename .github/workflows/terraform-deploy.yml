@@ -52,7 +52,7 @@ jobs:
       with:
         name: terraform-plan-${{ inputs.environment }}
         path: .
-      
+        
     - name: Deploy to ${{ inputs.environment }} environment
       run: |
         if [ -f "${{ inputs.plan-file }}" ]; then

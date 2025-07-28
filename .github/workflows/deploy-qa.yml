@@ -55,7 +55,7 @@ jobs:
     name: Deploy to QA
     uses: ./.github/workflows/terraform-deploy.yml
     needs: [validate, plan, wait-for-approval]
-    if: needs.wait-for-approval.outputs.approved == 'true'
+    if: ${{ always() && needs.wait-for-approval.outputs.approved == 'true' && needs.plan.result == 'success' }}
     with:
       environment: qa
       aws-region: ${{ vars.AWS_REGION }}
