@@ -45,11 +45,6 @@ jobs:
     outputs:
       approved: ${{ steps.approval.outputs.approved }}
     steps:
-    - name: Debug approval workflow
-      run: |
-        echo "Production deployment approval process starting..."
-        echo "Commit message: ${{ github.event.head_commit.message }}"
-        echo "Plan result: ${{ needs.plan.result }}"
     - name: Wait for approval
       id: approval
       uses: trstringer/manual-approval@v1

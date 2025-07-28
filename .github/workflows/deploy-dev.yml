@@ -60,10 +60,6 @@ jobs:
     outputs:
       approved: ${{ steps.approval.outputs.approved }}
     steps:
-    - name: Debug approval workflow
-      run: |
-        echo "Skip approval input: ${{ github.event.inputs.skip_approval }}"
-        echo "Running approval step..."
     - name: Wait for approval
       id: approval
       uses: trstringer/manual-approval@v1

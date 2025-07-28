@@ -47,10 +47,9 @@ jobs:
       id: plan
       run: |
         ./scripts/build.sh plan ${{ inputs.environment }}
-        # Ensure the plan file exists in the expected location
+        # Validate plan file was generated successfully
         if [ -f "terraform-plan-${{ inputs.environment }}.tfplan" ]; then
           echo "plan-file=terraform-plan-${{ inputs.environment }}.tfplan" >> $GITHUB_OUTPUT
-          echo "Plan file generated successfully: terraform-plan-${{ inputs.environment }}.tfplan"
         else
           echo "Error: Plan file not generated"
           exit 1

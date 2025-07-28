@@ -42,10 +42,6 @@ jobs:
     outputs:
       approved: ${{ steps.approval.outputs.approved }}
     steps:
-    - name: Debug approval workflow
-      run: |
-        echo "QA deployment approval process starting..."
-        echo "Plan result: ${{ needs.plan.result }}"
     - name: Wait for approval
       id: approval
       uses: trstringer/manual-approval@v1
