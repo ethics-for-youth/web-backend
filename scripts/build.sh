@@ -185,9 +185,9 @@ apply_terraform() {
     if [ -n "$plan_file" ] && [ -f "../$plan_file" ]; then
         print_status "Applying saved plan from $plan_file"
         terraform apply "../$plan_file"
-    elif [ -f "terraform/terraform-plan-${{ inputs.environment }}.tfplan" ]; then
-        print_status "Applying saved plan from terraform/terraform-plan-${{ inputs.environment }}.tfplan"
-        terraform apply terraform/terraform-plan-${{ inputs.environment }}.tfplan
+    elif [ -f "terraform/terraform-plan-$env.tfplan" ]; then
+        print_status "Applying saved plan from terraform/terraform-plan-$env.tfplan"
+        terraform apply terraform/terraform-plan-$env.tfplan
     else
         print_status "No saved plan found, applying with auto-approve"
         terraform apply -auto-approve
