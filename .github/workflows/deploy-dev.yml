@@ -14,7 +14,7 @@ on:
         default: false
         type: boolean
   push:
-    branches: [ develop, feature/devops ]
+    branches: [ develop ]
     paths:
       - 'terraform/**'
       - 'lambda_functions/**'
