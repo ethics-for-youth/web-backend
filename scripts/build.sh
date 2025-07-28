@@ -158,8 +158,8 @@ plan_terraform() {
     else
         # Manual workspace management
         terraform workspace select "$env" || terraform workspace new "$env"
-        terraform plan -out=plan.out
-        print_status "Plan saved to terraform/plan.out"
+        terraform plan -out=terraform-plan-$env.out
+        print_status "Plan saved to terraform/terraform-plan-$env.out"
     fi
     
     cd ..
