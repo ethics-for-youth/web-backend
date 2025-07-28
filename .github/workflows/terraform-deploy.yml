@@ -12,10 +12,6 @@ on:
         type: string
         default: ${{ vars.AWS_REGION }}
         description: 'AWS region for deployment'
-      plan-file:
-        required: false
-        type: string
-        description: 'Name of the plan file artifact to download and apply'
     secrets:
       aws-access-key-id:
         required: true
@@ -54,9 +50,9 @@ jobs:
       
     - name: Deploy to ${{ inputs.environment }} environment
       run: |
-        if [ -f "${{ inputs.plan-file }}" ]; then
-          echo "Applying saved plan file: ${{ inputs.plan-file }}"
-          ./scripts/build.sh apply ${{ inputs.environment }} ${{ inputs.plan-file }}
+        if [ -f "terraform/terraform-plan-${{ inputs.environment }}.tfplan" ]; then
+          echo "Applying saved plan file: terraform/terraform-plan-${{ inputs.environment }}.tfplan"
+          ./scripts/build.sh apply ${{ inputs.environment }} terraform/terraform-plan-${{ inputs.environment }}.tfplan
         else
           echo "No plan file found, running full deploy"
           ./scripts/build.sh deploy ${{ inputs.environment }}
