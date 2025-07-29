@@ -53,14 +53,18 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: terraform-plan-${{ inputs.environment }}
-        path: terraform/terraform-plan-${{ inputs.environment }}.tfplan
+        path: terraform/
       
-    - name: Download plan file
-      if: inputs.plan-file != ''
-      uses: actions/download-artifact@v4
-      with:
-        name: terraform-plan-${{ inputs.environment }}
-        path: .
+    - name: Verify plan file exists
+      run: |
+        if [ -f "terraform/terraform-plan-${{ inputs.environment }}.tfplan" ]; then
+          echo "Plan file found: terraform/terraform-plan-${{ inputs.environment }}.tfplan"
+          ls -la terraform/terraform-plan-${{ inputs.environment }}.tfplan
+        else
+          echo "Plan file not found at expected location"
+          echo "Contents of terraform directory:"
+          ls -la terraform/
+        fi
         
     - name: Deploy to ${{ inputs.environment }} environment
       run: |
