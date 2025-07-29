@@ -405,7 +405,12 @@ main() {
             plan_terraform "$environment"
             ;;
         "apply")
-            install_layer_dependencies
+            # Skip dependency installation if using pre-built artifacts
+            if [ -d "terraform/builds" ] && [ -n "$3" ]; then
+                print_status "Using pre-built artifacts, skipping dependency installation"
+            else
+                install_layer_dependencies
+            fi
             apply_terraform "$environment" "$3"
             ;;
         "destroy")

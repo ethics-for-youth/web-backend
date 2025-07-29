@@ -473,7 +473,12 @@ function Main {
             Plan-Terraform $Environment
         }
         "apply" {
-            Install-LayerDependencies
+            # Skip dependency installation if using pre-built artifacts
+            if ((Test-Path "terraform/builds") -and $PlanFile) {
+                Write-Status "Using pre-built artifacts, skipping dependency installation"
+            } else {
+                Install-LayerDependencies
+            }
             Apply-Terraform $Environment $PlanFile
         }
         "destroy" {

@@ -62,9 +62,13 @@ jobs:
         ./scripts/build.sh plan ${{ inputs.environment }}
         echo "plan-file=terraform/terraform-plan-${{ inputs.environment }}.tfplan" >> $GITHUB_OUTPUT
       
-    - name: Upload plan file
+    # Upload both plan file and build artifacts (zip files) to ensure consistency
+    # between plan and apply steps. This prevents hash mismatches when applying.
+    - name: Upload plan file and build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: terraform-plan-${{ inputs.environment }}
-        path: terraform/terraform-plan-${{ inputs.environment }}.tfplan
+        path: |
+          terraform/terraform-plan-${{ inputs.environment }}.tfplan
+          terraform/builds/
         retention-days: 1
