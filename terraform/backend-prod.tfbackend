@@ -1,5 +1,5 @@
 bucket         = "efy-web-backend-prod-terraform-state-030382357640"
 key            = "terraform.tfstate"
 region         = "ap-south-1"
-dynamodb_table = "efy-web-backend-prod-terraform-locks"
+use_lockfile   = true
 encrypt        = true

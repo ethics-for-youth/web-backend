@@ -252,7 +252,7 @@ plan_terraform() {
 
     # Ensure workspace exists and select it
     print_status "Setting up workspace: $env"
-    if terraform workspace list | grep -q "^[[:space:]]*$env[[:space:]]*$"; then
+    if terraform workspace list | grep -q "^[* ]\s*$env$"; then
         print_status "Selecting existing workspace: $env"
         terraform workspace select "$env"
     else
@@ -290,7 +290,7 @@ apply_terraform() {
 
     # Ensure workspace exists and select it
     print_status "Setting up workspace: $env"
-    if terraform workspace list | grep -q "^[[:space:]]*$env[[:space:]]*$"; then
+    if terraform workspace list | grep -q "^[* ]\s*$env$"; then
         print_status "Selecting existing workspace: $env"
         terraform workspace select "$env"
     else
@@ -355,7 +355,7 @@ destroy_terraform() {
     else
         # Manual workspace management
         print_status "Setting up workspace: $env"
-        if terraform workspace list | grep -q "^[[:space:]]*$env[[:space:]]*$"; then
+        if terraform workspace list | grep -q "^[* ]\s*$env$"; then
             print_status "Selecting existing workspace: $env"
             terraform workspace select "$env"
         else
