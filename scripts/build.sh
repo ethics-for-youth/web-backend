@@ -162,12 +162,14 @@ validate_terraform() {
         cd ../../
     fi
     
-    # Validate main configuration with local backend for CI
+    # Validate main configuration
     print_status "Validating main configuration..."
     
-    # Use local backend for validation if in CI environment or no AWS credentials
+    # For validation only, use local backend if AWS credentials are not available
+    local use_local_backend=false
     if [[ -n "$CI" ]] || ! aws sts get-caller-identity &>/dev/null; then
-        print_status "Using local backend for validation..."
+        use_local_backend=true
+        print_status "Using local backend for validation (no AWS credentials)..."
         # Temporarily modify backend.tf to use local backend
         if [[ -f "backend.tf" ]]; then
             mv backend.tf backend.tf.bak
@@ -191,7 +193,7 @@ terraform {
     }
   }
 
-  # Local backend for validation
+  # Local backend for validation only
   backend "local" {
     path = "terraform.tfstate"
   }
@@ -203,7 +205,7 @@ EOF
     fi
     
     # Initialize if not already done or .terraform directory doesn't exist
-    if [[ ! -d ".terraform" ]]; then
+    if [[ ! -d ".terraform" ]] || [[ "$use_local_backend" == "true" ]]; then
         print_status "Initializing main configuration..."
         terraform init -input=false
     fi
@@ -244,8 +246,8 @@ plan_terraform() {
     
     # Initialize if not already done
     if [[ ! -d ".terraform" ]]; then
-        print_status "Initializing Terraform..."
-        terraform init
+        print_status "Initializing Terraform with S3 backend for $env..."
+        terraform init -backend-config="backend-${env}.tfbackend"
     fi
 
     # Ensure workspace exists and select it
@@ -282,8 +284,8 @@ apply_terraform() {
     
     # Initialize if not already done
     if [[ ! -d ".terraform" ]]; then
-        print_status "Initializing Terraform..."
-        terraform init
+        print_status "Initializing Terraform with S3 backend for $env..."
+        terraform init -backend-config="backend-${env}.tfbackend"
     fi
 
     # Ensure workspace exists and select it
@@ -342,8 +344,8 @@ destroy_terraform() {
     
     # Initialize if not already done
     if [[ ! -d ".terraform" ]]; then
-        print_status "Initializing Terraform..."
-        terraform init
+        print_status "Initializing Terraform with S3 backend for $env..."
+        terraform init -backend-config="backend-${env}.tfbackend"
     fi
     
     # Use workspace script if available

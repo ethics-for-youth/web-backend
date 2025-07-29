@@ -64,16 +64,19 @@ A youth-driven platform for organizing Islamic educational events, competitions,
 ### Environment Setup
 
 ```bash
-# Initialize Terraform workspace
+# Using the build script (recommended)
+./scripts/build.sh plan dev     # Plan for dev environment
+./scripts/build.sh apply dev    # Deploy to dev environment
+
+# Or manually with proper S3 backend configuration
 cd terraform
-terraform workspace new dev  # or qa, prod
-
-# Plan deployment
-terraform plan
-
-# Deploy infrastructure
-terraform apply
+terraform init -backend-config="backend-dev.tfbackend"  # Use appropriate backend config
+terraform workspace new dev  # or select existing: terraform workspace select dev
+terraform plan -out=terraform-plan-dev.tfplan
+terraform apply terraform-plan-dev.tfplan
 ```
+
+> 🔧 **Backend Configuration**: The project uses S3 backend for state management. Backend configurations are stored in `terraform/backend-*.tfbackend` files for each environment.
 
 ### Supported Environments
 
@@ -107,8 +110,12 @@ terraform apply
 │   │   ├── lambda_layer/     # Lambda layer module
 │   │   ├── dynamodb/         # DynamoDB tables module
 │   │   └── efy_api_gateway/  # API Gateway module
+│   ├── backend-dev.tfbackend  # Dev environment S3 backend config
+│   ├── backend-qa.tfbackend   # QA environment S3 backend config
+│   ├── backend-prod.tfbackend # Prod environment S3 backend config
+│   ├── backend.tf            # Terraform backend configuration
 │   ├── main.tf              # Main Terraform configuration
-│   ├── variables.tf         # Variable definitions
+│   ├── variables.tf         # Variable definitions (includes backend config)
 │   └── outputs.tf           # Output definitions
 ├── layers/                   # Lambda layers
 │   ├── dependencies/        # Shared dependencies

@@ -16,8 +16,8 @@ terraform {
     }
   }
 
-  # Local backend for validation
-  backend "local" {
-    path = "terraform.tfstate"
+  backend "s3" {
+    # Backend configuration will be provided via backend config files
+    # or terraform init -backend-config parameters
   }
 }

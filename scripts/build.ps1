@@ -198,15 +198,15 @@ function Test-TerraformConfig {
             Set-Location "../../terraform"
         }
         
-        # Validate main configuration with local backend for CI
+        # Validate main configuration
         Write-Status "Validating main configuration..."
         
-        # Use local backend for validation if in CI environment or no AWS credentials
+        # For validation only, use local backend if AWS credentials are not available
         $useLocalBackend = (Test-CIEnvironment) -or (-not (Test-AWSCredentials))
         $backupCreated = $false
         
         if ($useLocalBackend) {
-            Write-Status "Using local backend for validation..."
+            Write-Status "Using local backend for validation (no AWS credentials)..."
             # Temporarily modify backend.tf to use local backend
             if (Test-Path "backend.tf") {
                 Copy-Item "backend.tf" "backend.tf.bak"
@@ -232,7 +232,7 @@ terraform {
     }
   }
 
-  # Local backend for validation
+  # Local backend for validation only
   backend "local" {
     path = "terraform.tfstate"
   }
@@ -246,7 +246,7 @@ terraform {
         }
         
         # Initialize if not already done or .terraform directory doesn't exist
-        if (-not (Test-Path ".terraform")) {
+        if ((-not (Test-Path ".terraform")) -or $useLocalBackend) {
             Write-Status "Initializing main configuration..."
             terraform init -input=false
         }
@@ -313,8 +313,8 @@ function Plan-Terraform {
     try {
         # Initialize if not already done
         if (-not (Test-Path ".terraform")) {
-            Write-Status "Initializing Terraform..."
-            terraform init
+            Write-Status "Initializing Terraform with S3 backend for $Env..."
+            terraform init -backend-config="backend-$Env.tfbackend"
         }
 
         # Setup workspace
@@ -347,8 +347,8 @@ function Apply-Terraform {
     try {
         # Initialize if not already done
         if (-not (Test-Path ".terraform")) {
-            Write-Status "Initializing Terraform..."
-            terraform init
+            Write-Status "Initializing Terraform with S3 backend for $Env..."
+            terraform init -backend-config="backend-$Env.tfbackend"
         }
 
         # Setup workspace
@@ -409,8 +409,8 @@ function Destroy-Terraform {
     try {
         # Initialize if not already done
         if (-not (Test-Path ".terraform")) {
-            Write-Status "Initializing Terraform..."
-            terraform init
+            Write-Status "Initializing Terraform with S3 backend for $Env..."
+            terraform init -backend-config="backend-$Env.tfbackend"
         }
         
         # Use workspace script if available
