@@ -26,6 +26,12 @@ const errorResponse = (error, statusCode = 400) => {
 };
 
 const validateRequired = (obj, fields) => {
+    if (!obj || typeof obj !== 'object') {
+        throw new Error('Invalid object provided for validation');
+    }
+    if (!fields || !Array.isArray(fields)) {
+        throw new Error('Invalid fields array provided for validation');
+    }
     const missing = fields.filter(field => !obj[field]);
     if (missing.length > 0) {
         throw new Error(`Missing required fields: ${missing.join(', ')}`);
@@ -34,6 +40,9 @@ const validateRequired = (obj, fields) => {
 
 const parseJSON = (str) => {
     try {
+        if (!str || str.trim() === '') {
+            return {};
+        }
         return JSON.parse(str);
     } catch (e) {
         throw new Error('Invalid JSON format');
