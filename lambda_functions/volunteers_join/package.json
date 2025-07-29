@@ -1,10 +1,6 @@
 {
   "name": "volunteers-join",
   "version": "1.0.0",
-  "description": "Lambda function to submit volunteer application",
-  "main": "index.js",
-  "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.x",
-    "@aws-sdk/lib-dynamodb": "^3.x"
-  }
+  "description": "Lambda function to submit volunteer join request",
+  "main": "index.js"
 }
