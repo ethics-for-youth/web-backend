@@ -182,12 +182,27 @@ apply_terraform() {
     terraform workspace select "$env" || terraform workspace new "$env"
     
     # Check if plan file exists
-    if [ -n "$plan_file" ] && [ -f "../$plan_file" ]; then
-        print_status "Applying saved plan from $plan_file"
-        terraform apply "../$plan_file"
-    elif [ -f "terraform/terraform-plan-$env.tfplan" ]; then
-        print_status "Applying saved plan from terraform/terraform-plan-$env.tfplan"
-        terraform apply terraform/terraform-plan-$env.tfplan
+    if [ -n "$plan_file" ]; then
+        # Handle absolute and relative paths
+        if [ -f "$plan_file" ]; then
+            print_status "Applying saved plan from $plan_file"
+            terraform apply "$plan_file"
+        elif [ -f "../$plan_file" ]; then
+            print_status "Applying saved plan from ../$plan_file"
+            terraform apply "../$plan_file"
+        elif [ -f "terraform-plan-$env.tfplan" ]; then
+            print_status "Applying saved plan from terraform-plan-$env.tfplan"
+            terraform apply "terraform-plan-$env.tfplan"
+        else
+            print_error "Plan file specified but not found: $plan_file"
+            print_status "Available files in current directory:"
+            ls -la
+            print_status "Falling back to auto-approve"
+            terraform apply -auto-approve
+        fi
+    elif [ -f "terraform-plan-$env.tfplan" ]; then
+        print_status "Applying saved plan from terraform-plan-$env.tfplan"
+        terraform apply "terraform-plan-$env.tfplan"
     else
         print_status "No saved plan found, applying with auto-approve"
         terraform apply -auto-approve

@@ -69,8 +69,8 @@ jobs:
     - name: Deploy to ${{ inputs.environment }} environment
       run: |
         if [ -f "terraform/terraform-plan-${{ inputs.environment }}.tfplan" ]; then
-          echo "Applying saved plan file: terraform/terraform-plan-${{ inputs.environment }}.tfplan"
-          ./scripts/build.sh apply ${{ inputs.environment }} terraform/terraform-plan-${{ inputs.environment }}.tfplan
+          echo "Applying saved plan file: terraform-plan-${{ inputs.environment }}.tfplan"
+          ./scripts/build.sh apply ${{ inputs.environment }} terraform-plan-${{ inputs.environment }}.tfplan
         else
           echo "No plan file found, running full deploy"
           ./scripts/build.sh deploy ${{ inputs.environment }}
