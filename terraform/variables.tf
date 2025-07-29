@@ -13,9 +13,9 @@ variable "project_name" {
 variable "environment_configs" {
   description = "Environment-specific configurations"
   type = map(object({
-    backend_bucket     = string
-    backend_table      = string
-    tags              = map(string)
+    backend_bucket = string
+    backend_table  = string
+    tags           = map(string)
   }))
   default = {
     dev = {

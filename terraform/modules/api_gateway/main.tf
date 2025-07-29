@@ -1,6 +1,6 @@
 resource "aws_api_gateway_rest_api" "this" {
   name = var.api_name
-  
+
   tags = var.tags
 }
 
@@ -25,7 +25,7 @@ resource "aws_api_gateway_integration" "get_xyz" {
 
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
-  uri                     = var.get_lambda_arn
+  uri                     = var.get_lambda_invoke_arn
 }
 
 # POST method for /xyz
@@ -43,7 +43,7 @@ resource "aws_api_gateway_integration" "post_xyz" {
 
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
-  uri                     = var.post_lambda_arn
+  uri                     = var.post_lambda_invoke_arn
 }
 
 # Lambda permissions for API Gateway
@@ -75,7 +75,7 @@ resource "aws_api_gateway_deployment" "this" {
 
 # API Gateway stage (replaces deprecated stage_name in deployment)
 resource "aws_api_gateway_stage" "this" {
-  rest_api_id = aws_api_gateway_rest_api.this.id
+  rest_api_id   = aws_api_gateway_rest_api.this.id
   deployment_id = aws_api_gateway_deployment.this.id
-  stage_name = "default"
+  stage_name    = "default"
 }

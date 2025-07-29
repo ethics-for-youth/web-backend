@@ -38,7 +38,7 @@ variable "environment_configs" {
   type = map(object({
     state_bucket_name   = string
     dynamodb_table_name = string
-    tags               = map(string)
+    tags                = map(string)
   }))
   default = {
     dev = {
