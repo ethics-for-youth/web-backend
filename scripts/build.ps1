@@ -73,12 +73,60 @@ function Test-Requirements {
         exit 1
     }
     
+    # Check if npm is available (required for layer dependencies)
+    if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
+        Write-ErrorMessage "npm command not found. Please install Node.js and npm."
+        exit 1
+    }
+    
     # Check if AWS CLI is available (optional but recommended)
     if (-not (Get-Command aws -ErrorAction SilentlyContinue)) {
         Write-Warning "AWS CLI not found. Some operations may fail."
     }
     
     Write-Status "All requirements satisfied"
+}
+
+# Function to install Lambda layer dependencies
+function Install-LayerDependencies {
+    Write-Header "Installing Lambda Layer Dependencies"
+    
+    $originalLocation = Get-Location
+    
+    try {
+        # Install dependencies for dependencies layer
+        if (Test-Path "layers/dependencies/nodejs") {
+            Write-Status "Installing dependencies layer..."
+            Set-Location "layers/dependencies/nodejs"
+            if (Test-Path "package.json") {
+                npm install --production
+                Write-Status "Dependencies layer installed successfully"
+            }
+            Set-Location $originalLocation
+        }
+        
+        # Check utility layer (usually no dependencies)
+        if (Test-Path "layers/utility/nodejs") {
+            Set-Location "layers/utility/nodejs"
+            if (Test-Path "package.json") {
+                $packageContent = Get-Content "package.json" -Raw
+                if ($packageContent -like '*"dependencies"*:*{*}*') {
+                    Write-Status "Installing utility layer..."
+                    npm install --production
+                    Write-Status "Utility layer installed successfully"
+                }
+                else {
+                    Write-Status "Utility layer has no dependencies to install"
+                }
+            }
+            Set-Location $originalLocation
+        }
+        
+        Write-Status "Layer dependencies installation completed"
+    }
+    finally {
+        Set-Location $originalLocation
+    }
 }
 
 # Function to clean build artifacts
@@ -96,6 +144,17 @@ function Clear-Build {
         Remove-Item $_ -Recurse -Force -ErrorAction SilentlyContinue
     }
     Write-Status "Removed .terraform directories"
+    
+    # Remove node_modules from layers (will be reinstalled when needed)
+    if (Test-Path "layers/dependencies/nodejs/node_modules") {
+        Remove-Item "layers/dependencies/nodejs/node_modules" -Recurse -Force
+        Write-Status "Removed dependencies layer node_modules"
+    }
+    
+    if (Test-Path "layers/utility/nodejs/node_modules") {
+        Remove-Item "layers/utility/nodejs/node_modules" -Recurse -Force
+        Write-Status "Removed utility layer node_modules"
+    }
     
     Write-Status "Cleanup completed"
 }
@@ -402,21 +461,26 @@ function Main {
             Clear-Build
         }
         "validate" {
+            Install-LayerDependencies
             Test-TerraformConfig $false
         }
         "validate-all" {
+            Install-LayerDependencies
             Test-TerraformConfig $true
         }
         "plan" {
+            Install-LayerDependencies
             Plan-Terraform $Environment
         }
         "apply" {
+            Install-LayerDependencies
             Apply-Terraform $Environment $PlanFile
         }
         "destroy" {
             Destroy-Terraform $Environment
         }
         "deploy" {
+            Install-LayerDependencies
             Deploy-ToEnvironment $Environment
         }
         { $_ -in @("help", "--help", "-h") } {

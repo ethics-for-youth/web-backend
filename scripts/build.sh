@@ -66,6 +66,12 @@ check_requirements() {
         exit 1
     fi
     
+    # Check if npm is available (required for layer dependencies)
+    if ! command -v npm &> /dev/null; then
+        print_error "npm command not found. Please install Node.js and npm."
+        exit 1
+    fi
+    
     # Check if AWS CLI is available (optional but recommended)
     if ! command -v aws &> /dev/null; then
         print_warning "AWS CLI not found. Some operations may fail."
@@ -75,6 +81,37 @@ check_requirements() {
 }
 
 
+
+# Function to install Lambda layer dependencies
+install_layer_dependencies() {
+    print_header "Installing Lambda Layer Dependencies"
+    
+    # Install dependencies for dependencies layer
+    if [ -d "layers/dependencies/nodejs" ]; then
+        print_status "Installing dependencies layer..."
+        cd layers/dependencies/nodejs
+        if [ -f "package.json" ]; then
+            npm install --production
+            print_status "Dependencies layer installed successfully"
+        fi
+        cd - > /dev/null
+    fi
+    
+    # Check utility layer (usually no dependencies)
+    if [ -d "layers/utility/nodejs" ]; then
+        cd layers/utility/nodejs
+        if [ -f "package.json" ] && [ "$(cat package.json | grep -c '"dependencies".*{.*}')" -eq 0 ]; then
+            print_status "Utility layer has no dependencies to install"
+        elif [ -f "package.json" ]; then
+            print_status "Installing utility layer..."
+            npm install --production
+            print_status "Utility layer installed successfully"
+        fi
+        cd - > /dev/null
+    fi
+    
+    print_status "Layer dependencies installation completed"
+}
 
 # Function to clean build artifacts
 clean_build() {
@@ -89,6 +126,17 @@ clean_build() {
     # Remove .terraform directories
     find . -name ".terraform" -type d -exec rm -rf {} + 2>/dev/null || true
     print_status "Removed .terraform directories"
+    
+    # Remove node_modules from layers (will be reinstalled when needed)
+    if [ -d "layers/dependencies/nodejs/node_modules" ]; then
+        rm -rf layers/dependencies/nodejs/node_modules
+        print_status "Removed dependencies layer node_modules"
+    fi
+    
+    if [ -d "layers/utility/nodejs/node_modules" ]; then
+        rm -rf layers/utility/nodejs/node_modules
+        print_status "Removed utility layer node_modules"
+    fi
     
     print_status "Cleanup completed"
 }
@@ -345,21 +393,26 @@ main() {
             clean_build
             ;;
         "validate")
+            install_layer_dependencies
             validate_terraform false
             ;;
         "validate-all")
+            install_layer_dependencies
             validate_terraform true
             ;;
         "plan")
+            install_layer_dependencies
             plan_terraform "$environment"
             ;;
         "apply")
+            install_layer_dependencies
             apply_terraform "$environment" "$3"
             ;;
         "destroy")
             destroy_terraform "$environment"
             ;;
         "deploy")
+            install_layer_dependencies
             deploy_to_environment "$environment"
             ;;
         "help"|"--help"|"-h")
