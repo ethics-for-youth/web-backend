@@ -200,8 +200,18 @@ plan_terraform() {
         terraform init
     fi
 
-    terraform workspace select "$env" || terraform workspace new "$env"
-    terraform plan -out=terraform-plan-$env.tfplan
+    # Ensure workspace exists and select it
+    print_status "Setting up workspace: $env"
+    if ! terraform workspace list | grep -q "\s$env\s\|^$env$\|\*\s$env$"; then
+        print_status "Creating new workspace: $env"
+        terraform workspace new "$env"
+    else
+        print_status "Selecting existing workspace: $env"
+        terraform workspace select "$env"
+    fi
+    
+    print_status "Running terraform plan..."
+    terraform plan -out=terraform-plan-$env.tfplan -detailed-exitcode
     print_status "Plan saved to terraform/terraform-plan-$env.tfplan"
     
     cd ..
@@ -228,7 +238,15 @@ apply_terraform() {
         terraform init
     fi
 
-    terraform workspace select "$env" || terraform workspace new "$env"
+    # Ensure workspace exists and select it
+    print_status "Setting up workspace: $env"
+    if ! terraform workspace list | grep -q "\s$env\s\|^$env$\|\*\s$env$"; then
+        print_status "Creating new workspace: $env"
+        terraform workspace new "$env"
+    else
+        print_status "Selecting existing workspace: $env"
+        terraform workspace select "$env"
+    fi
     
     # Check if plan file exists
     if [ -n "$plan_file" ]; then

@@ -84,19 +84,34 @@ jobs:
         
     - name: Plan Terraform changes for dev
       id: plan-dev
-      run: ./scripts/build.sh plan dev
+      run: |
+        set -e
+        ./scripts/build.sh plan dev 2>&1 | tee plan_output.txt
+        # Capture the plan output for commenting
+        echo "PLAN_OUTPUT<<EOF" >> $GITHUB_ENV
+        cat plan_output.txt >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
+      continue-on-error: true
       
     - name: Comment PR with plan
+      if: github.event_name == 'pull_request'
       uses: actions/github-script@v7
       with:
         script: |
           const planOutput = process.env.PLAN_OUTPUT || 'No changes. Infrastructure is up-to-date.';
           // Remove ANSI color codes and escape sequences
           const cleanOutput = planOutput.replace(/\u001b\[[0-9;]*m/g, '');
+          
+          // Truncate if too long for GitHub comment
+          const maxLength = 60000;
+          const truncatedOutput = cleanOutput.length > maxLength 
+            ? cleanOutput.substring(0, maxLength) + '\n\n... (output truncated)' 
+            : cleanOutput;
+            
           const output = `#### Terraform Plan for Dev Environment 📋
           
           \`\`\`
-          ${cleanOutput}
+          ${truncatedOutput}
           \`\`\`
           
           *This plan was generated automatically for the dev environment.*`;
@@ -107,8 +122,6 @@ jobs:
             repo: context.repo.repo,
             body: output
           })
-      env:
-        PLAN_OUTPUT: ${{ steps.plan-dev.outputs.stdout }}
 
   plan-qa:
     name: Plan QA Environment
@@ -140,19 +153,34 @@ jobs:
         
     - name: Plan Terraform changes for qa
       id: plan-qa
-      run: ./scripts/build.sh plan qa
+      run: |
+        set -e
+        ./scripts/build.sh plan qa 2>&1 | tee plan_output.txt
+        # Capture the plan output for commenting
+        echo "PLAN_OUTPUT<<EOF" >> $GITHUB_ENV
+        cat plan_output.txt >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
+      continue-on-error: true
       
     - name: Comment PR with plan
+      if: github.event_name == 'pull_request'
       uses: actions/github-script@v7
       with:
         script: |
           const planOutput = process.env.PLAN_OUTPUT || 'No changes. Infrastructure is up-to-date.';
           // Remove ANSI color codes and escape sequences
           const cleanOutput = planOutput.replace(/\u001b\[[0-9;]*m/g, '');
+          
+          // Truncate if too long for GitHub comment
+          const maxLength = 60000;
+          const truncatedOutput = cleanOutput.length > maxLength 
+            ? cleanOutput.substring(0, maxLength) + '\n\n... (output truncated)' 
+            : cleanOutput;
+            
           const output = `#### Terraform Plan for QA Environment 📋
           
           \`\`\`
-          ${cleanOutput}
+          ${truncatedOutput}
           \`\`\`
           
           *This plan was generated automatically for the qa environment.*`;
@@ -163,8 +191,6 @@ jobs:
             repo: context.repo.repo,
             body: output
           })
-      env:
-        PLAN_OUTPUT: ${{ steps.plan-qa.outputs.stdout }}
 
   plan-prod:
     name: Plan Production Environment
