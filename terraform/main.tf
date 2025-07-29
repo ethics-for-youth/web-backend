@@ -70,7 +70,6 @@ module "events_get_lambda" {
 
   environment_variables = {
     EVENTS_TABLE_NAME = module.dynamodb.events_table_name
-    AWS_REGION        = var.aws_region
   }
 
   dynamodb_table_arns = [module.dynamodb.events_table_arn]
@@ -93,7 +92,6 @@ module "events_get_by_id_lambda" {
 
   environment_variables = {
     EVENTS_TABLE_NAME = module.dynamodb.events_table_name
-    AWS_REGION        = var.aws_region
   }
 
   dynamodb_table_arns = [module.dynamodb.events_table_arn]
@@ -116,7 +114,6 @@ module "events_post_lambda" {
 
   environment_variables = {
     EVENTS_TABLE_NAME = module.dynamodb.events_table_name
-    AWS_REGION        = var.aws_region
   }
 
   dynamodb_table_arns = [module.dynamodb.events_table_arn]
@@ -139,7 +136,6 @@ module "events_put_lambda" {
 
   environment_variables = {
     EVENTS_TABLE_NAME = module.dynamodb.events_table_name
-    AWS_REGION        = var.aws_region
   }
 
   dynamodb_table_arns = [module.dynamodb.events_table_arn]
@@ -162,7 +158,6 @@ module "events_delete_lambda" {
 
   environment_variables = {
     EVENTS_TABLE_NAME = module.dynamodb.events_table_name
-    AWS_REGION        = var.aws_region
   }
 
   dynamodb_table_arns = [module.dynamodb.events_table_arn]
@@ -186,7 +181,6 @@ module "competitions_get_lambda" {
 
   environment_variables = {
     COMPETITIONS_TABLE_NAME = module.dynamodb.competitions_table_name
-    AWS_REGION              = var.aws_region
   }
 
   dynamodb_table_arns = [module.dynamodb.competitions_table_arn]
@@ -209,7 +203,6 @@ module "competitions_get_by_id_lambda" {
 
   environment_variables = {
     COMPETITIONS_TABLE_NAME = module.dynamodb.competitions_table_name
-    AWS_REGION              = var.aws_region
   }
 
   dynamodb_table_arns = [module.dynamodb.competitions_table_arn]
@@ -232,7 +225,6 @@ module "competitions_post_lambda" {
 
   environment_variables = {
     COMPETITIONS_TABLE_NAME = module.dynamodb.competitions_table_name
-    AWS_REGION              = var.aws_region
   }
 
   dynamodb_table_arns = [module.dynamodb.competitions_table_arn]
@@ -255,7 +247,6 @@ module "competitions_register_lambda" {
 
   environment_variables = {
     COMPETITIONS_TABLE_NAME = module.dynamodb.competitions_table_name
-    AWS_REGION              = var.aws_region
   }
 
   dynamodb_table_arns = [module.dynamodb.competitions_table_arn]
@@ -278,7 +269,6 @@ module "competitions_results_lambda" {
 
   environment_variables = {
     COMPETITIONS_TABLE_NAME = module.dynamodb.competitions_table_name
-    AWS_REGION              = var.aws_region
   }
 
   dynamodb_table_arns = [module.dynamodb.competitions_table_arn]
@@ -302,7 +292,6 @@ module "volunteers_join_lambda" {
 
   environment_variables = {
     VOLUNTEERS_TABLE_NAME = module.dynamodb.volunteers_table_name
-    AWS_REGION            = var.aws_region
   }
 
   dynamodb_table_arns = [module.dynamodb.volunteers_table_arn]
@@ -325,7 +314,6 @@ module "volunteers_get_lambda" {
 
   environment_variables = {
     VOLUNTEERS_TABLE_NAME = module.dynamodb.volunteers_table_name
-    AWS_REGION            = var.aws_region
   }
 
   dynamodb_table_arns = [module.dynamodb.volunteers_table_arn]
@@ -348,7 +336,6 @@ module "volunteers_put_lambda" {
 
   environment_variables = {
     VOLUNTEERS_TABLE_NAME = module.dynamodb.volunteers_table_name
-    AWS_REGION            = var.aws_region
   }
 
   dynamodb_table_arns = [module.dynamodb.volunteers_table_arn]
@@ -372,7 +359,6 @@ module "suggestions_post_lambda" {
 
   environment_variables = {
     SUGGESTIONS_TABLE_NAME = module.dynamodb.suggestions_table_name
-    AWS_REGION             = var.aws_region
   }
 
   dynamodb_table_arns = [module.dynamodb.suggestions_table_arn]
@@ -395,7 +381,6 @@ module "suggestions_get_lambda" {
 
   environment_variables = {
     SUGGESTIONS_TABLE_NAME = module.dynamodb.suggestions_table_name
-    AWS_REGION             = var.aws_region
   }
 
   dynamodb_table_arns = [module.dynamodb.suggestions_table_arn]
