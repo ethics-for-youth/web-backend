@@ -329,8 +329,8 @@ apply_terraform() {
         if [ -f "terraform.$env.tfvars" ]; then
             terraform apply -var-file="terraform.$env.tfvars" -auto-approve
         else
-            print_warning "No var file found for environment $env, applying without specific variables"
-            terraform apply -auto-approve
+            print_error "No var file found for environment $env. Please ensure terraform.$env.tfvars exists."
+            exit 1
         fi
     fi
     
@@ -376,6 +376,7 @@ destroy_terraform() {
     
     cd ..
 }
+
 
 # Main script logic
 main() {

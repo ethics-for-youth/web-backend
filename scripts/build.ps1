@@ -48,12 +48,13 @@ function Show-Usage {
     Write-Host "  plan <env>      - Plan Terraform changes for environment (dev|qa|prod)"
     Write-Host "  apply <env> [plan-file] - Apply Terraform changes for environment (optionally with plan file)"
     Write-Host "  destroy <env>   - Destroy resources for environment"
-    Write-Host "  deploy <env>    - Deploy to environment"
     Write-Host "  help            - Show this help message"
     Write-Host ""
     Write-Host "Examples:"
+    Write-Host "  .\build.ps1 validate"
     Write-Host "  .\build.ps1 plan dev"
-    Write-Host "  .\build.ps1 deploy dev"
+    Write-Host "  .\build.ps1 apply dev"
+    Write-Host "  .\build.ps1 apply dev terraform-plan-dev.tfplan"
     Write-Host "  .\build.ps1 clean"
 }
 
@@ -354,36 +355,45 @@ function Apply-Terraform {
         # Setup workspace
         Set-TerraformWorkspace $Env
         
-        # Check if plan file exists
+        # Determine the plan file to use
+        $actualPlanFile = ""
+        
         if ($PlanFile) {
-            # Handle absolute and relative paths
+            # Plan file was explicitly specified
             if (Test-Path $PlanFile) {
-                Write-Status "Applying saved plan from $PlanFile"
-                terraform apply $PlanFile
+                $actualPlanFile = $PlanFile
             }
             elseif (Test-Path "../$PlanFile") {
-                Write-Status "Applying saved plan from ../$PlanFile"
-                terraform apply "../$PlanFile"
-            }
-            elseif (Test-Path "terraform-plan-$Env.tfplan") {
-                Write-Status "Applying saved plan from terraform-plan-$Env.tfplan"
-                terraform apply "terraform-plan-$Env.tfplan"
+                $actualPlanFile = "../$PlanFile"
             }
             else {
-                Write-ErrorMessage "Plan file specified but not found: $PlanFile"
+                Write-ErrorMessage "Specified plan file not found: $PlanFile"
                 Write-Status "Available files in current directory:"
                 Get-ChildItem -Name
-                Write-Status "Falling back to auto-approve"
-                terraform apply -auto-approve
+                Write-Status "Available files in parent directory:"
+                Get-ChildItem -Path ".." -Name
+                exit 1
             }
         }
         elseif (Test-Path "terraform-plan-$Env.tfplan") {
-            Write-Status "Applying saved plan from terraform-plan-$Env.tfplan"
-            terraform apply "terraform-plan-$Env.tfplan"
+            # Check for default plan file
+            $actualPlanFile = "terraform-plan-$Env.tfplan"
+        }
+        
+        # Apply terraform changes
+        if ($actualPlanFile) {
+            Write-Status "Applying saved plan from $actualPlanFile"
+            terraform apply $actualPlanFile
         }
         else {
-            Write-Status "No saved plan found, applying with auto-approve"
-            terraform apply -auto-approve
+            Write-Status "No plan file found, applying with var file: terraform.$Env.tfvars"
+            if (Test-Path "terraform.$Env.tfvars") {
+                terraform apply -var-file="terraform.$Env.tfvars" -auto-approve
+            }
+            else {
+                Write-ErrorMessage "No var file found for environment $Env. Please ensure terraform.$Env.tfvars exists."
+                exit 1
+            }
         }
     }
     finally {
@@ -428,26 +438,7 @@ function Destroy-Terraform {
     }
 }
 
-# Function to deploy to environment
-function Deploy-ToEnvironment {
-    param([string]$Env)
-    
-    if (-not $Env) {
-        Write-ErrorMessage "Environment is required for deploy command"
-        Show-Usage
-        exit 1
-    }
-    
-    Write-Header "Deploying to $Env Environment"
-    
-    # Validate configuration
-    Test-TerraformConfig
-    
-    # Apply changes
-    Apply-Terraform $Env
-    
-    Write-Status "Deployment to $Env completed successfully"
-}
+
 
 # Main script logic
 function Main {
@@ -483,10 +474,6 @@ function Main {
         }
         "destroy" {
             Destroy-Terraform $Environment
-        }
-        "deploy" {
-            Install-LayerDependencies
-            Deploy-ToEnvironment $Environment
         }
         { $_ -in @("help", "--help", "-h") } {
             Show-Usage

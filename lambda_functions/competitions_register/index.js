@@ -1,7 +1,7 @@
 // Import from utility layer
 const { successResponse, errorResponse, validateRequired, parseJSON } = require('/opt/nodejs/utils');
-const { DynamoDBClient, UpdateItemCommand, GetItemCommand } = require('@aws-sdk/client-dynamodb');
-const { DynamoDBDocumentClient } = require('@aws-sdk/lib-dynamodb');
+const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBDocumentClient, UpdateCommand, GetCommand } = require('@aws-sdk/lib-dynamodb');
 
 const client = new DynamoDBClient({ region: process.env.AWS_REGION });
 const docClient = DynamoDBDocumentClient.from(client);
@@ -24,10 +24,10 @@ exports.handler = async (event) => {
         const tableName = process.env.COMPETITIONS_TABLE_NAME;
         
         // First check if competition exists and is open for registration
-        const getCommand = new GetItemCommand({
+        const getCommand = new GetCommand({
             TableName: tableName,
             Key: {
-                id: { S: competitionId }
+                id: competitionId
             }
         });
         
@@ -70,10 +70,10 @@ exports.handler = async (event) => {
         };
         
         // Add participant to competition
-        const command = new UpdateItemCommand({
+        const command = new UpdateCommand({
             TableName: tableName,
             Key: {
-                id: { S: competitionId }
+                id: competitionId
             },
             UpdateExpression: 'SET participants = list_append(if_not_exists(participants, :empty_list), :participant), updatedAt = :updatedAt',
             ExpressionAttributeValues: {
