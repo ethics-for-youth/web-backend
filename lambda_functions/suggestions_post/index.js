@@ -1,7 +1,7 @@
 // Import from utility layer
 const { successResponse, errorResponse, validateRequired, parseJSON } = require('/opt/nodejs/utils');
-const { DynamoDBClient, PutItemCommand } = require('@aws-sdk/client-dynamodb');
-const { DynamoDBDocumentClient } = require('@aws-sdk/lib-dynamodb');
+const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBDocumentClient, PutCommand } = require('@aws-sdk/lib-dynamodb');
 
 const client = new DynamoDBClient({ region: process.env.AWS_REGION });
 const docClient = DynamoDBDocumentClient.from(client);
@@ -34,7 +34,7 @@ exports.handler = async (event) => {
             updatedAt: new Date().toISOString()
         };
         
-        const command = new PutItemCommand({
+        const command = new PutCommand({
             TableName: tableName,
             Item: suggestionItem
         });
