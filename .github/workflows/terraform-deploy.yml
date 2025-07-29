@@ -31,6 +31,16 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: |
+          package-lock.json
+          layers/dependencies/nodejs/package-lock.json
+          layers/utility/nodejs/package-lock.json
+        
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
       with:
@@ -49,30 +59,44 @@ jobs:
         chmod +x terraform/workspace.sh
         chmod +x terraform/backend-setup/workspace.sh
         
-    - name: Download plan file
+    # Download plan file and pre-built artifacts from plan step
+    # This ensures we use the exact same zip files that were used during planning
+    - name: Download plan file and build artifacts
       uses: actions/download-artifact@v4
       with:
         name: terraform-plan-${{ inputs.environment }}
-        path: terraform/
+        path: .
       
-    - name: Verify plan file exists
+    - name: Verify plan file and build artifacts exist
       run: |
+        echo "=== Checking plan file ==="
         if [ -f "terraform/terraform-plan-${{ inputs.environment }}.tfplan" ]; then
-          echo "Plan file found: terraform/terraform-plan-${{ inputs.environment }}.tfplan"
+          echo "✅ Plan file found: terraform/terraform-plan-${{ inputs.environment }}.tfplan"
           ls -la terraform/terraform-plan-${{ inputs.environment }}.tfplan
         else
-          echo "Plan file not found at expected location"
+          echo "❌ Plan file not found at expected location"
           echo "Contents of terraform directory:"
           ls -la terraform/
+        fi
+        
+        echo -e "\n=== Checking build artifacts ==="
+        if [ -d "terraform/builds" ]; then
+          echo "✅ Build artifacts found:"
+          ls -la terraform/builds/
+        else
+          echo "❌ Build artifacts not found"
+          echo "Contents of current directory:"
+          ls -la
         fi
         
     - name: Deploy to ${{ inputs.environment }} environment
       run: |
         if [ -f "terraform/terraform-plan-${{ inputs.environment }}.tfplan" ]; then
-          echo "Applying saved plan file: terraform-plan-${{ inputs.environment }}.tfplan"
+          echo "✅ Applying saved plan file: terraform-plan-${{ inputs.environment }}.tfplan"
+          echo "🔧 Using pre-built artifacts from plan step"
           ./scripts/build.sh apply ${{ inputs.environment }} terraform-plan-${{ inputs.environment }}.tfplan
         else
-          echo "No plan file found, running full deploy"
+          echo "⚠️  No plan file found, running full deploy (will rebuild dependencies)"
           ./scripts/build.sh deploy ${{ inputs.environment }}
         fi
       

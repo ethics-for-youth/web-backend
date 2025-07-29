@@ -1,0 +1,6 @@
+{
+  "name": "events-get-by-id",
+  "version": "1.0.0",
+  "description": "Lambda function to get event by ID",
+  "main": "index.js"
+}

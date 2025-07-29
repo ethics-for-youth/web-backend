@@ -35,7 +35,7 @@ variable "environment_configs" {
       }
     }
     prod = {
-      backend_bucket = "efy-web-backend-prod-terraform-state-"
+      backend_bucket = "efy-web-backend-prod-terraform-state-030382357640"
       backend_table  = "efy-web-backend-prod-terraform-locks"
       tags = {
         Environment = "prod"

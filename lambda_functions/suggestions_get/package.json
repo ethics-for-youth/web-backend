@@ -1,0 +1,6 @@
+{
+  "name": "suggestions-get",
+  "version": "1.0.0",
+  "description": "Lambda function to get all suggestions",
+  "main": "index.js"
+}

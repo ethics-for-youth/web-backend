@@ -21,6 +21,7 @@ permissions:
 
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}
+  CI: true
 
 jobs:
   validate:
@@ -31,13 +32,24 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: |
+          package-lock.json
+          layers/dependencies/nodejs/package-lock.json
+          layers/utility/nodejs/package-lock.json
+        
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
       with:
         terraform_version: "1.5.0"
         
-    - name: Configure AWS credentials
+    - name: Configure AWS credentials (optional for validation)
       uses: aws-actions/configure-aws-credentials@v4
+      continue-on-error: true
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -53,51 +65,40 @@ jobs:
       run: ./scripts/build.sh validate
 
   plan-dev:
-    name: Plan Dev Environment
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/terraform-plan.yml
     needs: validate
     if: github.base_ref == 'develop'
+    with:
+      environment: dev
+      aws-region: ${{ vars.AWS_REGION }}
+    secrets:
+      aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+  comment-plan:
+    name: Comment PR with Plan Link
+    runs-on: ubuntu-latest
+    needs: [validate, plan-dev]
+    if: github.event_name == 'pull_request' && github.base_ref == 'develop'
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
-      with:
-        terraform_version: "1.5.0"
-        
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
-        
-    - name: Make scripts executable
-      run: |
-        chmod +x scripts/build.sh
-        chmod +x terraform/workspace.sh
-        chmod +x terraform/backend-setup/workspace.sh
-        
-    - name: Plan Terraform changes for dev
-      id: plan-dev
-      run: ./scripts/build.sh plan dev
-      
-    - name: Comment PR with plan
+    - name: Comment PR with plan link
       uses: actions/github-script@v7
       with:
         script: |
-          const planOutput = process.env.PLAN_OUTPUT || 'No changes. Infrastructure is up-to-date.';
-          // Remove ANSI color codes and escape sequences
-          const cleanOutput = planOutput.replace(/\u001b\[[0-9;]*m/g, '');
-          const output = `#### Terraform Plan for Dev Environment 📋
+          const runUrl = `${context.payload.repository.html_url}/actions/runs/${context.runId}`;
+          const output = `#### 🔍 Terraform Plan for Dev Environment
           
-          \`\`\`
-          ${cleanOutput}
-          \`\`\`
+          The Terraform plan has been generated! You can view the full plan details here:
           
-          *This plan was generated automatically for the dev environment.*`;
+          **[📋 View Terraform Plan Results](${runUrl})**
+          
+          This includes:
+          - 📊 Resource changes summary
+          - 🔧 Infrastructure modifications  
+          - ⚠️ Any warnings or errors
+          
+          *Click the link above to see the complete plan output in the workflow logs.*`;
           
           github.rest.issues.createComment({
             issue_number: context.issue.number,
@@ -105,55 +106,42 @@ jobs:
             repo: context.repo.repo,
             body: output
           })
-      env:
-        PLAN_OUTPUT: ${{ steps.plan-dev.outputs.stdout }}
 
   plan-qa:
-    name: Plan QA Environment
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/terraform-plan.yml
     needs: validate
     if: github.base_ref == 'main'
+    with:
+      environment: qa
+      aws-region: ${{ vars.AWS_REGION }}
+    secrets:
+      aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+  comment-plan-qa:
+    name: Comment PR with QA Plan Link
+    runs-on: ubuntu-latest
+    needs: [validate, plan-qa]
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
-      with:
-        terraform_version: "1.5.0"
-        
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
-        
-    - name: Make scripts executable
-      run: |
-        chmod +x scripts/build.sh
-        chmod +x terraform/workspace.sh
-        chmod +x terraform/backend-setup/workspace.sh
-        
-    - name: Plan Terraform changes for qa
-      id: plan-qa
-      run: ./scripts/build.sh plan qa
-      
-    - name: Comment PR with plan
+    - name: Comment PR with plan link
       uses: actions/github-script@v7
       with:
         script: |
-          const planOutput = process.env.PLAN_OUTPUT || 'No changes. Infrastructure is up-to-date.';
-          // Remove ANSI color codes and escape sequences
-          const cleanOutput = planOutput.replace(/\u001b\[[0-9;]*m/g, '');
-          const output = `#### Terraform Plan for QA Environment 📋
+          const runUrl = `${context.payload.repository.html_url}/actions/runs/${context.runId}`;
+          const output = `#### 🔍 Terraform Plan for QA Environment
           
-          \`\`\`
-          ${cleanOutput}
-          \`\`\`
+          The Terraform plan has been generated! You can view the full plan details here:
           
-          *This plan was generated automatically for the qa environment.*`;
+          **[📋 View Terraform Plan Results](${runUrl})**
+          
+          This includes:
+          - 📊 Resource changes summary
+          - 🔧 Infrastructure modifications  
+          - ⚠️ Any warnings or errors
+          
+          *Click the link above to see the complete plan output in the workflow logs.*`;
           
           github.rest.issues.createComment({
             issue_number: context.issue.number,
@@ -161,61 +149,46 @@ jobs:
             repo: context.repo.repo,
             body: output
           })
-      env:
-        PLAN_OUTPUT: ${{ steps.plan-qa.outputs.stdout }}
 
   plan-prod:
-    name: Plan Production Environment
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/terraform-plan.yml
     needs: validate
     if: github.base_ref == 'main'
+    with:
+      environment: prod
+      aws-region: ${{ vars.AWS_REGION }}
+    secrets:
+      aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+  comment-plan-prod:
+    name: Comment PR with Prod Plan Link
+    runs-on: ubuntu-latest
+    needs: [validate, plan-prod]
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
-      with:
-        terraform_version: "1.5.0"
-        
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
-        
-    - name: Make scripts executable
-      run: |
-        chmod +x scripts/build.sh
-        chmod +x terraform/workspace.sh
-        chmod +x terraform/backend-setup/workspace.sh
-        
-    - name: Plan Terraform changes for prod
-      id: plan-prod
-      run: ./scripts/build.sh plan prod
-      
-    - name: Comment PR with plan
+    - name: Comment PR with plan link
       uses: actions/github-script@v7
       with:
         script: |
-          const planOutput = process.env.PLAN_OUTPUT || 'No changes. Infrastructure is up-to-date.';
-          // Remove ANSI color codes and escape sequences
-          const cleanOutput = planOutput.replace(/\u001b\[[0-9;]*m/g, '');
-          const output = `#### Terraform Plan for Production Environment 📋
+          const runUrl = `${context.payload.repository.html_url}/actions/runs/${context.runId}`;
+          const output = `#### 🔍 Terraform Plan for Production Environment
           
-          \`\`\`
-          ${cleanOutput}
-          \`\`\`
+          The Terraform plan has been generated! You can view the full plan details here:
           
-          *This plan was generated automatically for the production environment.*`;
+          **[📋 View Terraform Plan Results](${runUrl})**
+          
+          This includes:
+          - 📊 Resource changes summary
+          - 🔧 Infrastructure modifications  
+          - ⚠️ Any warnings or errors
+          
+          *Click the link above to see the complete plan output in the workflow logs.*`;
           
           github.rest.issues.createComment({
             issue_number: context.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
             body: output
-          })
-      env:
-        PLAN_OUTPUT: ${{ steps.plan-prod.outputs.stdout }} 
+          }) 

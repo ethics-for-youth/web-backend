@@ -6,8 +6,15 @@ param(
     [string]$Command,
     
     [Parameter(Position=1)]
-    [string]$Environment
+    [string]$Environment,
+    
+    [Parameter(Position=2)]
+    [string]$PlanFile
 )
+
+# Set strict mode for better error handling
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
 
 # Function to print colored output
 function Write-Status {
@@ -20,7 +27,7 @@ function Write-Warning {
     Write-Host "[WARNING] $Message" -ForegroundColor Yellow
 }
 
-function Write-Error {
+function Write-ErrorMessage {
     param([string]$Message)
     Write-Host "[ERROR] $Message" -ForegroundColor Red
 }
@@ -54,15 +61,21 @@ function Show-Usage {
 function Test-Requirements {
     Write-Header "Checking Requirements"
     
-    # Check if Compress-Archive is available (PowerShell 5.0+)
+    # Check if PowerShell version is sufficient
     if ($PSVersionTable.PSVersion.Major -lt 5) {
-        Write-Error "PowerShell 5.0 or higher is required."
+        Write-ErrorMessage "PowerShell 5.0 or higher is required."
         exit 1
     }
     
     # Check if terraform is available
     if (-not (Get-Command terraform -ErrorAction SilentlyContinue)) {
-        Write-Error "terraform command not found. Please install Terraform."
+        Write-ErrorMessage "terraform command not found. Please install Terraform."
+        exit 1
+    }
+    
+    # Check if npm is available (required for layer dependencies)
+    if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
+        Write-ErrorMessage "npm command not found. Please install Node.js and npm."
         exit 1
     }
     
@@ -72,6 +85,48 @@ function Test-Requirements {
     }
     
     Write-Status "All requirements satisfied"
+}
+
+# Function to install Lambda layer dependencies
+function Install-LayerDependencies {
+    Write-Header "Installing Lambda Layer Dependencies"
+    
+    $originalLocation = Get-Location
+    
+    try {
+        # Install dependencies for dependencies layer
+        if (Test-Path "layers/dependencies/nodejs") {
+            Write-Status "Installing dependencies layer..."
+            Set-Location "layers/dependencies/nodejs"
+            if (Test-Path "package.json") {
+                npm install --production
+                Write-Status "Dependencies layer installed successfully"
+            }
+            Set-Location $originalLocation
+        }
+        
+        # Check utility layer (usually no dependencies)
+        if (Test-Path "layers/utility/nodejs") {
+            Set-Location "layers/utility/nodejs"
+            if (Test-Path "package.json") {
+                $packageContent = Get-Content "package.json" -Raw
+                if ($packageContent -like '*"dependencies"*:*{*}*') {
+                    Write-Status "Installing utility layer..."
+                    npm install --production
+                    Write-Status "Utility layer installed successfully"
+                }
+                else {
+                    Write-Status "Utility layer has no dependencies to install"
+                }
+            }
+            Set-Location $originalLocation
+        }
+        
+        Write-Status "Layer dependencies installation completed"
+    }
+    finally {
+        Set-Location $originalLocation
+    }
 }
 
 # Function to clean build artifacts
@@ -85,12 +140,39 @@ function Clear-Build {
     }
     
     # Remove .terraform directories
-    Get-ChildItem -Path "." -Name ".terraform" -Directory -Recurse | ForEach-Object {
-        Remove-Item $_ -Recurse -Force
+    Get-ChildItem -Path "." -Name ".terraform" -Directory -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
+        Remove-Item $_ -Recurse -Force -ErrorAction SilentlyContinue
     }
     Write-Status "Removed .terraform directories"
     
+    # Remove node_modules from layers (will be reinstalled when needed)
+    if (Test-Path "layers/dependencies/nodejs/node_modules") {
+        Remove-Item "layers/dependencies/nodejs/node_modules" -Recurse -Force
+        Write-Status "Removed dependencies layer node_modules"
+    }
+    
+    if (Test-Path "layers/utility/nodejs/node_modules") {
+        Remove-Item "layers/utility/nodejs/node_modules" -Recurse -Force
+        Write-Status "Removed utility layer node_modules"
+    }
+    
     Write-Status "Cleanup completed"
+}
+
+# Function to check if running in CI environment
+function Test-CIEnvironment {
+    return ($env:CI -or $env:GITHUB_ACTIONS -or $env:AZURE_PIPELINES -or $env:JENKINS_URL)
+}
+
+# Function to test AWS credentials
+function Test-AWSCredentials {
+    try {
+        $result = aws sts get-caller-identity 2>$null
+        return $LASTEXITCODE -eq 0
+    }
+    catch {
+        return $false
+    }
 }
 
 # Function to validate Terraform configuration
@@ -99,39 +181,118 @@ function Test-TerraformConfig {
     
     Write-Header "Validating Terraform Configuration"
     
+    $originalLocation = Get-Location
     Set-Location "terraform"
     
-    # Validate backend setup only if explicitly requested
-    if ($ValidateBackend -and (Test-Path "../terraform/backend-setup")) {
-        Write-Status "Validating backend setup..."
-        Set-Location "../terraform/backend-setup"
-        # Initialize if not already done
-        if (-not (Test-Path ".terraform")) {
-            Write-Status "Initializing backend setup..."
-            terraform init
+    try {
+        # Validate backend setup only if explicitly requested
+        if ($ValidateBackend -and (Test-Path "../terraform/backend-setup")) {
+            Write-Status "Validating backend setup..."
+            Set-Location "../terraform/backend-setup"
+            # Initialize if not already done
+            if (-not (Test-Path ".terraform")) {
+                Write-Status "Initializing backend setup..."
+                terraform init
+            }
+            terraform validate
+            Set-Location "../../terraform"
         }
+        
+        # Validate main configuration
+        Write-Status "Validating main configuration..."
+        
+        # For validation only, use local backend if AWS credentials are not available
+        $useLocalBackend = (Test-CIEnvironment) -or (-not (Test-AWSCredentials))
+        $backupCreated = $false
+        
+        if ($useLocalBackend) {
+            Write-Status "Using local backend for validation (no AWS credentials)..."
+            # Temporarily modify backend.tf to use local backend
+            if (Test-Path "backend.tf") {
+                Copy-Item "backend.tf" "backend.tf.bak"
+                $backupCreated = $true
+                
+                # Create a temporary backend.tf with local backend
+                $localBackend = @'
+terraform {
+  required_version = ">= 1.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.1"
+    }
+    archive = {
+      source  = "hashicorp/archive"
+      version = "~> 2.2"
+    }
+  }
+
+  # Local backend for validation only
+  backend "local" {
+    path = "terraform.tfstate"
+  }
+}
+'@
+                Set-Content -Path "backend.tf" -Value $localBackend
+                
+                # Format the generated backend file
+                terraform fmt backend.tf
+            }
+        }
+        
+        # Initialize if not already done or .terraform directory doesn't exist
+        if ((-not (Test-Path ".terraform")) -or $useLocalBackend) {
+            Write-Status "Initializing main configuration..."
+            terraform init -input=false
+        }
+        
+        # Check formatting first
+        Write-Status "Checking terraform formatting..."
+        terraform fmt -check -recursive .
+        if ($LASTEXITCODE -ne 0) {
+            Write-ErrorMessage "Terraform files are not properly formatted. Run 'terraform fmt -recursive .' to fix."
+            exit 1
+        }
+        
+        # Validate configuration
+        Write-Status "Running terraform validate..."
         terraform validate
-        Set-Location "../.."
+        
+        # Restore original backend configuration if it was backed up
+        if ($backupCreated -and (Test-Path "backend.tf.bak")) {
+            Move-Item "backend.tf.bak" "backend.tf" -Force
+        }
+        
+        Write-Status "Terraform validation completed successfully"
     }
-    
-    # Validate main configuration
-    Write-Status "Validating main configuration..."
-    # Initialize if not already done
-    if (-not (Test-Path ".terraform")) {
-        Write-Status "Initializing main configuration..."
-        terraform init
+    finally {
+        Set-Location $originalLocation
     }
+}
+
+# Function to setup workspace
+function Set-TerraformWorkspace {
+    param([string]$Env)
     
-    # Select a valid workspace for validation (use dev as default)
-    Write-Status "Selecting workspace for validation..."
-    terraform workspace select dev 2>$null
-    if ($LASTEXITCODE -ne 0) {
-        terraform workspace new dev
+    Write-Status "Setting up workspace: $Env"
+    
+    # Check if workspace exists
+    $workspaces = terraform workspace list
+    $workspaceExists = $workspaces | Where-Object { $_ -match "\s$Env\s|^$Env$|\*\s$Env$" }
+    
+    if (-not $workspaceExists) {
+        Write-Status "Creating new workspace: $Env"
+        terraform workspace new $Env
     }
-    terraform validate
-    
-    Set-Location ".."
-    Write-Status "Terraform validation completed successfully"
+    else {
+        Write-Status "Selecting existing workspace: $Env"
+        terraform workspace select $Env
+    }
 }
 
 # Function to plan Terraform changes
@@ -139,29 +300,33 @@ function Plan-Terraform {
     param([string]$Env)
     
     if (-not $Env) {
-        Write-Error "Environment is required for plan command"
+        Write-ErrorMessage "Environment is required for plan command"
         Show-Usage
         exit 1
     }
     
     Write-Header "Planning Terraform Changes for $Env"
     
+    $originalLocation = Get-Location
     Set-Location "terraform"
     
-    # Initialize if not already done
-    if (-not (Test-Path ".terraform")) {
-        Write-Status "Initializing Terraform..."
-        terraform init
-    }
+    try {
+        # Initialize if not already done
+        if (-not (Test-Path ".terraform")) {
+            Write-Status "Initializing Terraform with S3 backend for $Env..."
+            terraform init -backend-config="backend-$Env.tfbackend"
+        }
 
-    terraform workspace select $Env 2>$null
-    if ($LASTEXITCODE -ne 0) {
-        terraform workspace new $Env
+        # Setup workspace
+        Set-TerraformWorkspace $Env
+        
+        Write-Status "Running terraform plan..."
+        terraform plan -out="terraform-plan-$Env.tfplan" -detailed-exitcode
+        Write-Status "Plan saved to terraform/terraform-plan-$Env.tfplan"
     }
-    terraform plan -out="terraform-plan-$Env.tfplan"
-    Write-Status "Plan saved to terraform/terraform-plan-$Env.tfplan"
-    
-    Set-Location ".."
+    finally {
+        Set-Location $originalLocation
+    }
 }
 
 # Function to apply Terraform changes
@@ -169,39 +334,61 @@ function Apply-Terraform {
     param([string]$Env, [string]$PlanFile)
     
     if (-not $Env) {
-        Write-Error "Environment is required for apply command"
+        Write-ErrorMessage "Environment is required for apply command"
         Show-Usage
         exit 1
     }
     
     Write-Header "Applying Terraform Changes for $Env"
     
+    $originalLocation = Get-Location
     Set-Location "terraform"
     
-    # Initialize if not already done
-    if (-not (Test-Path ".terraform")) {
-        Write-Status "Initializing Terraform..."
-        terraform init
-    }
+    try {
+        # Initialize if not already done
+        if (-not (Test-Path ".terraform")) {
+            Write-Status "Initializing Terraform with S3 backend for $Env..."
+            terraform init -backend-config="backend-$Env.tfbackend"
+        }
 
-    terraform workspace select $Env 2>$null
-    if ($LASTEXITCODE -ne 0) {
-        terraform workspace new $Env
+        # Setup workspace
+        Set-TerraformWorkspace $Env
+        
+        # Check if plan file exists
+        if ($PlanFile) {
+            # Handle absolute and relative paths
+            if (Test-Path $PlanFile) {
+                Write-Status "Applying saved plan from $PlanFile"
+                terraform apply $PlanFile
+            }
+            elseif (Test-Path "../$PlanFile") {
+                Write-Status "Applying saved plan from ../$PlanFile"
+                terraform apply "../$PlanFile"
+            }
+            elseif (Test-Path "terraform-plan-$Env.tfplan") {
+                Write-Status "Applying saved plan from terraform-plan-$Env.tfplan"
+                terraform apply "terraform-plan-$Env.tfplan"
+            }
+            else {
+                Write-ErrorMessage "Plan file specified but not found: $PlanFile"
+                Write-Status "Available files in current directory:"
+                Get-ChildItem -Name
+                Write-Status "Falling back to auto-approve"
+                terraform apply -auto-approve
+            }
+        }
+        elseif (Test-Path "terraform-plan-$Env.tfplan") {
+            Write-Status "Applying saved plan from terraform-plan-$Env.tfplan"
+            terraform apply "terraform-plan-$Env.tfplan"
+        }
+        else {
+            Write-Status "No saved plan found, applying with auto-approve"
+            terraform apply -auto-approve
+        }
     }
-    
-    # Check if plan file exists
-    if ($PlanFile -and (Test-Path "../$PlanFile")) {
-        Write-Status "Applying saved plan from $PlanFile"
-        terraform apply "../$PlanFile"
-    } elseif (Test-Path "terraform-plan-$Env.tfplan") {
-        Write-Status "Applying saved plan from terraform-plan-$Env.tfplan"
-        terraform apply "terraform-plan-$Env.tfplan"
-    } else {
-        Write-Status "No saved plan found, applying with auto-approve"
-        terraform apply -auto-approve
+    finally {
+        Set-Location $originalLocation
     }
-    
-    Set-Location ".."
 }
 
 # Function to destroy Terraform resources
@@ -209,34 +396,36 @@ function Destroy-Terraform {
     param([string]$Env)
     
     if (-not $Env) {
-        Write-Error "Environment is required for destroy command"
+        Write-ErrorMessage "Environment is required for destroy command"
         Show-Usage
         exit 1
     }
     
     Write-Header "Destroying Terraform Resources for $Env"
     
+    $originalLocation = Get-Location
     Set-Location "terraform"
     
-    # Initialize if not already done
-    if (-not (Test-Path ".terraform")) {
-        Write-Status "Initializing Terraform..."
-        terraform init
-    }
-    
-    # Use workspace script if available
-    if (Test-Path "workspace.ps1") {
-        .\workspace.ps1 destroy $Env
-    } else {
-        # Manual workspace management
-        terraform workspace select $Env 2>$null
-        if ($LASTEXITCODE -ne 0) {
-            terraform workspace new $Env
+    try {
+        # Initialize if not already done
+        if (-not (Test-Path ".terraform")) {
+            Write-Status "Initializing Terraform with S3 backend for $Env..."
+            terraform init -backend-config="backend-$Env.tfbackend"
         }
-        terraform destroy -auto-approve
+        
+        # Use workspace script if available
+        if (Test-Path "workspace.ps1") {
+            & .\workspace.ps1 destroy $Env
+        }
+        else {
+            # Manual workspace management
+            Set-TerraformWorkspace $Env
+            terraform destroy -auto-approve
+        }
     }
-    
-    Set-Location ".."
+    finally {
+        Set-Location $originalLocation
+    }
 }
 
 # Function to deploy to environment
@@ -244,7 +433,7 @@ function Deploy-ToEnvironment {
     param([string]$Env)
     
     if (-not $Env) {
-        Write-Error "Environment is required for deploy command"
+        Write-ErrorMessage "Environment is required for deploy command"
         Show-Usage
         exit 1
     }
@@ -262,7 +451,7 @@ function Deploy-ToEnvironment {
 
 # Main script logic
 function Main {
-    param([string]$Command, [string]$Environment)
+    param([string]$Command, [string]$Environment, [string]$PlanFile)
     
     # Check requirements first
     Test-Requirements
@@ -272,33 +461,43 @@ function Main {
             Clear-Build
         }
         "validate" {
+            Install-LayerDependencies
             Test-TerraformConfig $false
         }
         "validate-all" {
+            Install-LayerDependencies
             Test-TerraformConfig $true
         }
         "plan" {
+            Install-LayerDependencies
             Plan-Terraform $Environment
         }
         "apply" {
-            Apply-Terraform $Environment $args[2]
+            # Skip dependency installation if using pre-built artifacts
+            if ((Test-Path "terraform/builds") -and $PlanFile) {
+                Write-Status "Using pre-built artifacts, skipping dependency installation"
+            } else {
+                Install-LayerDependencies
+            }
+            Apply-Terraform $Environment $PlanFile
         }
         "destroy" {
             Destroy-Terraform $Environment
         }
         "deploy" {
+            Install-LayerDependencies
             Deploy-ToEnvironment $Environment
         }
-        "help"|"--help"|"-h" {
+        { $_ -in @("help", "--help", "-h") } {
             Show-Usage
         }
         "" {
-            Write-Error "No command specified"
+            Write-ErrorMessage "No command specified"
             Show-Usage
             exit 1
         }
         default {
-            Write-Error "Unknown command: $Command"
+            Write-ErrorMessage "Unknown command: $Command"
             Show-Usage
             exit 1
         }
@@ -306,4 +505,4 @@ function Main {
 }
 
 # Run main function with all arguments
-Main $Command $Environment 
+Main $Command $Environment $PlanFile 

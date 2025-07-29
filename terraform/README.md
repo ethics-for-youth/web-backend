@@ -30,17 +30,16 @@ cd terraform/backend-setup
 - **Utility Layer**: Shared utility functions for Lambda functions (response helpers, validation, JSON parsing)
 
 ### Lambda Functions
-- **get-xyz**: GET /xyz endpoint handler
-  - Returns success response with message, requestId, and timestamp
-  - Uses utility layer for standardized response formatting
-- **post-xyz**: POST /xyz endpoint handler
-  - Accepts JSON body with required 'name' field
-  - Validates input using utility functions
-  - Returns success response with received data
+- **EFY API Functions**: Complete set of functions for Events, Competitions, Volunteers, and Suggestions
+  - Events: CRUD operations for educational events
+  - Competitions: Management including registration and results
+  - Volunteers: Join requests and management
+  - Suggestions: Community feedback system
+  - All functions use utility layer for standardized response formatting
 
 ### API Gateway
-- REST API with `/xyz` endpoint
-- GET and POST methods
+- REST API with EFY endpoints for youth platform
+- Multiple HTTP methods (GET, POST, PUT, DELETE)
 - Lambda integration with proper permissions
 - CORS headers configured in utility layer
 
@@ -148,7 +147,7 @@ All resources follow this naming pattern:
 ```
 
 Examples:
-- `efy-web-backend-dev-get-xyz` (Lambda function)
+- `efy-web-backend-dev-events-get` (Lambda function)
 - `efy-web-backend-dev-dependencies-layer` (Lambda layer)
 - `efy-web-backend-dev-api` (API Gateway)
 
@@ -201,64 +200,7 @@ cd terraform
 .\workspace.ps1 apply prod
 ```
 
-## Current Lambda Functions
 
-### GET /xyz Function
-```javascript
-// lambda_functions/get_xyz/index.js
-const { successResponse, errorResponse } = require('/opt/nodejs/utils');
-
-exports.handler = async (event) => {
-    try {
-        console.log('Event: ', JSON.stringify(event, null, 2));
-        
-        // Sample business logic
-        const data = {
-            message: 'GET XYZ function executed successfully!',
-            requestId: event.requestContext?.requestId,
-            timestamp: new Date().toISOString()
-        };
-        
-        return successResponse(data);
-        
-    } catch (error) {
-        console.error('Error in get_xyz function:', error);
-        return errorResponse(error, 500);
-    }
-};
-```
-
-### POST /xyz Function
-```javascript
-// lambda_functions/post_xyz/index.js
-const { successResponse, errorResponse, validateRequired, parseJSON } = require('/opt/nodejs/utils');
-
-exports.handler = async (event) => {
-    try {
-        console.log('Event: ', JSON.stringify(event, null, 2));
-        
-        // Parse request body
-        const body = parseJSON(event.body || '{}');
-        
-        // Validate required fields (example)
-        validateRequired(body, ['name']);
-        
-        // Sample business logic
-        const data = {
-            message: 'POST XYZ function executed successfully!',
-            receivedData: body,
-            requestId: event.requestContext?.requestId,
-            timestamp: new Date().toISOString()
-        };
-        
-        return successResponse(data, 'Data created successfully');
-        
-    } catch (error) {
-        console.error('Error in post_xyz function:', error);
-        return errorResponse(error, error.message.includes('Missing required') ? 400 : 500);
-    }
-};
-```
 
 ## Shared Utility Functions
 

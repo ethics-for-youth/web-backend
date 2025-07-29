@@ -28,6 +28,16 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: |
+          package-lock.json
+          layers/dependencies/nodejs/package-lock.json
+          layers/utility/nodejs/package-lock.json
+        
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
       with:
@@ -52,9 +62,13 @@ jobs:
         ./scripts/build.sh plan ${{ inputs.environment }}
         echo "plan-file=terraform/terraform-plan-${{ inputs.environment }}.tfplan" >> $GITHUB_OUTPUT
       
-    - name: Upload plan file
+    # Upload both plan file and build artifacts (zip files) to ensure consistency
+    # between plan and apply steps. This prevents hash mismatches when applying.
+    - name: Upload plan file and build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: terraform-plan-${{ inputs.environment }}
-        path: terraform/terraform-plan-${{ inputs.environment }}.tfplan
+        path: |
+          terraform/terraform-plan-${{ inputs.environment }}.tfplan
+          terraform/builds/
         retention-days: 1

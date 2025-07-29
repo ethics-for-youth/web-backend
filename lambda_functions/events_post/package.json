@@ -1,0 +1,6 @@
+{
+  "name": "events-post",
+  "version": "1.0.0",
+  "description": "Lambda function to create a new event",
+  "main": "index.js"
+}

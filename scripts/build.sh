@@ -66,6 +66,12 @@ check_requirements() {
         exit 1
     fi
     
+    # Check if npm is available (required for layer dependencies)
+    if ! command -v npm &> /dev/null; then
+        print_error "npm command not found. Please install Node.js and npm."
+        exit 1
+    fi
+    
     # Check if AWS CLI is available (optional but recommended)
     if ! command -v aws &> /dev/null; then
         print_warning "AWS CLI not found. Some operations may fail."
@@ -75,6 +81,37 @@ check_requirements() {
 }
 
 
+
+# Function to install Lambda layer dependencies
+install_layer_dependencies() {
+    print_header "Installing Lambda Layer Dependencies"
+    
+    # Install dependencies for dependencies layer
+    if [ -d "layers/dependencies/nodejs" ]; then
+        print_status "Installing dependencies layer..."
+        cd layers/dependencies/nodejs
+        if [ -f "package.json" ]; then
+            npm install --production
+            print_status "Dependencies layer installed successfully"
+        fi
+        cd - > /dev/null
+    fi
+    
+    # Check utility layer (usually no dependencies)
+    if [ -d "layers/utility/nodejs" ]; then
+        cd layers/utility/nodejs
+        if [ -f "package.json" ] && [ "$(cat package.json | grep -c '"dependencies".*{.*}')" -eq 0 ]; then
+            print_status "Utility layer has no dependencies to install"
+        elif [ -f "package.json" ]; then
+            print_status "Installing utility layer..."
+            npm install --production
+            print_status "Utility layer installed successfully"
+        fi
+        cd - > /dev/null
+    fi
+    
+    print_status "Layer dependencies installation completed"
+}
 
 # Function to clean build artifacts
 clean_build() {
@@ -89,6 +126,17 @@ clean_build() {
     # Remove .terraform directories
     find . -name ".terraform" -type d -exec rm -rf {} + 2>/dev/null || true
     print_status "Removed .terraform directories"
+    
+    # Remove node_modules from layers (will be reinstalled when needed)
+    if [ -d "layers/dependencies/nodejs/node_modules" ]; then
+        rm -rf layers/dependencies/nodejs/node_modules
+        print_status "Removed dependencies layer node_modules"
+    fi
+    
+    if [ -d "layers/utility/nodejs/node_modules" ]; then
+        rm -rf layers/utility/nodejs/node_modules
+        print_status "Removed utility layer node_modules"
+    fi
     
     print_status "Cleanup completed"
 }
@@ -116,16 +164,67 @@ validate_terraform() {
     
     # Validate main configuration
     print_status "Validating main configuration..."
-    # Initialize if not already done
-    if [[ ! -d ".terraform" ]]; then
-        print_status "Initializing main configuration..."
-        terraform init
+    
+    # For validation only, use local backend if AWS credentials are not available
+    local use_local_backend=false
+    if [[ -n "$CI" ]] || ! aws sts get-caller-identity &>/dev/null; then
+        use_local_backend=true
+        print_status "Using local backend for validation (no AWS credentials)..."
+        # Temporarily modify backend.tf to use local backend
+        if [[ -f "backend.tf" ]]; then
+            mv backend.tf backend.tf.bak
+            # Create a temporary backend.tf with local backend
+            cat > backend.tf << EOF
+terraform {
+  required_version = ">= 1.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.1"
+    }
+    archive = {
+      source  = "hashicorp/archive"
+      version = "~> 2.2"
+    }
+  }
+
+  # Local backend for validation only
+  backend "local" {
+    path = "terraform.tfstate"
+  }
+}
+EOF
+            # Format the generated backend file
+            terraform fmt backend.tf
+        fi
     fi
     
-    # Select a valid workspace for validation (use dev as default)
-    print_status "Selecting workspace for validation..."
-    terraform workspace select dev 2>/dev/null || terraform workspace new dev
+    # Initialize if not already done or .terraform directory doesn't exist
+    if [[ ! -d ".terraform" ]] || [[ "$use_local_backend" == "true" ]]; then
+        print_status "Initializing main configuration..."
+        terraform init -input=false
+    fi
+    
+    # Check formatting first
+    print_status "Checking terraform formatting..."
+    terraform fmt -check -recursive . || {
+        print_error "Terraform files are not properly formatted. Run 'terraform fmt -recursive .' to fix."
+        exit 1
+    }
+    
+    # Validate configuration
+    print_status "Running terraform validate..."
     terraform validate
+    
+    # Restore original backend configuration if it was backed up
+    if [[ -f "backend.tf.bak" ]]; then
+        mv backend.tf.bak backend.tf
+    fi
     
     cd ..
     print_status "Terraform validation completed successfully"
@@ -147,12 +246,22 @@ plan_terraform() {
     
     # Initialize if not already done
     if [[ ! -d ".terraform" ]]; then
-        print_status "Initializing Terraform..."
-        terraform init
+        print_status "Initializing Terraform with S3 backend for $env..."
+        terraform init -backend-config="backend-${env}.tfbackend"
     fi
 
-    terraform workspace select "$env" || terraform workspace new "$env"
-    terraform plan -out=terraform-plan-$env.tfplan
+    # Ensure workspace exists and select it
+    print_status "Setting up workspace: $env"
+    if terraform workspace list | grep -q "^[[:space:]]*$env[[:space:]]*$"; then
+        print_status "Selecting existing workspace: $env"
+        terraform workspace select "$env"
+    else
+        print_status "Creating new workspace: $env"
+        terraform workspace new "$env"
+    fi
+    
+    print_status "Running terraform plan..."
+    terraform plan -out=terraform-plan-$env.tfplan -detailed-exitcode
     print_status "Plan saved to terraform/terraform-plan-$env.tfplan"
     
     cd ..
@@ -175,11 +284,19 @@ apply_terraform() {
     
     # Initialize if not already done
     if [[ ! -d ".terraform" ]]; then
-        print_status "Initializing Terraform..."
-        terraform init
+        print_status "Initializing Terraform with S3 backend for $env..."
+        terraform init -backend-config="backend-${env}.tfbackend"
     fi
 
-    terraform workspace select "$env" || terraform workspace new "$env"
+    # Ensure workspace exists and select it
+    print_status "Setting up workspace: $env"
+    if terraform workspace list | grep -q "^[[:space:]]*$env[[:space:]]*$"; then
+        print_status "Selecting existing workspace: $env"
+        terraform workspace select "$env"
+    else
+        print_status "Creating new workspace: $env"
+        terraform workspace new "$env"
+    fi
     
     # Check if plan file exists
     if [ -n "$plan_file" ]; then
@@ -227,8 +344,8 @@ destroy_terraform() {
     
     # Initialize if not already done
     if [[ ! -d ".terraform" ]]; then
-        print_status "Initializing Terraform..."
-        terraform init
+        print_status "Initializing Terraform with S3 backend for $env..."
+        terraform init -backend-config="backend-${env}.tfbackend"
     fi
     
     # Use workspace script if available
@@ -237,7 +354,14 @@ destroy_terraform() {
         ./workspace.sh destroy "$env"
     else
         # Manual workspace management
-        terraform workspace select "$env" || terraform workspace new "$env"
+        print_status "Setting up workspace: $env"
+        if terraform workspace list | grep -q "^[[:space:]]*$env[[:space:]]*$"; then
+            print_status "Selecting existing workspace: $env"
+            terraform workspace select "$env"
+        else
+            print_status "Creating new workspace: $env"
+            terraform workspace new "$env"
+        fi
         terraform destroy -auto-approve
     fi
     
@@ -278,21 +402,31 @@ main() {
             clean_build
             ;;
         "validate")
+            install_layer_dependencies
             validate_terraform false
             ;;
         "validate-all")
+            install_layer_dependencies
             validate_terraform true
             ;;
         "plan")
+            install_layer_dependencies
             plan_terraform "$environment"
             ;;
         "apply")
+            # Skip dependency installation if using pre-built artifacts
+            if [ -d "terraform/builds" ] && [ -n "$3" ]; then
+                print_status "Using pre-built artifacts, skipping dependency installation"
+            else
+                install_layer_dependencies
+            fi
             apply_terraform "$environment" "$3"
             ;;
         "destroy")
             destroy_terraform "$environment"
             ;;
         "deploy")
+            install_layer_dependencies
             deploy_to_environment "$environment"
             ;;
         "help"|"--help"|"-h")
