@@ -2,7 +2,7 @@
 environment = "prod"
 
 # Resource Naming for Production Environment
-state_bucket_name   = "efy-web-backend-prod-terraform-state-"  # Change this to a unique name
+state_bucket_name   = "efy-web-backend-prod-terraform-state-" # Change this to a unique name
 dynamodb_table_name = "efy-web-backend-prod-terraform-locks"
 
 # Feature Flags for Production

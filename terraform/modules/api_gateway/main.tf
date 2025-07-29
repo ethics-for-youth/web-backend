@@ -1,6 +1,6 @@
 resource "aws_api_gateway_rest_api" "this" {
   name = var.api_name
-  
+
   tags = var.tags
 }
 
@@ -75,7 +75,7 @@ resource "aws_api_gateway_deployment" "this" {
 
 # API Gateway stage (replaces deprecated stage_name in deployment)
 resource "aws_api_gateway_stage" "this" {
-  rest_api_id = aws_api_gateway_rest_api.this.id
+  rest_api_id   = aws_api_gateway_rest_api.this.id
   deployment_id = aws_api_gateway_deployment.this.id
-  stage_name = "default"
+  stage_name    = "default"
 }

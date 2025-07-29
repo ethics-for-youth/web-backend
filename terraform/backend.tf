@@ -1,6 +1,6 @@
 terraform {
   required_version = ">= 1.0"
-  
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -17,10 +17,10 @@ terraform {
   }
 
   backend "s3" {
-    bucket         = "efy-web-backend-dev-terraform-state-123456"  # Replace with your actual bucket name
+    bucket         = "efy-web-backend-dev-terraform-state-123456" # Replace with your actual bucket name
     key            = "main-infrastructure/terraform.tfstate"
     region         = "ap-south-1"
     encrypt        = true
-    dynamodb_table = "efy-web-backend-dev-terraform-locks"  # Replace with your actual table name
+    dynamodb_table = "efy-web-backend-dev-terraform-locks" # Replace with your actual table name
   }
 }
