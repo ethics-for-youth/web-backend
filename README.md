@@ -51,9 +51,15 @@ A youth-driven platform for organizing Islamic educational events, competitions,
 
 ### Prerequisites
 
-- AWS CLI configured
-- Terraform >= 1.0
-- Node.js >= 18.x
+- **AWS CLI** configured with appropriate credentials
+- **Terraform** >= 1.0 ([Install Terraform](https://learn.hashicorp.com/terraform/getting-started/install))
+- **Node.js** 18.x - 20.x ([Install Node.js](https://nodejs.org/))
+- **npm** >= 8.0 (comes with Node.js)
+
+> 💡 **Tip**: Use [nvm](https://github.com/nvm-sh/nvm) to manage Node.js versions:
+> ```bash
+> nvm use  # Uses the version specified in .nvmrc
+> ```
 
 ### Environment Setup
 
