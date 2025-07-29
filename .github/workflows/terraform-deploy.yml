@@ -96,8 +96,8 @@ jobs:
           echo "🔧 Using pre-built artifacts from plan step"
           ./scripts/build.sh apply ${{ inputs.environment }} terraform-plan-${{ inputs.environment }}.tfplan
         else
-          echo "⚠️  No plan file found, running full deploy (will rebuild dependencies)"
-          ./scripts/build.sh deploy ${{ inputs.environment }}
+          echo "⚠️  No plan file found, running apply with var file (will rebuild dependencies)"
+          ./scripts/build.sh apply ${{ inputs.environment }}
         fi
       
     - name: Get deployment outputs

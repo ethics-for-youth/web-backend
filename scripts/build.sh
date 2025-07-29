@@ -40,13 +40,13 @@ show_usage() {
     echo "  plan <env>      - Plan Terraform changes for environment (dev|qa|prod)"
     echo "  apply <env> [plan-file] - Apply Terraform changes for environment (optionally with plan file)"
     echo "  destroy <env>   - Destroy resources for environment"
-    echo "  deploy <env>    - Deploy to environment"
     echo "  help            - Show this help message"
     echo ""
     echo "Examples:"
-    echo "  $0 build-layers"
+    echo "  $0 validate"
     echo "  $0 plan dev"
-    echo "  $0 deploy dev"
+    echo "  $0 apply dev"
+    echo "  $0 apply dev terraform-plan-dev.tfplan"
     echo "  $0 clean"
 }
 
@@ -298,31 +298,40 @@ apply_terraform() {
         terraform workspace new "$env"
     fi
     
-    # Check if plan file exists
+    # Determine the plan file to use
+    local actual_plan_file=""
+    
     if [ -n "$plan_file" ]; then
-        # Handle absolute and relative paths
+        # Plan file was explicitly specified
         if [ -f "$plan_file" ]; then
-            print_status "Applying saved plan from $plan_file"
-            terraform apply "$plan_file"
+            actual_plan_file="$plan_file"
         elif [ -f "../$plan_file" ]; then
-            print_status "Applying saved plan from ../$plan_file"
-            terraform apply "../$plan_file"
-        elif [ -f "terraform-plan-$env.tfplan" ]; then
-            print_status "Applying saved plan from terraform-plan-$env.tfplan"
-            terraform apply "terraform-plan-$env.tfplan"
+            actual_plan_file="../$plan_file"
         else
-            print_error "Plan file specified but not found: $plan_file"
+            print_error "Specified plan file not found: $plan_file"
             print_status "Available files in current directory:"
             ls -la
-            print_status "Falling back to auto-approve"
-            terraform apply -auto-approve
+            print_status "Available files in parent directory:"
+            ls -la ..
+            exit 1
         fi
     elif [ -f "terraform-plan-$env.tfplan" ]; then
-        print_status "Applying saved plan from terraform-plan-$env.tfplan"
-        terraform apply "terraform-plan-$env.tfplan"
+        # Check for default plan file
+        actual_plan_file="terraform-plan-$env.tfplan"
+    fi
+    
+    # Apply terraform changes
+    if [ -n "$actual_plan_file" ]; then
+        print_status "Applying saved plan from $actual_plan_file"
+        terraform apply "$actual_plan_file"
     else
-        print_status "No saved plan found, applying with auto-approve"
-        terraform apply -auto-approve
+        print_status "No plan file found, applying with var file: terraform.$env.tfvars"
+        if [ -f "terraform.$env.tfvars" ]; then
+            terraform apply -var-file="terraform.$env.tfvars" -auto-approve
+        else
+            print_warning "No var file found for environment $env, applying without specific variables"
+            terraform apply -auto-approve
+        fi
     fi
     
     cd ..
@@ -368,27 +377,6 @@ destroy_terraform() {
     cd ..
 }
 
-# Function to deploy to environment
-deploy_to_environment() {
-    local env=$1
-    
-    if [ -z "$env" ]; then
-        print_error "Environment is required for deploy command"
-        show_usage
-        exit 1
-    fi
-    
-    print_header "Deploying to $env Environment"
-    
-    # Validate configuration
-    validate_terraform
-    
-    # Apply changes
-    apply_terraform "$env"
-    
-    print_status "Deployment to $env completed successfully"
-}
-
 # Main script logic
 main() {
     local command=$1
@@ -424,10 +412,6 @@ main() {
             ;;
         "destroy")
             destroy_terraform "$environment"
-            ;;
-        "deploy")
-            install_layer_dependencies
-            deploy_to_environment "$environment"
             ;;
         "help"|"--help"|"-h")
             show_usage
