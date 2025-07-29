@@ -12,6 +12,10 @@ on:
         type: string
         default: ${{ vars.AWS_REGION }}
         description: 'AWS region for deployment'
+      plan-file:
+        required: false
+        type: string
+        description: 'Name of the plan file artifact to download and apply'
     secrets:
       aws-access-key-id:
         required: true
@@ -51,6 +55,13 @@ jobs:
         name: terraform-plan-${{ inputs.environment }}
         path: terraform/terraform-plan-${{ inputs.environment }}.tfplan
       
+    - name: Download plan file
+      if: inputs.plan-file != ''
+      uses: actions/download-artifact@v4
+      with:
+        name: terraform-plan-${{ inputs.environment }}
+        path: .
+        
     - name: Deploy to ${{ inputs.environment }} environment
       run: |
         if [ -f "terraform/terraform-plan-${{ inputs.environment }}.tfplan" ]; then
