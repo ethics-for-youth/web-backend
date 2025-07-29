@@ -49,22 +49,22 @@ output "suggestions_table_name" {
 output "events_lambda_arns" {
   description = "ARNs of all Events Lambda functions"
   value = {
-    get        = module.events_get_lambda.lambda_arn
-    get_by_id  = module.events_get_by_id_lambda.lambda_arn
-    post       = module.events_post_lambda.lambda_arn
-    put        = module.events_put_lambda.lambda_arn
-    delete     = module.events_delete_lambda.lambda_arn
+    get       = module.events_get_lambda.lambda_arn
+    get_by_id = module.events_get_by_id_lambda.lambda_arn
+    post      = module.events_post_lambda.lambda_arn
+    put       = module.events_put_lambda.lambda_arn
+    delete    = module.events_delete_lambda.lambda_arn
   }
 }
 
 output "competitions_lambda_arns" {
   description = "ARNs of all Competitions Lambda functions"
   value = {
-    get        = module.competitions_get_lambda.lambda_arn
-    get_by_id  = module.competitions_get_by_id_lambda.lambda_arn
-    post       = module.competitions_post_lambda.lambda_arn
-    register   = module.competitions_register_lambda.lambda_arn
-    results    = module.competitions_results_lambda.lambda_arn
+    get       = module.competitions_get_lambda.lambda_arn
+    get_by_id = module.competitions_get_by_id_lambda.lambda_arn
+    post      = module.competitions_post_lambda.lambda_arn
+    register  = module.competitions_register_lambda.lambda_arn
+    results   = module.competitions_results_lambda.lambda_arn
   }
 }
 

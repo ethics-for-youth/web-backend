@@ -127,7 +127,7 @@ validate_terraform() {
             cat > backend.tf << EOF
 terraform {
   required_version = ">= 1.0"
-  
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -149,6 +149,8 @@ terraform {
   }
 }
 EOF
+            # Format the generated backend file
+            terraform fmt backend.tf
         fi
     fi
     
@@ -157,6 +159,13 @@ EOF
         print_status "Initializing main configuration..."
         terraform init -input=false
     fi
+    
+    # Check formatting first
+    print_status "Checking terraform formatting..."
+    terraform fmt -check -recursive . || {
+        print_error "Terraform files are not properly formatted. Run 'terraform fmt -recursive .' to fix."
+        exit 1
+    }
     
     # Validate configuration
     print_status "Running terraform validate..."

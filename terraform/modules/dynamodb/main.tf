@@ -1,8 +1,8 @@
 # Events Table
 resource "aws_dynamodb_table" "events" {
-  name           = var.events_table_name
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "id"
+  name         = var.events_table_name
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "id"
 
   attribute {
     name = "id"
@@ -14,9 +14,9 @@ resource "aws_dynamodb_table" "events" {
 
 # Competitions Table
 resource "aws_dynamodb_table" "competitions" {
-  name           = var.competitions_table_name
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "id"
+  name         = var.competitions_table_name
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "id"
 
   attribute {
     name = "id"
@@ -28,9 +28,9 @@ resource "aws_dynamodb_table" "competitions" {
 
 # Volunteers Table
 resource "aws_dynamodb_table" "volunteers" {
-  name           = var.volunteers_table_name
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "id"
+  name         = var.volunteers_table_name
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "id"
 
   attribute {
     name = "id"
@@ -42,9 +42,9 @@ resource "aws_dynamodb_table" "volunteers" {
 
 # Suggestions Table
 resource "aws_dynamodb_table" "suggestions" {
-  name           = var.suggestions_table_name
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "id"
+  name         = var.suggestions_table_name
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "id"
 
   attribute {
     name = "id"

@@ -1,6 +1,6 @@
 resource "aws_api_gateway_rest_api" "efy_api" {
   name = var.api_name
-  
+
   tags = var.tags
 }
 
