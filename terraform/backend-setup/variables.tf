@@ -4,17 +4,6 @@ variable "aws_region" {
   default     = "ap-south-1"
 }
 
-variable "state_bucket_name" {
-  description = "Name of the S3 bucket for Terraform state"
-  type        = string
-}
-
-variable "dynamodb_table_name" {
-  description = "Name of the DynamoDB table for state locking"
-  type        = string
-  default     = "terraform-state-locks"
-}
-
 variable "project_name" {
   description = "Name of the project (used for resource naming)"
   type        = string
@@ -42,7 +31,7 @@ variable "environment_configs" {
   }))
   default = {
     dev = {
-      state_bucket_name   = "efy-web-backend-dev-terraform-state-123456"
+      state_bucket_name   = "efy-web-backend-dev-terraform-state-030382357640"
       dynamodb_table_name = "efy-web-backend-dev-terraform-locks"
       tags = {
         Environment = "dev"
@@ -50,7 +39,7 @@ variable "environment_configs" {
       }
     }
     qa = {
-      state_bucket_name   = "efy-web-backend-qa-terraform-state-123456"
+      state_bucket_name   = "efy-web-backend-qa-terraform-state-030382357640"
       dynamodb_table_name = "efy-web-backend-qa-terraform-locks"
       tags = {
         Environment = "qa"
@@ -58,7 +47,7 @@ variable "environment_configs" {
       }
     }
     prod = {
-      state_bucket_name   = "efy-web-backend-prod-terraform-state-123456"
+      state_bucket_name   = "efy-web-backend-prod-terraform-state-030382357640"
       dynamodb_table_name = "efy-web-backend-prod-terraform-locks"
       tags = {
         Environment = "prod"
