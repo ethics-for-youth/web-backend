@@ -252,12 +252,12 @@ plan_terraform() {
 
     # Ensure workspace exists and select it
     print_status "Setting up workspace: $env"
-    if ! terraform workspace list | grep -q "\s$env\s\|^$env$\|\*\s$env$"; then
-        print_status "Creating new workspace: $env"
-        terraform workspace new "$env"
-    else
+    if terraform workspace list | grep -q "^[[:space:]]*$env[[:space:]]*$"; then
         print_status "Selecting existing workspace: $env"
         terraform workspace select "$env"
+    else
+        print_status "Creating new workspace: $env"
+        terraform workspace new "$env"
     fi
     
     print_status "Running terraform plan..."
@@ -290,12 +290,12 @@ apply_terraform() {
 
     # Ensure workspace exists and select it
     print_status "Setting up workspace: $env"
-    if ! terraform workspace list | grep -q "\s$env\s\|^$env$\|\*\s$env$"; then
-        print_status "Creating new workspace: $env"
-        terraform workspace new "$env"
-    else
+    if terraform workspace list | grep -q "^[[:space:]]*$env[[:space:]]*$"; then
         print_status "Selecting existing workspace: $env"
         terraform workspace select "$env"
+    else
+        print_status "Creating new workspace: $env"
+        terraform workspace new "$env"
     fi
     
     # Check if plan file exists
@@ -354,7 +354,14 @@ destroy_terraform() {
         ./workspace.sh destroy "$env"
     else
         # Manual workspace management
-        terraform workspace select "$env" || terraform workspace new "$env"
+        print_status "Setting up workspace: $env"
+        if terraform workspace list | grep -q "^[[:space:]]*$env[[:space:]]*$"; then
+            print_status "Selecting existing workspace: $env"
+            terraform workspace select "$env"
+        else
+            print_status "Creating new workspace: $env"
+            terraform workspace new "$env"
+        fi
         terraform destroy -auto-approve
     fi
     
