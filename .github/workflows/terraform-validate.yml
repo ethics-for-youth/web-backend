@@ -35,8 +35,11 @@ jobs:
         aws-secret-access-key: ${{ secrets.aws-secret-access-key }}
         aws-region: ${{ inputs.aws-region }}
         
-    - name: Make build script executable
-      run: chmod +x scripts/build.sh
-      
+    - name: Make scripts executable
+      run: |
+        chmod +x scripts/build.sh
+        chmod +x terraform/workspace.sh
+        chmod +x terraform/backend-setup/workspace.sh
+        
     - name: Validate Terraform configuration
       run: ./scripts/build.sh validate 

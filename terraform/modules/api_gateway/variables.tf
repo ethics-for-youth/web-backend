@@ -4,12 +4,22 @@ variable "api_name" {
 }
 
 variable "get_lambda_arn" {
-  description = "ARN of the GET Lambda function to integrate"
+  description = "ARN of the GET Lambda function (for permissions)"
   type        = string
 }
 
 variable "post_lambda_arn" {
-  description = "ARN of the POST Lambda function to integrate"
+  description = "ARN of the POST Lambda function (for permissions)"
+  type        = string
+}
+
+variable "get_lambda_invoke_arn" {
+  description = "Invoke ARN of the GET Lambda function (for integration)"
+  type        = string
+}
+
+variable "post_lambda_invoke_arn" {
+  description = "Invoke ARN of the POST Lambda function (for integration)"
   type        = string
 }
 

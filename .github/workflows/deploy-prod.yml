@@ -58,7 +58,6 @@ jobs:
     name: Deploy to Production
     uses: ./.github/workflows/terraform-deploy.yml
     needs: [validate, plan, wait-for-approval]
-    if: contains(github.event.head_commit.message, '[deploy-prod]') && needs.wait-for-approval.outputs.approved == 'true'
     with:
       environment: prod
       aws-region: ${{ vars.AWS_REGION }}

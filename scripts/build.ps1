@@ -45,7 +45,6 @@ function Show-Usage {
     Write-Host "  help            - Show this help message"
     Write-Host ""
     Write-Host "Examples:"
-    Write-Host "  .\build.ps1 build-layers"
     Write-Host "  .\build.ps1 plan dev"
     Write-Host "  .\build.ps1 deploy dev"
     Write-Host "  .\build.ps1 clean"
@@ -74,9 +73,6 @@ function Test-Requirements {
     
     Write-Status "All requirements satisfied"
 }
-
-# Function to build Lambda layers
-
 
 # Function to clean build artifacts
 function Clear-Build {
@@ -157,19 +153,13 @@ function Plan-Terraform {
         Write-Status "Initializing Terraform..."
         terraform init
     }
-    
-    # Use workspace script if available
-    if (Test-Path "workspace.ps1") {
-        .\workspace.ps1 plan $Env
-    } else {
-        # Manual workspace management
-        terraform workspace select $Env 2>$null
-        if ($LASTEXITCODE -ne 0) {
-            terraform workspace new $Env
-        }
-        terraform plan -out=plan.out
-        Write-Status "Plan saved to terraform/plan.out"
+
+    terraform workspace select $Env 2>$null
+    if ($LASTEXITCODE -ne 0) {
+        terraform workspace new $Env
     }
+    terraform plan -out="terraform-plan-$Env.tfplan"
+    Write-Status "Plan saved to terraform/terraform-plan-$Env.tfplan"
     
     Set-Location ".."
 }
@@ -193,37 +183,22 @@ function Apply-Terraform {
         Write-Status "Initializing Terraform..."
         terraform init
     }
+
+    terraform workspace select $Env 2>$null
+    if ($LASTEXITCODE -ne 0) {
+        terraform workspace new $Env
+    }
     
-    # Use workspace script if available
-    if (Test-Path "workspace.ps1") {
-        if ($PlanFile -and (Test-Path "../$PlanFile")) {
-            Write-Status "Applying saved plan from $PlanFile"
-            terraform workspace select $Env 2>$null
-            if ($LASTEXITCODE -ne 0) {
-                terraform workspace new $Env
-            }
-            terraform apply "../$PlanFile"
-        } else {
-            .\workspace.ps1 apply $Env
-        }
+    # Check if plan file exists
+    if ($PlanFile -and (Test-Path "../$PlanFile")) {
+        Write-Status "Applying saved plan from $PlanFile"
+        terraform apply "../$PlanFile"
+    } elseif (Test-Path "terraform-plan-$Env.tfplan") {
+        Write-Status "Applying saved plan from terraform-plan-$Env.tfplan"
+        terraform apply "terraform-plan-$Env.tfplan"
     } else {
-        # Manual workspace management
-        terraform workspace select $Env 2>$null
-        if ($LASTEXITCODE -ne 0) {
-            terraform workspace new $Env
-        }
-        
-        # Check if plan file exists
-        if ($PlanFile -and (Test-Path "../$PlanFile")) {
-            Write-Status "Applying saved plan from $PlanFile"
-            terraform apply "../$PlanFile"
-        } elseif (Test-Path "plan.out") {
-            Write-Status "Applying saved plan from plan.out"
-            terraform apply plan.out
-        } else {
-            Write-Status "No saved plan found, applying with auto-approve"
-            terraform apply -auto-approve
-        }
+        Write-Status "No saved plan found, applying with auto-approve"
+        terraform apply -auto-approve
     }
     
     Set-Location ".."
@@ -314,15 +289,16 @@ function Main {
         "deploy" {
             Deploy-ToEnvironment $Environment
         }
-        "help" {
+        "help"|"--help"|"-h" {
             Show-Usage
         }
+        "" {
+            Write-Error "No command specified"
+            Show-Usage
+            exit 1
+        }
         default {
-            if (-not $Command) {
-                Write-Error "No command specified"
-            } else {
-                Write-Error "Unknown command: $Command"
-            }
+            Write-Error "Unknown command: $Command"
             Show-Usage
             exit 1
         }

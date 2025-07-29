@@ -40,18 +40,21 @@ jobs:
         aws-secret-access-key: ${{ secrets.aws-secret-access-key }}
         aws-region: ${{ inputs.aws-region }}
         
-    - name: Make build script executable
-      run: chmod +x scripts/build.sh
-      
+    - name: Make scripts executable
+      run: |
+        chmod +x scripts/build.sh
+        chmod +x terraform/workspace.sh
+        chmod +x terraform/backend-setup/workspace.sh
+        
     - name: Plan Terraform changes
       id: plan
       run: |
         ./scripts/build.sh plan ${{ inputs.environment }}
-        echo "plan-file=terraform-plan-${{ inputs.environment }}.tfplan" >> $GITHUB_OUTPUT
+        echo "plan-file=terraform/terraform-plan-${{ inputs.environment }}.tfplan" >> $GITHUB_OUTPUT
       
     - name: Upload plan file
       uses: actions/upload-artifact@v4
       with:
         name: terraform-plan-${{ inputs.environment }}
-        path: terraform-plan-${{ inputs.environment }}.tfplan
-        retention-days: 1 
+        path: terraform/terraform-plan-${{ inputs.environment }}.tfplan
+        retention-days: 1

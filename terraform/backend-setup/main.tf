@@ -14,16 +14,16 @@ provider "aws" {
 # Validate workspace name
 locals {
   valid_workspaces = ["dev", "qa", "prod"]
-  
+
   # Validate that current workspace is valid
   workspace_validation = can(regex("^(dev|qa|prod)$", terraform.workspace)) ? null : file("ERROR: Invalid workspace '${terraform.workspace}'. Valid workspaces are: ${join(", ", local.valid_workspaces)}")
-  
+
   # Get current environment from workspace
   current_environment = terraform.workspace
-  
+
   # Get environment-specific configuration
   env_config = var.environment_configs[local.current_environment]
-  
+
   # Common tags for all resources
   common_tags = merge(
     {
@@ -79,9 +79,9 @@ resource "aws_s3_bucket_public_access_block" "terraform_state_pab" {
 
 # DynamoDB table for state locking
 resource "aws_dynamodb_table" "terraform_state_lock" {
-  name           = local.env_config.dynamodb_table_name
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "LockID"
+  name         = local.env_config.dynamodb_table_name
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "LockID"
 
   attribute {
     name = "LockID"

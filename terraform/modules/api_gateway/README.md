@@ -18,10 +18,12 @@ This Terraform module creates AWS API Gateway REST API with Lambda integrations,
 module "api_gateway" {
   source = "./modules/api_gateway"
   
-  api_name        = "my-api"
-  get_lambda_arn  = module.get_function.invoke_arn
-  post_lambda_arn = module.post_function.invoke_arn
-  region          = "ap-south-1"
+  api_name              = "my-api"
+  get_lambda_arn        = module.get_function.lambda_arn
+  post_lambda_arn       = module.post_function.lambda_arn
+  get_lambda_invoke_arn = module.get_function.lambda_invoke_arn
+  post_lambda_invoke_arn = module.post_function.lambda_invoke_arn
+  region                = "ap-south-1"
   
   tags = {
     Project     = "my-project"
@@ -36,8 +38,10 @@ module "api_gateway" {
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | api_name | Name of the API Gateway REST API | `string` | n/a | yes |
-| get_lambda_arn | Invocation ARN of the GET Lambda function | `string` | n/a | yes |
-| post_lambda_arn | Invocation ARN of the POST Lambda function | `string` | n/a | yes |
+| get_lambda_arn | ARN of the GET Lambda function (for permissions) | `string` | n/a | yes |
+| post_lambda_arn | ARN of the POST Lambda function (for permissions) | `string` | n/a | yes |
+| get_lambda_invoke_arn | Invoke ARN of the GET Lambda function (for integration) | `string` | n/a | yes |
+| post_lambda_invoke_arn | Invoke ARN of the POST Lambda function (for integration) | `string` | n/a | yes |
 | region | AWS region for the API Gateway | `string` | n/a | yes |
 | tags | Map of tags to apply to resources | `map(string)` | `{}` | no |
 
@@ -74,10 +78,12 @@ The module creates the following endpoints:
 module "basic_api" {
   source = "./modules/api_gateway"
   
-  api_name        = "basic-api"
-  get_lambda_arn  = module.get_function.invoke_arn
-  post_lambda_arn = module.post_function.invoke_arn
-  region          = "ap-south-1"
+  api_name              = "basic-api"
+  get_lambda_arn        = module.get_function.lambda_arn
+  post_lambda_arn       = module.post_function.lambda_arn
+  get_lambda_invoke_arn = module.get_function.lambda_invoke_arn
+  post_lambda_invoke_arn = module.post_function.lambda_invoke_arn
+  region                = "ap-south-1"
 }
 ```
 
@@ -87,10 +93,12 @@ module "basic_api" {
 module "tagged_api" {
   source = "./modules/api_gateway"
   
-  api_name        = "tagged-api"
-  get_lambda_arn  = module.get_function.invoke_arn
-  post_lambda_arn = module.post_function.invoke_arn
-  region          = "ap-south-1"
+  api_name              = "tagged-api"
+  get_lambda_arn        = module.get_function.lambda_arn
+  post_lambda_arn       = module.post_function.lambda_arn
+  get_lambda_invoke_arn = module.get_function.lambda_invoke_arn
+  post_lambda_invoke_arn = module.post_function.lambda_invoke_arn
+  region                = "ap-south-1"
   
   tags = {
     Project     = "my-project"
