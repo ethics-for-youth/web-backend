@@ -37,3 +37,33 @@ output "suggestions_table_arn" {
   description = "ARN of the Suggestions table"
   value       = aws_dynamodb_table.suggestions.arn
 }
+
+output "courses_table_name" {
+  description = "Name of the Courses table"
+  value       = aws_dynamodb_table.courses.name
+}
+
+output "courses_table_arn" {
+  description = "ARN of the Courses table"
+  value       = aws_dynamodb_table.courses.arn
+}
+
+output "registrations_table_name" {
+  description = "Name of the Registrations table"
+  value       = aws_dynamodb_table.registrations.name
+}
+
+output "registrations_table_arn" {
+  description = "ARN of the Registrations table"
+  value       = aws_dynamodb_table.registrations.arn
+}
+
+output "messages_table_name" {
+  description = "Name of the Messages table"
+  value       = aws_dynamodb_table.messages.name
+}
+
+output "messages_table_arn" {
+  description = "ARN of the Messages table"
+  value       = aws_dynamodb_table.messages.arn
+}

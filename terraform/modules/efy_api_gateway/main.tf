@@ -452,6 +452,339 @@ resource "aws_lambda_permission" "suggestions_get" {
   source_arn    = "${aws_api_gateway_rest_api.efy_api.execution_arn}/*/*"
 }
 
+# Courses Resource
+resource "aws_api_gateway_resource" "courses" {
+  rest_api_id = aws_api_gateway_rest_api.efy_api.id
+  parent_id   = aws_api_gateway_rest_api.efy_api.root_resource_id
+  path_part   = "courses"
+}
+
+resource "aws_api_gateway_resource" "courses_id" {
+  rest_api_id = aws_api_gateway_rest_api.efy_api.id
+  parent_id   = aws_api_gateway_resource.courses.id
+  path_part   = "{id}"
+}
+
+# Courses Methods
+resource "aws_api_gateway_method" "courses_get" {
+  rest_api_id   = aws_api_gateway_rest_api.efy_api.id
+  resource_id   = aws_api_gateway_resource.courses.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_method" "courses_post" {
+  rest_api_id   = aws_api_gateway_rest_api.efy_api.id
+  resource_id   = aws_api_gateway_resource.courses.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_method" "courses_get_by_id" {
+  rest_api_id   = aws_api_gateway_rest_api.efy_api.id
+  resource_id   = aws_api_gateway_resource.courses_id.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_method" "courses_put" {
+  rest_api_id   = aws_api_gateway_rest_api.efy_api.id
+  resource_id   = aws_api_gateway_resource.courses_id.id
+  http_method   = "PUT"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_method" "courses_delete" {
+  rest_api_id   = aws_api_gateway_rest_api.efy_api.id
+  resource_id   = aws_api_gateway_resource.courses_id.id
+  http_method   = "DELETE"
+  authorization = "NONE"
+}
+
+# Courses Integrations
+resource "aws_api_gateway_integration" "courses_get" {
+  rest_api_id = aws_api_gateway_rest_api.efy_api.id
+  resource_id = aws_api_gateway_resource.courses.id
+  http_method = aws_api_gateway_method.courses_get.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.courses_get_lambda_arn
+}
+
+resource "aws_api_gateway_integration" "courses_post" {
+  rest_api_id = aws_api_gateway_rest_api.efy_api.id
+  resource_id = aws_api_gateway_resource.courses.id
+  http_method = aws_api_gateway_method.courses_post.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.courses_post_lambda_arn
+}
+
+resource "aws_api_gateway_integration" "courses_get_by_id" {
+  rest_api_id = aws_api_gateway_rest_api.efy_api.id
+  resource_id = aws_api_gateway_resource.courses_id.id
+  http_method = aws_api_gateway_method.courses_get_by_id.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.courses_get_by_id_lambda_arn
+}
+
+resource "aws_api_gateway_integration" "courses_put" {
+  rest_api_id = aws_api_gateway_rest_api.efy_api.id
+  resource_id = aws_api_gateway_resource.courses_id.id
+  http_method = aws_api_gateway_method.courses_put.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.courses_put_lambda_arn
+}
+
+resource "aws_api_gateway_integration" "courses_delete" {
+  rest_api_id = aws_api_gateway_rest_api.efy_api.id
+  resource_id = aws_api_gateway_resource.courses_id.id
+  http_method = aws_api_gateway_method.courses_delete.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.courses_delete_lambda_arn
+}
+
+# Courses Lambda Permissions
+resource "aws_lambda_permission" "courses_get" {
+  statement_id  = "AllowExecutionFromAPIGateway-courses-get"
+  action        = "lambda:InvokeFunction"
+  function_name = var.courses_get_lambda_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.efy_api.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "courses_post" {
+  statement_id  = "AllowExecutionFromAPIGateway-courses-post"
+  action        = "lambda:InvokeFunction"
+  function_name = var.courses_post_lambda_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.efy_api.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "courses_get_by_id" {
+  statement_id  = "AllowExecutionFromAPIGateway-courses-get-by-id"
+  action        = "lambda:InvokeFunction"
+  function_name = var.courses_get_by_id_lambda_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.efy_api.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "courses_put" {
+  statement_id  = "AllowExecutionFromAPIGateway-courses-put"
+  action        = "lambda:InvokeFunction"
+  function_name = var.courses_put_lambda_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.efy_api.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "courses_delete" {
+  statement_id  = "AllowExecutionFromAPIGateway-courses-delete"
+  action        = "lambda:InvokeFunction"
+  function_name = var.courses_delete_lambda_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.efy_api.execution_arn}/*/*"
+}
+
+# Registrations Resource
+resource "aws_api_gateway_resource" "registrations" {
+  rest_api_id = aws_api_gateway_rest_api.efy_api.id
+  parent_id   = aws_api_gateway_rest_api.efy_api.root_resource_id
+  path_part   = "registrations"
+}
+
+resource "aws_api_gateway_resource" "registrations_id" {
+  rest_api_id = aws_api_gateway_rest_api.efy_api.id
+  parent_id   = aws_api_gateway_resource.registrations.id
+  path_part   = "{id}"
+}
+
+# Registrations Methods
+resource "aws_api_gateway_method" "registrations_post" {
+  rest_api_id   = aws_api_gateway_rest_api.efy_api.id
+  resource_id   = aws_api_gateway_resource.registrations.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_method" "registrations_get" {
+  rest_api_id   = aws_api_gateway_rest_api.efy_api.id
+  resource_id   = aws_api_gateway_resource.registrations.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_method" "registrations_put" {
+  rest_api_id   = aws_api_gateway_rest_api.efy_api.id
+  resource_id   = aws_api_gateway_resource.registrations_id.id
+  http_method   = "PUT"
+  authorization = "NONE"
+}
+
+# Registrations Integrations
+resource "aws_api_gateway_integration" "registrations_post" {
+  rest_api_id = aws_api_gateway_rest_api.efy_api.id
+  resource_id = aws_api_gateway_resource.registrations.id
+  http_method = aws_api_gateway_method.registrations_post.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.registrations_post_lambda_arn
+}
+
+resource "aws_api_gateway_integration" "registrations_get" {
+  rest_api_id = aws_api_gateway_rest_api.efy_api.id
+  resource_id = aws_api_gateway_resource.registrations.id
+  http_method = aws_api_gateway_method.registrations_get.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.registrations_get_lambda_arn
+}
+
+resource "aws_api_gateway_integration" "registrations_put" {
+  rest_api_id = aws_api_gateway_rest_api.efy_api.id
+  resource_id = aws_api_gateway_resource.registrations_id.id
+  http_method = aws_api_gateway_method.registrations_put.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.registrations_put_lambda_arn
+}
+
+# Registrations Lambda Permissions
+resource "aws_lambda_permission" "registrations_post" {
+  statement_id  = "AllowExecutionFromAPIGateway-registrations-post"
+  action        = "lambda:InvokeFunction"
+  function_name = var.registrations_post_lambda_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.efy_api.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "registrations_get" {
+  statement_id  = "AllowExecutionFromAPIGateway-registrations-get"
+  action        = "lambda:InvokeFunction"
+  function_name = var.registrations_get_lambda_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.efy_api.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "registrations_put" {
+  statement_id  = "AllowExecutionFromAPIGateway-registrations-put"
+  action        = "lambda:InvokeFunction"
+  function_name = var.registrations_put_lambda_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.efy_api.execution_arn}/*/*"
+}
+
+# Messages Resource
+resource "aws_api_gateway_resource" "messages" {
+  rest_api_id = aws_api_gateway_rest_api.efy_api.id
+  parent_id   = aws_api_gateway_rest_api.efy_api.root_resource_id
+  path_part   = "messages"
+}
+
+# Messages Methods
+resource "aws_api_gateway_method" "messages_post" {
+  rest_api_id   = aws_api_gateway_rest_api.efy_api.id
+  resource_id   = aws_api_gateway_resource.messages.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_method" "messages_get" {
+  rest_api_id   = aws_api_gateway_rest_api.efy_api.id
+  resource_id   = aws_api_gateway_resource.messages.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+# Messages Integrations
+resource "aws_api_gateway_integration" "messages_post" {
+  rest_api_id = aws_api_gateway_rest_api.efy_api.id
+  resource_id = aws_api_gateway_resource.messages.id
+  http_method = aws_api_gateway_method.messages_post.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.messages_post_lambda_arn
+}
+
+resource "aws_api_gateway_integration" "messages_get" {
+  rest_api_id = aws_api_gateway_rest_api.efy_api.id
+  resource_id = aws_api_gateway_resource.messages.id
+  http_method = aws_api_gateway_method.messages_get.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.messages_get_lambda_arn
+}
+
+# Messages Lambda Permissions
+resource "aws_lambda_permission" "messages_post" {
+  statement_id  = "AllowExecutionFromAPIGateway-messages-post"
+  action        = "lambda:InvokeFunction"
+  function_name = var.messages_post_lambda_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.efy_api.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "messages_get" {
+  statement_id  = "AllowExecutionFromAPIGateway-messages-get"
+  action        = "lambda:InvokeFunction"
+  function_name = var.messages_get_lambda_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.efy_api.execution_arn}/*/*"
+}
+
+# Admin Resource
+resource "aws_api_gateway_resource" "admin" {
+  rest_api_id = aws_api_gateway_rest_api.efy_api.id
+  parent_id   = aws_api_gateway_rest_api.efy_api.root_resource_id
+  path_part   = "admin"
+}
+
+resource "aws_api_gateway_resource" "admin_stats" {
+  rest_api_id = aws_api_gateway_rest_api.efy_api.id
+  parent_id   = aws_api_gateway_resource.admin.id
+  path_part   = "stats"
+}
+
+# Admin Stats Methods
+resource "aws_api_gateway_method" "admin_stats_get" {
+  rest_api_id   = aws_api_gateway_rest_api.efy_api.id
+  resource_id   = aws_api_gateway_resource.admin_stats.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+# Admin Stats Integrations
+resource "aws_api_gateway_integration" "admin_stats_get" {
+  rest_api_id = aws_api_gateway_rest_api.efy_api.id
+  resource_id = aws_api_gateway_resource.admin_stats.id
+  http_method = aws_api_gateway_method.admin_stats_get.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.admin_stats_get_lambda_arn
+}
+
+# Admin Stats Lambda Permissions
+resource "aws_lambda_permission" "admin_stats_get" {
+  statement_id  = "AllowExecutionFromAPIGateway-admin-stats-get"
+  action        = "lambda:InvokeFunction"
+  function_name = var.admin_stats_get_lambda_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.efy_api.execution_arn}/*/*"
+}
+
 # API Gateway deployment
 resource "aws_api_gateway_deployment" "efy_api_deployment" {
   depends_on = [
@@ -469,7 +802,18 @@ resource "aws_api_gateway_deployment" "efy_api_deployment" {
     aws_api_gateway_integration.volunteers_get,
     aws_api_gateway_integration.volunteers_put,
     aws_api_gateway_integration.suggestions_post,
-    aws_api_gateway_integration.suggestions_get
+    aws_api_gateway_integration.suggestions_get,
+    aws_api_gateway_integration.courses_get,
+    aws_api_gateway_integration.courses_post,
+    aws_api_gateway_integration.courses_get_by_id,
+    aws_api_gateway_integration.courses_put,
+    aws_api_gateway_integration.courses_delete,
+    aws_api_gateway_integration.registrations_post,
+    aws_api_gateway_integration.registrations_get,
+    aws_api_gateway_integration.registrations_put,
+    aws_api_gateway_integration.messages_post,
+    aws_api_gateway_integration.messages_get,
+    aws_api_gateway_integration.admin_stats_get
   ]
 
   rest_api_id = aws_api_gateway_rest_api.efy_api.id

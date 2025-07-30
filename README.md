@@ -47,6 +47,37 @@ A youth-driven platform for organizing Islamic educational events, competitions,
 | `POST` | `/suggestions` | Submit idea or feedback |
 | `GET` | `/suggestions` | View all suggestions |
 
+### 📚 Courses
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/courses` | List all courses |
+| `GET` | `/courses/{id}` | Get specific course details |
+| `POST` | `/courses` | Create a new course |
+| `PUT` | `/courses/{id}` | Update an existing course |
+| `DELETE` | `/courses/{id}` | Delete a course |
+
+### 📝 Registrations
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/registrations` | Register for an event or competition |
+| `GET` | `/registrations` | List all registrations |
+| `PUT` | `/registrations/{id}` | Update registration status |
+
+### 💬 Messages
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/messages` | Submit community message (feedback, thank-you, etc.) |
+| `GET` | `/messages` | View all messages (public or admin view) |
+
+### 🔧 Admin
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/admin/stats` | Get dashboard metrics and statistics |
+
 ## 🚀 Deployment
 
 ### Prerequisites
@@ -103,7 +134,18 @@ terraform apply terraform-plan-dev.tfplan
 │   ├── volunteers_get/        # GET /volunteers
 │   ├── volunteers_put/        # PUT /volunteers/{id}
 │   ├── suggestions_post/      # POST /suggestions
-│   └── suggestions_get/       # GET /suggestions
+│   ├── suggestions_get/       # GET /suggestions
+│   ├── courses_get/           # GET /courses
+│   ├── courses_get_by_id/     # GET /courses/{id}
+│   ├── courses_post/          # POST /courses
+│   ├── courses_put/           # PUT /courses/{id}
+│   ├── courses_delete/        # DELETE /courses/{id}
+│   ├── registrations_post/    # POST /registrations
+│   ├── registrations_get/     # GET /registrations
+│   ├── registrations_put/     # PUT /registrations/{id}
+│   ├── messages_post/         # POST /messages
+│   ├── messages_get/          # GET /messages
+│   └── admin_stats_get/       # GET /admin/stats
 ├── terraform/                 # Infrastructure as code
 │   ├── modules/              # Reusable Terraform modules
 │   │   ├── lambda/           # Lambda function module
@@ -197,6 +239,63 @@ terraform apply terraform-plan-dev.tfplan
 }
 ```
 
+### Course
+```json
+{
+  "id": "course_1706123456_abc123",
+  "title": "Quran Memorization Fundamentals",
+  "description": "Learn effective techniques for memorizing the Holy Quran",
+  "instructor": "Sheikh Ahmed Al-Hafiz",
+  "duration": "8 weeks",
+  "category": "religious-studies",
+  "level": "beginner",
+  "maxParticipants": 30,
+  "startDate": "2024-02-15T14:00:00Z",
+  "endDate": "2024-04-15T16:00:00Z",
+  "schedule": "Tuesdays & Thursdays 6-8 PM",
+  "materials": "Mushaf, notebook, recording app",
+  "status": "active",
+  "createdAt": "2024-01-25T10:30:00Z",
+  "updatedAt": "2024-01-25T10:30:00Z"
+}
+```
+
+### Registration
+```json
+{
+  "id": "reg_1706123456_ghi789",
+  "userId": "user_1706123456_def456",
+  "itemId": "event_1706123456_abc123",
+  "itemType": "event",
+  "userEmail": "participant@example.com",
+  "userName": "Fatima Al-Zahra",
+  "userPhone": "+1234567890",
+  "status": "registered",
+  "notes": "First time participant, excited to join!",
+  "registeredAt": "2024-01-25T10:30:00Z",
+  "updatedAt": "2024-01-25T10:30:00Z"
+}
+```
+
+### Message
+```json
+{
+  "id": "msg_1706123456_jkl012",
+  "senderName": "Omar Hassan",
+  "senderEmail": "omar.hassan@example.com",
+  "senderPhone": "+1234567890",
+  "messageType": "thank-you",
+  "subject": "Excellent Islamic History Workshop",
+  "content": "JazakAllahu khairan for organizing such an enlightening workshop. I learned so much about our Islamic heritage!",
+  "isPublic": true,
+  "status": "new",
+  "priority": "normal",
+  "tags": ["workshop", "history", "positive-feedback"],
+  "createdAt": "2024-01-25T10:30:00Z",
+  "updatedAt": "2024-01-25T10:30:00Z"
+}
+```
+
 ## 🔧 Configuration
 
 ### Environment Variables
@@ -207,6 +306,9 @@ Each Lambda function receives environment-specific variables:
 - `COMPETITIONS_TABLE_NAME` - DynamoDB table for competitions  
 - `VOLUNTEERS_TABLE_NAME` - DynamoDB table for volunteers
 - `SUGGESTIONS_TABLE_NAME` - DynamoDB table for suggestions
+- `COURSES_TABLE_NAME` - DynamoDB table for courses
+- `REGISTRATIONS_TABLE_NAME` - DynamoDB table for registrations
+- `MESSAGES_TABLE_NAME` - DynamoDB table for messages
 - `AWS_REGION` - AWS region for deployment
 
 ### Terraform Variables
