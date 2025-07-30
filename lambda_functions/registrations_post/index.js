@@ -22,8 +22,8 @@ exports.handler = async (event) => {
         const registrationItem = {
             id: registrationId,
             userId: body.userId,
-            itemId: body.itemId, // Event or competition ID
-            itemType: body.itemType, // 'event' or 'competition'
+            itemId: body.itemId, // Event, competition, or course ID
+            itemType: body.itemType, // 'event', 'competition', or 'course'
             userEmail: body.userEmail,
             userName: body.userName,
             userPhone: body.userPhone || null,

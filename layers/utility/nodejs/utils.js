@@ -6,8 +6,9 @@ const response = (statusCode, body, headers = {}) => {
         headers: {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Headers': 'Content-Type',
-            'Access-Control-Allow-Methods': 'OPTIONS,POST,GET',
+            'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent',
+            'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE',
+            'Access-Control-Max-Age': '86400',
             ...headers
         },
         body: JSON.stringify(body)

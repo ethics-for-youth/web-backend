@@ -1,16 +1,16 @@
 # Validate workspace name and get environment configuration
 locals {
   valid_workspaces = ["dev", "qa", "prod"]
-
+  
   # Validate that current workspace is valid (allow default for validation)
   workspace_validation = can(regex("^(dev|qa|prod|default)$", terraform.workspace)) ? null : file("ERROR: Invalid workspace '${terraform.workspace}'. Valid workspaces are: ${join(", ", local.valid_workspaces)}")
-
+  
   # Get current environment from workspace (default to dev for validation)
   current_environment = terraform.workspace == "default" ? "dev" : terraform.workspace
-
+  
   # Get environment-specific configuration
   env_config = var.environment_configs[local.current_environment]
-
+  
   # Common tags for all resources
   common_tags = merge(
     {
@@ -42,7 +42,7 @@ module "dynamodb" {
 # Dependencies Layer
 module "dependencies_layer" {
   source = "./modules/lambda_layer"
-
+  
   layer_name  = "${var.project_name}-${local.current_environment}-dependencies-layer"
   source_dir  = "../layers/dependencies"
   description = "Shared dependencies for Lambda functions - ${local.current_environment}"
@@ -51,7 +51,7 @@ module "dependencies_layer" {
 # Utility Layer
 module "utility_layer" {
   source = "./modules/lambda_layer"
-
+  
   layer_name  = "${var.project_name}-${local.current_environment}-utility-layer"
   source_dir  = "../layers/utility"
   description = "Shared utility functions for Lambda functions - ${local.current_environment}"
@@ -594,12 +594,12 @@ module "messages_post_lambda" {
 
 module "messages_get_lambda" {
   source = "./modules/lambda"
-
+  
   function_name = "${var.project_name}-${local.current_environment}-messages-get"
   handler       = "index.handler"
   runtime       = "nodejs18.x"
   source_dir    = "../lambda_functions/messages_get"
-
+  
   layers = [
     module.dependencies_layer.layer_arn,
     module.utility_layer.layer_arn
@@ -610,19 +610,19 @@ module "messages_get_lambda" {
   }
 
   dynamodb_table_arns = [module.dynamodb.messages_table_arn]
-
+  
   tags = local.common_tags
 }
 
 # Admin Stats Lambda Function
 module "admin_stats_get_lambda" {
   source = "./modules/lambda"
-
+  
   function_name = "${var.project_name}-${local.current_environment}-admin-stats-get"
   handler       = "index.handler"
   runtime       = "nodejs18.x"
   source_dir    = "../lambda_functions/admin_stats_get"
-
+  
   layers = [
     module.dependencies_layer.layer_arn,
     module.utility_layer.layer_arn
@@ -645,7 +645,7 @@ module "admin_stats_get_lambda" {
     module.dynamodb.registrations_table_arn,
     module.dynamodb.messages_table_arn
   ]
-
+  
   tags = local.common_tags
 }
 
@@ -722,6 +722,6 @@ module "efy_api_gateway" {
   # Admin Stats Lambda ARNs and Function Names
   admin_stats_get_lambda_arn           = module.admin_stats_get_lambda.lambda_invoke_arn
   admin_stats_get_lambda_function_name = module.admin_stats_get_lambda.lambda_function_name
-
+  
   tags = local.common_tags
 }
