@@ -1,0 +1,19 @@
+# Issue template configuration
+# This file configures the issue template chooser
+
+# Blank issue template
+blank_issues_enabled: false
+
+# Contact links
+contact_links:
+  - name: 📚 EFY Backend API Documentation
+    url: https://github.com/your-org/efy-web-backend#readme
+    about: Please check the documentation before creating an issue.
+  
+  - name: 🚀 Deployment Guide
+    url: https://github.com/your-org/efy-web-backend#deployment
+    about: Check the deployment guide for infrastructure issues.
+  
+  - name: 🔧 Development Setup
+    url: https://github.com/your-org/efy-web-backend#prerequisites
+    about: Setup guide for local development.
