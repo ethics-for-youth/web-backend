@@ -864,6 +864,693 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+  # Courses Endpoints
+  /courses:
+    get:
+      summary: Get all courses
+      description: Retrieves a list of all courses
+      operationId: getCourses
+      tags:
+        - Courses
+      responses:
+        '200':
+          description: Courses retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Courses retrieved successfully"
+                  data:
+                    type: object
+                    properties:
+                      courses:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Course'
+                      count:
+                        type: integer
+                        example: 5
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    
+    post:
+      summary: Create a new course
+      description: Creates a new course for the EFY platform
+      operationId: createCourse
+      tags:
+        - Courses
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - description
+                - instructor
+                - duration
+              properties:
+                title:
+                  type: string
+                  example: "Quran Memorization Fundamentals"
+                description:
+                  type: string
+                  example: "Learn effective techniques for memorizing the Holy Quran"
+                instructor:
+                  type: string
+                  example: "Sheikh Ahmed Al-Hafiz"
+                duration:
+                  type: string
+                  example: "8 weeks"
+                category:
+                  type: string
+                  example: "religious-studies"
+                level:
+                  type: string
+                  enum: [beginner, intermediate, advanced]
+                  example: "beginner"
+                maxParticipants:
+                  type: integer
+                  example: 30
+                startDate:
+                  type: string
+                  format: date-time
+                  example: "2024-02-15T14:00:00Z"
+                endDate:
+                  type: string
+                  format: date-time
+                  example: "2024-04-15T16:00:00Z"
+                schedule:
+                  type: string
+                  example: "Tuesdays & Thursdays 6-8 PM"
+                materials:
+                  type: string
+                  example: "Mushaf, notebook, recording app"
+      responses:
+        '200':
+          description: Course created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Course created successfully"
+                  data:
+                    type: object
+                    properties:
+                      course:
+                        $ref: '#/components/schemas/Course'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /courses/{id}:
+    get:
+      summary: Get course by ID
+      description: Retrieves details of a specific course
+      operationId: getCourseById
+      tags:
+        - Courses
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "course_1706123456_abc123"
+      responses:
+        '200':
+          description: Course retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Course retrieved successfully"
+                  data:
+                    type: object
+                    properties:
+                      course:
+                        $ref: '#/components/schemas/Course'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    
+    put:
+      summary: Update a course
+      description: Updates an existing course
+      operationId: updateCourse
+      tags:
+        - Courses
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "course_1706123456_abc123"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                instructor:
+                  type: string
+                duration:
+                  type: string
+                category:
+                  type: string
+                level:
+                  type: string
+                  enum: [beginner, intermediate, advanced]
+                maxParticipants:
+                  type: integer
+                startDate:
+                  type: string
+                  format: date-time
+                endDate:
+                  type: string
+                  format: date-time
+                schedule:
+                  type: string
+                materials:
+                  type: string
+      responses:
+        '200':
+          description: Course updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Course updated successfully"
+                  data:
+                    type: object
+                    properties:
+                      course:
+                        $ref: '#/components/schemas/Course'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    
+    delete:
+      summary: Delete a course
+      description: Deletes an existing course
+      operationId: deleteCourse
+      tags:
+        - Courses
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "course_1706123456_abc123"
+      responses:
+        '200':
+          description: Course deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Course deleted successfully"
+                  data:
+                    type: object
+                    properties:
+                      deletedCourse:
+                        $ref: '#/components/schemas/Course'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # Registrations Endpoints
+  /registrations:
+    post:
+      summary: Register for an event or competition
+      description: Submit a registration for a user to participate in an event or competition
+      operationId: createRegistration
+      tags:
+        - Registrations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - itemId
+                - itemType
+                - userEmail
+                - userName
+              properties:
+                userId:
+                  type: string
+                  example: "user_1706123456_def456"
+                itemId:
+                  type: string
+                  example: "event_1706123456_abc123"
+                itemType:
+                  type: string
+                  enum: [event, competition]
+                  example: "event"
+                userEmail:
+                  type: string
+                  format: email
+                  example: "participant@example.com"
+                userName:
+                  type: string
+                  example: "Fatima Al-Zahra"
+                userPhone:
+                  type: string
+                  example: "+1234567890"
+                notes:
+                  type: string
+                  example: "First time participant, excited to join!"
+      responses:
+        '200':
+          description: Registration created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Registration created successfully"
+                  data:
+                    type: object
+                    properties:
+                      registration:
+                        $ref: '#/components/schemas/Registration'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    
+    get:
+      summary: Get all registrations
+      description: Retrieves all registrations with optional filtering
+      operationId: getRegistrations
+      tags:
+        - Registrations
+      parameters:
+        - name: itemType
+          in: query
+          description: Filter by item type (event or competition)
+          schema:
+            type: string
+            enum: [event, competition]
+        - name: itemId
+          in: query
+          description: Filter by specific item ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Registrations retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Registrations retrieved successfully"
+                  data:
+                    type: object
+                    properties:
+                      registrations:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Registration'
+                      count:
+                        type: integer
+                        example: 25
+                      filters:
+                        type: object
+                        additionalProperties: true
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /registrations/{id}:
+    put:
+      summary: Update registration status
+      description: Updates an existing registration (usually status change)
+      operationId: updateRegistration
+      tags:
+        - Registrations
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "reg_1706123456_ghi789"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [registered, cancelled, completed]
+                  example: "completed"
+                notes:
+                  type: string
+                  example: "Successfully completed the event"
+      responses:
+        '200':
+          description: Registration updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Registration updated successfully"
+                  data:
+                    type: object
+                    properties:
+                      registration:
+                        $ref: '#/components/schemas/Registration'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # Messages Endpoints
+  /messages:
+    post:
+      summary: Submit a community message
+      description: Submit feedback, thank-you note, suggestion, or general message
+      operationId: createMessage
+      tags:
+        - Messages
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - senderName
+                - senderEmail
+                - messageType
+                - content
+              properties:
+                senderName:
+                  type: string
+                  example: "Omar Hassan"
+                senderEmail:
+                  type: string
+                  format: email
+                  example: "omar.hassan@example.com"
+                senderPhone:
+                  type: string
+                  example: "+1234567890"
+                messageType:
+                  type: string
+                  enum: [feedback, thank-you, suggestion, complaint, general]
+                  example: "thank-you"
+                subject:
+                  type: string
+                  example: "Excellent Islamic History Workshop"
+                content:
+                  type: string
+                  example: "JazakAllahu khairan for organizing such an enlightening workshop. I learned so much about our Islamic heritage!"
+                isPublic:
+                  type: boolean
+                  description: Whether the message can be displayed publicly
+                  example: true
+                priority:
+                  type: string
+                  enum: [low, normal, high, urgent]
+                  example: "normal"
+                tags:
+                  type: array
+                  items:
+                    type: string
+                  example: ["workshop", "history", "positive-feedback"]
+      responses:
+        '200':
+          description: Message submitted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Message submitted successfully"
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        $ref: '#/components/schemas/Message'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    
+    get:
+      summary: Get all messages
+      description: Retrieves messages with filtering options (public view or admin view)
+      operationId: getMessages
+      tags:
+        - Messages
+      parameters:
+        - name: admin
+          in: query
+          description: Set to 'true' to view all messages (admin only), defaults to public messages only
+          schema:
+            type: string
+            enum: ['true', 'false']
+        - name: messageType
+          in: query
+          description: Filter by message type
+          schema:
+            type: string
+            enum: [feedback, thank-you, suggestion, complaint, general]
+        - name: status
+          in: query
+          description: Filter by status (admin view only)
+          schema:
+            type: string
+            enum: [new, reviewed, responded, archived]
+        - name: priority
+          in: query
+          description: Filter by priority (admin view only)
+          schema:
+            type: string
+            enum: [low, normal, high, urgent]
+      responses:
+        '200':
+          description: Messages retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Messages retrieved successfully"
+                  data:
+                    type: object
+                    properties:
+                      messages:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Message'
+                      count:
+                        type: integer
+                        example: 15
+                      filters:
+                        type: object
+                        additionalProperties: true
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # Admin Stats Endpoints
+  /admin/stats:
+    get:
+      summary: Get admin dashboard statistics
+      description: Retrieves aggregated metrics for the admin dashboard
+      operationId: getAdminStats
+      tags:
+        - Admin
+      responses:
+        '200':
+          description: Admin statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Admin statistics retrieved successfully"
+                  data:
+                    type: object
+                    properties:
+                      stats:
+                        type: object
+                        properties:
+                          overview:
+                            type: object
+                            properties:
+                              totalEvents:
+                                type: integer
+                                example: 12
+                              totalCompetitions:
+                                type: integer
+                                example: 8
+                              totalVolunteers:
+                                type: integer
+                                example: 35
+                              totalParticipants:
+                                type: integer
+                                example: 150
+                              totalCourses:
+                                type: integer
+                                example: 6
+                              totalRegistrations:
+                                type: integer
+                                example: 203
+                              totalMessages:
+                                type: integer
+                                example: 42
+                          events:
+                            type: object
+                            properties:
+                              total:
+                                type: integer
+                                example: 12
+                              active:
+                                type: integer
+                                example: 8
+                              upcoming:
+                                type: integer
+                                example: 5
+                          competitions:
+                            type: object
+                            properties:
+                              total:
+                                type: integer
+                                example: 8
+                              upcoming:
+                                type: integer
+                                example: 3
+                          volunteers:
+                            type: object
+                            properties:
+                              total:
+                                type: integer
+                                example: 35
+                          courses:
+                            type: object
+                            properties:
+                              total:
+                                type: integer
+                                example: 6
+                          registrations:
+                            type: object
+                            properties:
+                              total:
+                                type: integer
+                                example: 203
+                              recent:
+                                type: integer
+                                example: 15
+                          messages:
+                            type: object
+                            properties:
+                              total:
+                                type: integer
+                                example: 42
+                              pending:
+                                type: integer
+                                example: 8
+                              byType:
+                                type: object
+                                additionalProperties:
+                                  type: integer
+                                example:
+                                  feedback: 18
+                                  thank-you: 12
+                                  suggestion: 8
+                                  complaint: 3
+                                  general: 1
+                      lastUpdated:
+                        type: string
+                        format: date-time
+                        example: "2024-01-25T10:30:00Z"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
 components:
   schemas:
     Event:
@@ -1116,6 +1803,223 @@ components:
           type: object
           description: Response data
 
+    Course:
+      type: object
+      required:
+        - id
+        - title
+        - description
+        - instructor
+        - duration
+        - status
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          example: "course_1706123456_abc123"
+          description: Unique course identifier
+        title:
+          type: string
+          example: "Quran Memorization Fundamentals"
+          description: Course title
+        description:
+          type: string
+          example: "Learn effective techniques for memorizing the Holy Quran"
+          description: Course description
+        instructor:
+          type: string
+          example: "Sheikh Ahmed Al-Hafiz"
+          description: Course instructor name
+        duration:
+          type: string
+          example: "8 weeks"
+          description: Course duration
+        category:
+          type: string
+          example: "religious-studies"
+          description: Course category
+        level:
+          type: string
+          enum: [beginner, intermediate, advanced]
+          example: "beginner"
+          description: Course difficulty level
+        maxParticipants:
+          type: integer
+          example: 30
+          description: Maximum number of participants
+        startDate:
+          type: string
+          format: date-time
+          example: "2024-02-15T14:00:00Z"
+          description: Course start date
+        endDate:
+          type: string
+          format: date-time
+          example: "2024-04-15T16:00:00Z"
+          description: Course end date
+        schedule:
+          type: string
+          example: "Tuesdays & Thursdays 6-8 PM"
+          description: Course schedule
+        materials:
+          type: string
+          example: "Mushaf, notebook, recording app"
+          description: Required materials
+        status:
+          type: string
+          enum: [active, inactive, completed, cancelled]
+          example: "active"
+          description: Course status
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-01-25T10:30:00Z"
+          description: Course creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-25T10:30:00Z"
+          description: Course last update timestamp
+
+    Registration:
+      type: object
+      required:
+        - id
+        - userId
+        - itemId
+        - itemType
+        - userEmail
+        - userName
+        - status
+        - registeredAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          example: "reg_1706123456_ghi789"
+          description: Unique registration identifier
+        userId:
+          type: string
+          example: "user_1706123456_def456"
+          description: User identifier
+        itemId:
+          type: string
+          example: "event_1706123456_abc123"
+          description: Event or competition identifier
+        itemType:
+          type: string
+          enum: [event, competition]
+          example: "event"
+          description: Type of item being registered for
+        userEmail:
+          type: string
+          format: email
+          example: "participant@example.com"
+          description: User email address
+        userName:
+          type: string
+          example: "Fatima Al-Zahra"
+          description: User full name
+        userPhone:
+          type: string
+          example: "+1234567890"
+          description: User phone number
+        status:
+          type: string
+          enum: [registered, cancelled, completed]
+          example: "registered"
+          description: Registration status
+        notes:
+          type: string
+          example: "First time participant, excited to join!"
+          description: Additional notes
+        registeredAt:
+          type: string
+          format: date-time
+          example: "2024-01-25T10:30:00Z"
+          description: Registration timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-25T10:30:00Z"
+          description: Last update timestamp
+
+    Message:
+      type: object
+      required:
+        - id
+        - senderName
+        - senderEmail
+        - messageType
+        - content
+        - isPublic
+        - status
+        - priority
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          example: "msg_1706123456_jkl012"
+          description: Unique message identifier
+        senderName:
+          type: string
+          example: "Omar Hassan"
+          description: Message sender name
+        senderEmail:
+          type: string
+          format: email
+          example: "omar.hassan@example.com"
+          description: Message sender email
+        senderPhone:
+          type: string
+          example: "+1234567890"
+          description: Message sender phone number
+        messageType:
+          type: string
+          enum: [feedback, thank-you, suggestion, complaint, general]
+          example: "thank-you"
+          description: Type of message
+        subject:
+          type: string
+          example: "Excellent Islamic History Workshop"
+          description: Message subject
+        content:
+          type: string
+          example: "JazakAllahu khairan for organizing such an enlightening workshop. I learned so much about our Islamic heritage!"
+          description: Message content
+        isPublic:
+          type: boolean
+          example: true
+          description: Whether message can be displayed publicly
+        status:
+          type: string
+          enum: [new, reviewed, responded, archived]
+          example: "new"
+          description: Message status
+        priority:
+          type: string
+          enum: [low, normal, high, urgent]
+          example: "normal"
+          description: Message priority level
+        tags:
+          type: array
+          items:
+            type: string
+          example: ["workshop", "history", "positive-feedback"]
+          description: Message tags for categorization
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-01-25T10:30:00Z"
+          description: Message creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-25T10:30:00Z"
+          description: Message last update timestamp
+
   responses:
     BadRequest:
       description: Bad request - missing required fields or invalid data
@@ -1162,5 +2066,13 @@ tags:
     description: Volunteer management and applications
   - name: Suggestions
     description: Community suggestions and feedback
+  - name: Courses
+    description: Islamic educational courses and learning programs
+  - name: Registrations
+    description: User registration for events and competitions
+  - name: Messages
+    description: Community messages, feedback, and communications
+  - name: Admin
+    description: Administrative endpoints and dashboard metrics
 
 # All endpoints are public - no authentication required

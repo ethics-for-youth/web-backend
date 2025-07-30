@@ -18,6 +18,21 @@ variable "suggestions_table_name" {
   type        = string
 }
 
+variable "courses_table_name" {
+  description = "Name of the Courses DynamoDB table"
+  type        = string
+}
+
+variable "registrations_table_name" {
+  description = "Name of the Registrations DynamoDB table"
+  type        = string
+}
+
+variable "messages_table_name" {
+  description = "Name of the Messages DynamoDB table"
+  type        = string
+}
+
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)

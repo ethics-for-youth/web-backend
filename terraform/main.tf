@@ -28,10 +28,13 @@ locals {
 module "dynamodb" {
   source = "./modules/dynamodb"
 
-  events_table_name       = "${var.project_name}-${local.current_environment}-events"
-  competitions_table_name = "${var.project_name}-${local.current_environment}-competitions"
-  volunteers_table_name   = "${var.project_name}-${local.current_environment}-volunteers"
-  suggestions_table_name  = "${var.project_name}-${local.current_environment}-suggestions"
+  events_table_name        = "${var.project_name}-${local.current_environment}-events"
+  competitions_table_name  = "${var.project_name}-${local.current_environment}-competitions"
+  volunteers_table_name    = "${var.project_name}-${local.current_environment}-volunteers"
+  suggestions_table_name   = "${var.project_name}-${local.current_environment}-suggestions"
+  courses_table_name       = "${var.project_name}-${local.current_environment}-courses"
+  registrations_table_name = "${var.project_name}-${local.current_environment}-registrations"
+  messages_table_name      = "${var.project_name}-${local.current_environment}-messages"
 
   tags = local.common_tags
 }
@@ -388,6 +391,264 @@ module "suggestions_get_lambda" {
   tags = local.common_tags
 }
 
+# Courses Lambda Functions
+module "courses_get_lambda" {
+  source = "./modules/lambda"
+
+  function_name = "${var.project_name}-${local.current_environment}-courses-get"
+  handler       = "index.handler"
+  runtime       = "nodejs18.x"
+  source_dir    = "../lambda_functions/courses_get"
+
+  layers = [
+    module.dependencies_layer.layer_arn,
+    module.utility_layer.layer_arn
+  ]
+
+  environment_variables = {
+    COURSES_TABLE_NAME = module.dynamodb.courses_table_name
+  }
+
+  dynamodb_table_arns = [module.dynamodb.courses_table_arn]
+
+  tags = local.common_tags
+}
+
+module "courses_get_by_id_lambda" {
+  source = "./modules/lambda"
+
+  function_name = "${var.project_name}-${local.current_environment}-courses-get-by-id"
+  handler       = "index.handler"
+  runtime       = "nodejs18.x"
+  source_dir    = "../lambda_functions/courses_get_by_id"
+
+  layers = [
+    module.dependencies_layer.layer_arn,
+    module.utility_layer.layer_arn
+  ]
+
+  environment_variables = {
+    COURSES_TABLE_NAME = module.dynamodb.courses_table_name
+  }
+
+  dynamodb_table_arns = [module.dynamodb.courses_table_arn]
+
+  tags = local.common_tags
+}
+
+module "courses_post_lambda" {
+  source = "./modules/lambda"
+
+  function_name = "${var.project_name}-${local.current_environment}-courses-post"
+  handler       = "index.handler"
+  runtime       = "nodejs18.x"
+  source_dir    = "../lambda_functions/courses_post"
+
+  layers = [
+    module.dependencies_layer.layer_arn,
+    module.utility_layer.layer_arn
+  ]
+
+  environment_variables = {
+    COURSES_TABLE_NAME = module.dynamodb.courses_table_name
+  }
+
+  dynamodb_table_arns = [module.dynamodb.courses_table_arn]
+
+  tags = local.common_tags
+}
+
+module "courses_put_lambda" {
+  source = "./modules/lambda"
+
+  function_name = "${var.project_name}-${local.current_environment}-courses-put"
+  handler       = "index.handler"
+  runtime       = "nodejs18.x"
+  source_dir    = "../lambda_functions/courses_put"
+
+  layers = [
+    module.dependencies_layer.layer_arn,
+    module.utility_layer.layer_arn
+  ]
+
+  environment_variables = {
+    COURSES_TABLE_NAME = module.dynamodb.courses_table_name
+  }
+
+  dynamodb_table_arns = [module.dynamodb.courses_table_arn]
+
+  tags = local.common_tags
+}
+
+module "courses_delete_lambda" {
+  source = "./modules/lambda"
+
+  function_name = "${var.project_name}-${local.current_environment}-courses-delete"
+  handler       = "index.handler"
+  runtime       = "nodejs18.x"
+  source_dir    = "../lambda_functions/courses_delete"
+
+  layers = [
+    module.dependencies_layer.layer_arn,
+    module.utility_layer.layer_arn
+  ]
+
+  environment_variables = {
+    COURSES_TABLE_NAME = module.dynamodb.courses_table_name
+  }
+
+  dynamodb_table_arns = [module.dynamodb.courses_table_arn]
+
+  tags = local.common_tags
+}
+
+# Registrations Lambda Functions
+module "registrations_post_lambda" {
+  source = "./modules/lambda"
+
+  function_name = "${var.project_name}-${local.current_environment}-registrations-post"
+  handler       = "index.handler"
+  runtime       = "nodejs18.x"
+  source_dir    = "../lambda_functions/registrations_post"
+
+  layers = [
+    module.dependencies_layer.layer_arn,
+    module.utility_layer.layer_arn
+  ]
+
+  environment_variables = {
+    REGISTRATIONS_TABLE_NAME = module.dynamodb.registrations_table_name
+  }
+
+  dynamodb_table_arns = [module.dynamodb.registrations_table_arn]
+
+  tags = local.common_tags
+}
+
+module "registrations_get_lambda" {
+  source = "./modules/lambda"
+
+  function_name = "${var.project_name}-${local.current_environment}-registrations-get"
+  handler       = "index.handler"
+  runtime       = "nodejs18.x"
+  source_dir    = "../lambda_functions/registrations_get"
+
+  layers = [
+    module.dependencies_layer.layer_arn,
+    module.utility_layer.layer_arn
+  ]
+
+  environment_variables = {
+    REGISTRATIONS_TABLE_NAME = module.dynamodb.registrations_table_name
+  }
+
+  dynamodb_table_arns = [module.dynamodb.registrations_table_arn]
+
+  tags = local.common_tags
+}
+
+module "registrations_put_lambda" {
+  source = "./modules/lambda"
+
+  function_name = "${var.project_name}-${local.current_environment}-registrations-put"
+  handler       = "index.handler"
+  runtime       = "nodejs18.x"
+  source_dir    = "../lambda_functions/registrations_put"
+
+  layers = [
+    module.dependencies_layer.layer_arn,
+    module.utility_layer.layer_arn
+  ]
+
+  environment_variables = {
+    REGISTRATIONS_TABLE_NAME = module.dynamodb.registrations_table_name
+  }
+
+  dynamodb_table_arns = [module.dynamodb.registrations_table_arn]
+
+  tags = local.common_tags
+}
+
+# Messages Lambda Functions
+module "messages_post_lambda" {
+  source = "./modules/lambda"
+
+  function_name = "${var.project_name}-${local.current_environment}-messages-post"
+  handler       = "index.handler"
+  runtime       = "nodejs18.x"
+  source_dir    = "../lambda_functions/messages_post"
+
+  layers = [
+    module.dependencies_layer.layer_arn,
+    module.utility_layer.layer_arn
+  ]
+
+  environment_variables = {
+    MESSAGES_TABLE_NAME = module.dynamodb.messages_table_name
+  }
+
+  dynamodb_table_arns = [module.dynamodb.messages_table_arn]
+
+  tags = local.common_tags
+}
+
+module "messages_get_lambda" {
+  source = "./modules/lambda"
+
+  function_name = "${var.project_name}-${local.current_environment}-messages-get"
+  handler       = "index.handler"
+  runtime       = "nodejs18.x"
+  source_dir    = "../lambda_functions/messages_get"
+
+  layers = [
+    module.dependencies_layer.layer_arn,
+    module.utility_layer.layer_arn
+  ]
+
+  environment_variables = {
+    MESSAGES_TABLE_NAME = module.dynamodb.messages_table_name
+  }
+
+  dynamodb_table_arns = [module.dynamodb.messages_table_arn]
+
+  tags = local.common_tags
+}
+
+# Admin Stats Lambda Function
+module "admin_stats_get_lambda" {
+  source = "./modules/lambda"
+
+  function_name = "${var.project_name}-${local.current_environment}-admin-stats-get"
+  handler       = "index.handler"
+  runtime       = "nodejs18.x"
+  source_dir    = "../lambda_functions/admin_stats_get"
+
+  layers = [
+    module.dependencies_layer.layer_arn,
+    module.utility_layer.layer_arn
+  ]
+
+  environment_variables = {
+    EVENTS_TABLE_NAME        = module.dynamodb.events_table_name
+    COMPETITIONS_TABLE_NAME  = module.dynamodb.competitions_table_name
+    VOLUNTEERS_TABLE_NAME    = module.dynamodb.volunteers_table_name
+    COURSES_TABLE_NAME       = module.dynamodb.courses_table_name
+    REGISTRATIONS_TABLE_NAME = module.dynamodb.registrations_table_name
+    MESSAGES_TABLE_NAME      = module.dynamodb.messages_table_name
+  }
+
+  dynamodb_table_arns = [
+    module.dynamodb.events_table_arn,
+    module.dynamodb.competitions_table_arn,
+    module.dynamodb.volunteers_table_arn,
+    module.dynamodb.courses_table_arn,
+    module.dynamodb.registrations_table_arn,
+    module.dynamodb.messages_table_arn
+  ]
+
+  tags = local.common_tags
+}
+
 # API Gateway for EFY Platform
 module "efy_api_gateway" {
   source = "./modules/efy_api_gateway"
@@ -431,6 +692,36 @@ module "efy_api_gateway" {
   suggestions_post_lambda_function_name = module.suggestions_post_lambda.lambda_function_name
   suggestions_get_lambda_arn            = module.suggestions_get_lambda.lambda_invoke_arn
   suggestions_get_lambda_function_name  = module.suggestions_get_lambda.lambda_function_name
+
+  # Courses Lambda ARNs and Function Names
+  courses_get_lambda_arn                 = module.courses_get_lambda.lambda_invoke_arn
+  courses_get_lambda_function_name       = module.courses_get_lambda.lambda_function_name
+  courses_get_by_id_lambda_arn           = module.courses_get_by_id_lambda.lambda_invoke_arn
+  courses_get_by_id_lambda_function_name = module.courses_get_by_id_lambda.lambda_function_name
+  courses_post_lambda_arn                = module.courses_post_lambda.lambda_invoke_arn
+  courses_post_lambda_function_name      = module.courses_post_lambda.lambda_function_name
+  courses_put_lambda_arn                 = module.courses_put_lambda.lambda_invoke_arn
+  courses_put_lambda_function_name       = module.courses_put_lambda.lambda_function_name
+  courses_delete_lambda_arn              = module.courses_delete_lambda.lambda_invoke_arn
+  courses_delete_lambda_function_name    = module.courses_delete_lambda.lambda_function_name
+
+  # Registrations Lambda ARNs and Function Names
+  registrations_post_lambda_arn           = module.registrations_post_lambda.lambda_invoke_arn
+  registrations_post_lambda_function_name = module.registrations_post_lambda.lambda_function_name
+  registrations_get_lambda_arn            = module.registrations_get_lambda.lambda_invoke_arn
+  registrations_get_lambda_function_name  = module.registrations_get_lambda.lambda_function_name
+  registrations_put_lambda_arn            = module.registrations_put_lambda.lambda_invoke_arn
+  registrations_put_lambda_function_name  = module.registrations_put_lambda.lambda_function_name
+
+  # Messages Lambda ARNs and Function Names
+  messages_post_lambda_arn           = module.messages_post_lambda.lambda_invoke_arn
+  messages_post_lambda_function_name = module.messages_post_lambda.lambda_function_name
+  messages_get_lambda_arn            = module.messages_get_lambda.lambda_invoke_arn
+  messages_get_lambda_function_name  = module.messages_get_lambda.lambda_function_name
+
+  # Admin Stats Lambda ARNs and Function Names
+  admin_stats_get_lambda_arn           = module.admin_stats_get_lambda.lambda_invoke_arn
+  admin_stats_get_lambda_function_name = module.admin_stats_get_lambda.lambda_function_name
 
   tags = local.common_tags
 }

@@ -157,6 +157,120 @@ variable "suggestions_get_lambda_function_name" {
   type        = string
 }
 
+# Courses Lambda Variables
+variable "courses_get_lambda_arn" {
+  description = "ARN of the Courses GET Lambda function"
+  type        = string
+}
+
+variable "courses_get_lambda_function_name" {
+  description = "Function name of the Courses GET Lambda"
+  type        = string
+}
+
+variable "courses_get_by_id_lambda_arn" {
+  description = "ARN of the Courses GET by ID Lambda function"
+  type        = string
+}
+
+variable "courses_get_by_id_lambda_function_name" {
+  description = "Function name of the Courses GET by ID Lambda"
+  type        = string
+}
+
+variable "courses_post_lambda_arn" {
+  description = "ARN of the Courses POST Lambda function"
+  type        = string
+}
+
+variable "courses_post_lambda_function_name" {
+  description = "Function name of the Courses POST Lambda"
+  type        = string
+}
+
+variable "courses_put_lambda_arn" {
+  description = "ARN of the Courses PUT Lambda function"
+  type        = string
+}
+
+variable "courses_put_lambda_function_name" {
+  description = "Function name of the Courses PUT Lambda"
+  type        = string
+}
+
+variable "courses_delete_lambda_arn" {
+  description = "ARN of the Courses DELETE Lambda function"
+  type        = string
+}
+
+variable "courses_delete_lambda_function_name" {
+  description = "Function name of the Courses DELETE Lambda"
+  type        = string
+}
+
+# Registrations Lambda Variables
+variable "registrations_post_lambda_arn" {
+  description = "ARN of the Registrations POST Lambda function"
+  type        = string
+}
+
+variable "registrations_post_lambda_function_name" {
+  description = "Function name of the Registrations POST Lambda"
+  type        = string
+}
+
+variable "registrations_get_lambda_arn" {
+  description = "ARN of the Registrations GET Lambda function"
+  type        = string
+}
+
+variable "registrations_get_lambda_function_name" {
+  description = "Function name of the Registrations GET Lambda"
+  type        = string
+}
+
+variable "registrations_put_lambda_arn" {
+  description = "ARN of the Registrations PUT Lambda function"
+  type        = string
+}
+
+variable "registrations_put_lambda_function_name" {
+  description = "Function name of the Registrations PUT Lambda"
+  type        = string
+}
+
+# Messages Lambda Variables
+variable "messages_post_lambda_arn" {
+  description = "ARN of the Messages POST Lambda function"
+  type        = string
+}
+
+variable "messages_post_lambda_function_name" {
+  description = "Function name of the Messages POST Lambda"
+  type        = string
+}
+
+variable "messages_get_lambda_arn" {
+  description = "ARN of the Messages GET Lambda function"
+  type        = string
+}
+
+variable "messages_get_lambda_function_name" {
+  description = "Function name of the Messages GET Lambda"
+  type        = string
+}
+
+# Admin Stats Lambda Variables
+variable "admin_stats_get_lambda_arn" {
+  description = "ARN of the Admin Stats GET Lambda function"
+  type        = string
+}
+
+variable "admin_stats_get_lambda_function_name" {
+  description = "Function name of the Admin Stats GET Lambda"
+  type        = string
+}
+
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)
