@@ -147,7 +147,80 @@ make_post_request "/competitions" '{
     ]
 }' "Creating Youth Leadership Essay Contest"
 
-# 3. Submit Volunteer Applications
+# 3. Create Courses
+echo "📚 Creating Courses..."
+
+make_post_request "/courses" '{
+    "title": "Quran Memorization Fundamentals",
+    "description": "Learn effective techniques for memorizing the Holy Quran with proper tajweed and pronunciation. Suitable for beginners and intermediate learners.",
+    "instructor": "Sheikh Ahmed Al-Hafiz",
+    "duration": "8 weeks",
+    "category": "religious-studies",
+    "level": "beginner",
+    "maxParticipants": 30,
+    "startDate": "2024-02-15T14:00:00Z",
+    "endDate": "2024-04-15T16:00:00Z",
+    "schedule": "Tuesdays & Thursdays 6-8 PM",
+    "materials": "Mushaf, notebook, recording app"
+}' "Creating Quran Memorization Course"
+
+make_post_request "/courses" '{
+    "title": "Islamic History & Civilization",
+    "description": "Explore the golden age of Islamic civilization, from the Prophet Muhammad (PBUH) to the Ottoman Empire. Learn about contributions to science, art, and culture.",
+    "instructor": "Dr. Fatima Rahman",
+    "duration": "12 weeks",
+    "category": "religious-studies",
+    "level": "intermediate",
+    "maxParticipants": 25,
+    "startDate": "2024-03-01T10:00:00Z",
+    "endDate": "2024-05-24T12:00:00Z",
+    "schedule": "Mondays & Wednesdays 4-6 PM",
+    "materials": "Course materials provided, recommended readings"
+}' "Creating Islamic History Course"
+
+make_post_request "/courses" '{
+    "title": "Arabic Language for Beginners",
+    "description": "Learn Modern Standard Arabic with focus on reading, writing, and basic conversation. Perfect for those interested in understanding Islamic texts.",
+    "instructor": "Ustadha Aisha Hassan",
+    "duration": "16 weeks",
+    "category": "language",
+    "level": "beginner",
+    "maxParticipants": 20,
+    "startDate": "2024-02-20T15:00:00Z",
+    "endDate": "2024-06-10T17:00:00Z",
+    "schedule": "Saturdays 10 AM - 12 PM",
+    "materials": "Textbook, workbook, online resources"
+}' "Creating Arabic Language Course"
+
+make_post_request "/courses" '{
+    "title": "Islamic Ethics & Character Building",
+    "description": "Study Islamic ethics and character development based on Quran and Hadith. Learn practical applications for daily life.",
+    "instructor": "Imam Omar Hassan",
+    "duration": "6 weeks",
+    "category": "religious-studies",
+    "level": "beginner",
+    "maxParticipants": 35,
+    "startDate": "2024-04-01T18:00:00Z",
+    "endDate": "2024-05-13T20:00:00Z",
+    "schedule": "Fridays 6-8 PM",
+    "materials": "Course handbook, reflection journal"
+}' "Creating Islamic Ethics Course"
+
+make_post_request "/courses" '{
+    "title": "Advanced Tajweed & Qiraat",
+    "description": "Master advanced tajweed rules and different qiraat styles. For students who have completed basic Quran memorization.",
+    "instructor": "Qari Muhammad Ali",
+    "duration": "10 weeks",
+    "category": "religious-studies",
+    "level": "advanced",
+    "maxParticipants": 15,
+    "startDate": "2024-03-15T19:00:00Z",
+    "endDate": "2024-05-24T21:00:00Z",
+    "schedule": "Sundays 4-6 PM",
+    "materials": "Advanced tajweed manual, audio recordings"
+}' "Creating Advanced Tajweed Course"
+
+# 4. Submit Volunteer Applications
 echo "🤝 Creating Volunteer Applications..."
 
 make_post_request "/volunteers/join" '{
@@ -205,7 +278,7 @@ make_post_request "/volunteers/join" '{
     "preferredRoles": ["Education Coordinator", "Youth Mentor"]
 }' "Creating volunteer application for Meera Patel"
 
-# 4. Submit Suggestions
+# 5. Submit Suggestions
 echo "💡 Creating Suggestions..."
 
 make_post_request "/suggestions" '{
@@ -267,19 +340,163 @@ make_post_request "/suggestions" '{
     "tags": ["dashboard", "impact", "transparency", "metrics"]
 }' "Creating impact dashboard suggestion"
 
+# 6. Submit Messages
+echo "💬 Creating Community Messages..."
+
+make_post_request "/messages" '{
+    "senderName": "Ahmed Abdullah",
+    "senderEmail": "ahmed.abdullah@example.com",
+    "senderPhone": "+91-9876543215",
+    "messageType": "thank-you",
+    "subject": "Excellent Islamic History Workshop",
+    "content": "JazakAllahu khairan for organizing such an enlightening workshop. I learned so much about our Islamic heritage and the contributions of Muslim scholars to science and culture. The instructor was very knowledgeable and engaging.",
+    "isPublic": true,
+    "priority": "normal",
+    "tags": ["workshop", "history", "positive-feedback", "education"]
+}' "Creating thank you message from Ahmed"
+
+make_post_request "/messages" '{
+    "senderName": "Fatima Al-Zahra",
+    "senderEmail": "fatima.alzahra@example.com",
+    "senderPhone": "+91-9876543216",
+    "messageType": "feedback",
+    "subject": "Quran Memorization Course Feedback",
+    "content": "The Quran memorization course was excellent! The instructor was very patient and the teaching methods were effective. I would suggest adding more audio resources for practice at home.",
+    "isPublic": true,
+    "priority": "normal",
+    "tags": ["course", "quran", "memorization", "feedback"]
+}' "Creating feedback message from Fatima"
+
+make_post_request "/messages" '{
+    "senderName": "Omar Hassan",
+    "senderEmail": "omar.hassan@example.com",
+    "senderPhone": "+91-9876543217",
+    "messageType": "suggestion",
+    "subject": "Arabic Language Course Suggestion",
+    "content": "I would love to see an advanced Arabic course that focuses on classical texts and Islamic literature. This would help students better understand traditional Islamic sources.",
+    "isPublic": true,
+    "priority": "medium",
+    "tags": ["course", "arabic", "advanced", "suggestion"]
+}' "Creating suggestion message from Omar"
+
+make_post_request "/messages" '{
+    "senderName": "Aisha Rahman",
+    "senderEmail": "aisha.rahman@example.com",
+    "senderPhone": "+91-9876543218",
+    "messageType": "general",
+    "subject": "Volunteer Experience",
+    "content": "I have been volunteering with EFY for the past year and it has been an amazing experience. The community is supportive and the work is meaningful. Thank you for this opportunity!",
+    "isPublic": true,
+    "priority": "normal",
+    "tags": ["volunteer", "experience", "community", "positive"]
+}' "Creating general message from Aisha"
+
+make_post_request "/messages" '{
+    "senderName": "Yusuf Khan",
+    "senderEmail": "yusuf.khan@example.com",
+    "senderPhone": "+91-9876543219",
+    "messageType": "complaint",
+    "subject": "Event Registration Issue",
+    "content": "I tried to register for the Tech Conference but the registration form was not working properly. I hope this can be fixed for future events.",
+    "isPublic": false,
+    "priority": "high",
+    "tags": ["registration", "technical-issue", "complaint"]
+}' "Creating complaint message from Yusuf"
+
+make_post_request "/messages" '{
+    "senderName": "Zara Ahmed",
+    "senderEmail": "zara.ahmed@example.com",
+    "senderPhone": "+91-9876543220",
+    "messageType": "thank-you",
+    "subject": "Youth Leadership Program",
+    "content": "The youth leadership program helped me develop confidence and public speaking skills. I am now more active in my community and feel empowered to make a difference.",
+    "isPublic": true,
+    "priority": "normal",
+    "tags": ["leadership", "youth", "empowerment", "positive"]
+}' "Creating thank you message from Zara"
+
+# 7. Create Registrations
+echo "📝 Creating Registrations..."
+
+make_post_request "/registrations" '{
+    "userId": "user_1706123456_def456",
+    "itemId": "event_1706123456_abc123",
+    "itemType": "event",
+    "userEmail": "participant1@example.com",
+    "userName": "Ahmed Abdullah",
+    "userPhone": "+91-9876543221",
+    "notes": "First time participant, excited to join the tech conference!"
+}' "Creating registration for Ahmed to Tech Conference"
+
+make_post_request "/registrations" '{
+    "userId": "user_1706123457_def457",
+    "itemId": "comp_1706123456_xyz789",
+    "itemType": "competition",
+    "userEmail": "participant2@example.com",
+    "userName": "Fatima Al-Zahra",
+    "userPhone": "+91-9876543222",
+    "notes": "Looking forward to the hackathon challenge!"
+}' "Creating registration for Fatima to Hackathon"
+
+make_post_request "/registrations" '{
+    "userId": "user_1706123458_def458",
+    "itemId": "event_1706123457_abc124",
+    "itemType": "event",
+    "userEmail": "participant3@example.com",
+    "userName": "Omar Hassan",
+    "userPhone": "+91-9876543223",
+    "notes": "Interested in sustainable energy solutions"
+}' "Creating registration for Omar to Green Energy Workshop"
+
+make_post_request "/registrations" '{
+    "userId": "user_1706123459_def459",
+    "itemId": "comp_1706123457_xyz790",
+    "itemType": "competition",
+    "userEmail": "participant4@example.com",
+    "userName": "Aisha Rahman",
+    "userPhone": "+91-9876543224",
+    "notes": "Passionate about environmental innovation"
+}' "Creating registration for Aisha to Innovation Challenge"
+
+make_post_request "/registrations" '{
+    "userId": "user_1706123460_def460",
+    "itemId": "event_1706123458_abc125",
+    "itemType": "event",
+    "userEmail": "participant5@example.com",
+    "userName": "Yusuf Khan",
+    "userPhone": "+91-9876543225",
+    "notes": "Healthcare professional interested in community service"
+}' "Creating registration for Yusuf to Health Fair"
+
+make_post_request "/registrations" '{
+    "userId": "user_1706123461_def461",
+    "itemId": "comp_1706123458_xyz791",
+    "itemType": "competition",
+    "userEmail": "participant6@example.com",
+    "userName": "Zara Ahmed",
+    "userPhone": "+91-9876543226",
+    "notes": "Young writer excited about the essay contest"
+}' "Creating registration for Zara to Essay Contest"
+
 echo ""
 echo "🎯 Database population completed!"
 echo ""
 echo "📊 Summary of created records:"
 echo "• Events: 4 records"
 echo "• Competitions: 3 records"
+echo "• Courses: 5 records"
 echo "• Volunteer Applications: 5 records"
 echo "• Suggestions: 6 records"
+echo "• Messages: 6 records"
+echo "• Registrations: 6 records"
 echo ""
 echo "🔗 You can now test the GET endpoints to verify the data:"
 echo "• GET $API_BASE_URL/events"
 echo "• GET $API_BASE_URL/competitions"
+echo "• GET $API_BASE_URL/courses"
 echo "• GET $API_BASE_URL/volunteers"
 echo "• GET $API_BASE_URL/suggestions"
+echo "• GET $API_BASE_URL/messages"
+echo "• GET $API_BASE_URL/registrations"
 echo ""
 echo "✨ All done! Your EFY API database is now populated with comprehensive dummy data."

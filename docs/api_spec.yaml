@@ -1152,7 +1152,7 @@ paths:
                   example: "event_1706123456_abc123"
                 itemType:
                   type: string
-                  enum: [event, competition]
+                  enum: [event, competition, course]
                   example: "event"
                 userEmail:
                   type: string
@@ -1200,10 +1200,10 @@ paths:
       parameters:
         - name: itemType
           in: query
-          description: Filter by item type (event or competition)
+          description: Filter by item type (event, competition, or course)
           schema:
             type: string
-            enum: [event, competition]
+            enum: [event, competition, course]
         - name: itemId
           in: query
           description: Filter by specific item ID
@@ -1906,10 +1906,10 @@ components:
         itemId:
           type: string
           example: "event_1706123456_abc123"
-          description: Event or competition identifier
+          description: Event, competition, or course identifier
         itemType:
           type: string
-          enum: [event, competition]
+          enum: [event, competition, course]
           example: "event"
           description: Type of item being registered for
         userEmail:
