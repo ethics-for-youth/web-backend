@@ -386,7 +386,7 @@ resource "aws_api_gateway_integration" "events_options" {
   resource_id = aws_api_gateway_resource.events.id
   http_method = aws_api_gateway_method.events_options.http_method
   type        = "MOCK"
-  
+
   request_templates = {
     "application/json" = "{ \"statusCode\": 200 }"
   }
@@ -397,7 +397,7 @@ resource "aws_api_gateway_integration" "events_id_options" {
   resource_id = aws_api_gateway_resource.events_id.id
   http_method = aws_api_gateway_method.events_id_options.http_method
   type        = "MOCK"
-  
+
   request_templates = {
     "application/json" = "{ \"statusCode\": 200 }"
   }
@@ -408,7 +408,7 @@ resource "aws_api_gateway_integration" "competitions_options" {
   resource_id = aws_api_gateway_resource.competitions.id
   http_method = aws_api_gateway_method.competitions_options.http_method
   type        = "MOCK"
-  
+
   request_templates = {
     "application/json" = "{ \"statusCode\": 200 }"
   }
@@ -419,7 +419,7 @@ resource "aws_api_gateway_integration" "competitions_register_options" {
   resource_id = aws_api_gateway_resource.competitions_register.id
   http_method = aws_api_gateway_method.competitions_register_options.http_method
   type        = "MOCK"
-  
+
   request_templates = {
     "application/json" = "{ \"statusCode\": 200 }"
   }
@@ -430,7 +430,7 @@ resource "aws_api_gateway_integration" "volunteers_join_options" {
   resource_id = aws_api_gateway_resource.volunteers_join.id
   http_method = aws_api_gateway_method.volunteers_join_options.http_method
   type        = "MOCK"
-  
+
   request_templates = {
     "application/json" = "{ \"statusCode\": 200 }"
   }
@@ -441,7 +441,7 @@ resource "aws_api_gateway_integration" "volunteers_id_options" {
   resource_id = aws_api_gateway_resource.volunteers_id.id
   http_method = aws_api_gateway_method.volunteers_id_options.http_method
   type        = "MOCK"
-  
+
   request_templates = {
     "application/json" = "{ \"statusCode\": 200 }"
   }
@@ -452,7 +452,7 @@ resource "aws_api_gateway_integration" "suggestions_options" {
   resource_id = aws_api_gateway_resource.suggestions.id
   http_method = aws_api_gateway_method.suggestions_options.http_method
   type        = "MOCK"
-  
+
   request_templates = {
     "application/json" = "{ \"statusCode\": 200 }"
   }
@@ -463,7 +463,7 @@ resource "aws_api_gateway_integration" "courses_options" {
   resource_id = aws_api_gateway_resource.courses.id
   http_method = aws_api_gateway_method.courses_options.http_method
   type        = "MOCK"
-  
+
   request_templates = {
     "application/json" = "{ \"statusCode\": 200 }"
   }
@@ -474,7 +474,7 @@ resource "aws_api_gateway_integration" "courses_id_options" {
   resource_id = aws_api_gateway_resource.courses_id.id
   http_method = aws_api_gateway_method.courses_id_options.http_method
   type        = "MOCK"
-  
+
   request_templates = {
     "application/json" = "{ \"statusCode\": 200 }"
   }
@@ -485,7 +485,7 @@ resource "aws_api_gateway_integration" "registrations_options" {
   resource_id = aws_api_gateway_resource.registrations.id
   http_method = aws_api_gateway_method.registrations_options.http_method
   type        = "MOCK"
-  
+
   request_templates = {
     "application/json" = "{ \"statusCode\": 200 }"
   }
@@ -496,7 +496,7 @@ resource "aws_api_gateway_integration" "registrations_id_options" {
   resource_id = aws_api_gateway_resource.registrations_id.id
   http_method = aws_api_gateway_method.registrations_id_options.http_method
   type        = "MOCK"
-  
+
   request_templates = {
     "application/json" = "{ \"statusCode\": 200 }"
   }
@@ -507,7 +507,7 @@ resource "aws_api_gateway_integration" "messages_options" {
   resource_id = aws_api_gateway_resource.messages.id
   http_method = aws_api_gateway_method.messages_options.http_method
   type        = "MOCK"
-  
+
   request_templates = {
     "application/json" = "{ \"statusCode\": 200 }"
   }
