@@ -28,13 +28,13 @@ locals {
 module "dynamodb" {
   source = "./modules/dynamodb"
 
-  events_table_name       = "${var.project_name}-${local.current_environment}-events"
-  competitions_table_name = "${var.project_name}-${local.current_environment}-competitions"
-  volunteers_table_name   = "${var.project_name}-${local.current_environment}-volunteers"
-  suggestions_table_name  = "${var.project_name}-${local.current_environment}-suggestions"
-  courses_table_name      = "${var.project_name}-${local.current_environment}-courses"
+  events_table_name        = "${var.project_name}-${local.current_environment}-events"
+  competitions_table_name  = "${var.project_name}-${local.current_environment}-competitions"
+  volunteers_table_name    = "${var.project_name}-${local.current_environment}-volunteers"
+  suggestions_table_name   = "${var.project_name}-${local.current_environment}-suggestions"
+  courses_table_name       = "${var.project_name}-${local.current_environment}-courses"
   registrations_table_name = "${var.project_name}-${local.current_environment}-registrations"
-  messages_table_name     = "${var.project_name}-${local.current_environment}-messages"
+  messages_table_name      = "${var.project_name}-${local.current_environment}-messages"
 
   tags = local.common_tags
 }
@@ -714,13 +714,13 @@ module "efy_api_gateway" {
   registrations_put_lambda_function_name  = module.registrations_put_lambda.lambda_function_name
 
   # Messages Lambda ARNs and Function Names
-  messages_post_lambda_arn           = module.messages_post_lambda.lambda_invoke_arn
-  messages_post_lambda_function_name = module.messages_post_lambda.lambda_function_name
-  messages_get_lambda_arn            = module.messages_get_lambda.lambda_invoke_arn
-  messages_get_lambda_function_name  = module.messages_get_lambda.lambda_function_name
+  messages_post_lambda_arn            = module.messages_post_lambda.lambda_invoke_arn
+  messages_post_lambda_function_name  = module.messages_post_lambda.lambda_function_name
+  messages_get_lambda_arn             = module.messages_get_lambda.lambda_invoke_arn
+  messages_get_lambda_function_name   = module.messages_get_lambda.lambda_function_name
 
   # Admin Stats Lambda ARNs and Function Names
-  admin_stats_get_lambda_arn           = module.admin_stats_get_lambda.lambda_invoke_arn
+  admin_stats_get_lambda_arn          = module.admin_stats_get_lambda.lambda_invoke_arn
   admin_stats_get_lambda_function_name = module.admin_stats_get_lambda.lambda_function_name
 
   tags = local.common_tags
