@@ -24,22 +24,22 @@ exports.handler = async (event) => {
         });
 
         if (new Date(body.startDate) > new Date(body.endDate)) {
-            throw new Error(`startDate cannot be after endDate`);
+            return errorResponse(new Error(`startDate cannot be after endDate`), 400);
         }
         if (body.registrationDeadline && new Date(body.registrationDeadline) > new Date(body.startDate)) {
-            throw new Error(`registrationDeadline cannot be after startDate`);
+            return errorResponse(new Error(`registrationDeadline cannot be after startDate`), 400);
         }
 
         // Type checks
         if (body.rules && !Array.isArray(body.rules)) {
-            throw new Error(`rules must be an array`);
+            return errorResponse(new Error(`rules must be an array`), 400);
         }
         if (body.prizes && !Array.isArray(body.prizes)) {
-            throw new Error(`prizes must be an array`);
+            return errorResponse(new Error(`prizes must be an array`), 400);
         }
         if (body.maxParticipants !== undefined) {
             if (typeof body.maxParticipants !== 'number' || body.maxParticipants < 0) {
-                throw new Error(`maxParticipants must be a non-negative number`);
+                return errorResponse(new Error(`maxParticipants must be a non-negative number`), 400);
             }
         }
 
