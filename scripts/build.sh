@@ -198,6 +198,17 @@ terraform {
     path = "terraform.tfstate"
   }
 }
+
+# Default AWS Provider
+provider "aws" {
+  region = var.aws_region
+}
+
+# AWS Provider for us-east-1 (required for ACM certificates used with CloudFront)
+provider "aws" {
+  alias  = "us_east_1"
+  region = "us-east-1"
+}
 EOF
             # Format the generated backend file
             terraform fmt backend.tf
@@ -261,7 +272,13 @@ plan_terraform() {
     fi
     
     print_status "Running terraform plan..."
-    terraform plan -out=terraform-plan-$env.tfplan -detailed-exitcode
+    if [ -f "terraform.$env.tfvars" ]; then
+        print_status "Using var file: terraform.$env.tfvars"
+        terraform plan -var-file="terraform.$env.tfvars" -out=terraform-plan-$env.tfplan -detailed-exitcode
+    else
+        print_error "No var file found for environment $env. Please ensure terraform.$env.tfvars exists."
+        exit 1
+    fi
     print_status "Plan saved to terraform/terraform-plan-$env.tfplan"
     
     cd ..
@@ -327,6 +344,7 @@ apply_terraform() {
     else
         print_status "No plan file found, applying with var file: terraform.$env.tfvars"
         if [ -f "terraform.$env.tfvars" ]; then
+            print_status "Using var file: terraform.$env.tfvars"
             terraform apply -var-file="terraform.$env.tfvars" -auto-approve
         else
             print_error "No var file found for environment $env. Please ensure terraform.$env.tfvars exists."
@@ -357,21 +375,24 @@ destroy_terraform() {
         terraform init -backend-config="backend-${env}.tfbackend"
     fi
     
-    # Use workspace script if available
-    if [ -f "workspace.sh" ]; then
-        chmod +x workspace.sh
-        ./workspace.sh destroy "$env"
+
+    # Manual workspace management
+    print_status "Setting up workspace: $env"
+    if terraform workspace list | grep -q "^[* ]\s*$env$"; then
+        print_status "Selecting existing workspace: $env"
+        terraform workspace select "$env"
     else
-        # Manual workspace management
-        print_status "Setting up workspace: $env"
-        if terraform workspace list | grep -q "^[* ]\s*$env$"; then
-            print_status "Selecting existing workspace: $env"
-            terraform workspace select "$env"
-        else
-            print_status "Creating new workspace: $env"
-            terraform workspace new "$env"
-        fi
-        terraform destroy -auto-approve
+        print_status "Creating new workspace: $env"
+        terraform workspace new "$env"
+    fi
+    
+    # Use var file for destroy to ensure consistency
+    if [ -f "terraform.$env.tfvars" ]; then
+        print_status "Using var file: terraform.$env.tfvars"
+        terraform destroy -var-file="terraform.$env.tfvars" -auto-approve
+    else
+        print_error "No var file found for environment $env. Please ensure terraform.$env.tfvars exists."
+        exit 1
     fi
     
     cd ..
