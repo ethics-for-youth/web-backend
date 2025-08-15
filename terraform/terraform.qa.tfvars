@@ -11,10 +11,10 @@ environment_configs = {
     cloudfront_price_class       = "PriceClass_100"
 
     # DNS & Domain (disabled for QA)
-    enable_custom_domain = false
+    enable_custom_domain = true
     domain_name          = "qa.efy.org.in"
     certificate_sans     = ["qa.efy.org.in"]
-    create_www_record    = false
+    create_www_record    = true
 
     # Application S3 Bucket
     s3_bucket_suffix        = "efy-qa-unique"
