@@ -261,7 +261,13 @@ plan_terraform() {
     fi
     
     print_status "Running terraform plan..."
-    terraform plan -out=terraform-plan-$env.tfplan -detailed-exitcode
+    if [ -f "terraform.$env.tfvars" ]; then
+        print_status "Using var file: terraform.$env.tfvars"
+        terraform plan -var-file="terraform.$env.tfvars" -out=terraform-plan-$env.tfplan -detailed-exitcode
+    else
+        print_error "No var file found for environment $env. Please ensure terraform.$env.tfvars exists."
+        exit 1
+    fi
     print_status "Plan saved to terraform/terraform-plan-$env.tfplan"
     
     cd ..
@@ -327,6 +333,7 @@ apply_terraform() {
     else
         print_status "No plan file found, applying with var file: terraform.$env.tfvars"
         if [ -f "terraform.$env.tfvars" ]; then
+            print_status "Using var file: terraform.$env.tfvars"
             terraform apply -var-file="terraform.$env.tfvars" -auto-approve
         else
             print_error "No var file found for environment $env. Please ensure terraform.$env.tfvars exists."
@@ -371,7 +378,15 @@ destroy_terraform() {
             print_status "Creating new workspace: $env"
             terraform workspace new "$env"
         fi
-        terraform destroy -auto-approve
+        
+        # Use var file for destroy to ensure consistency
+        if [ -f "terraform.$env.tfvars" ]; then
+            print_status "Using var file: terraform.$env.tfvars"
+            terraform destroy -var-file="terraform.$env.tfvars" -auto-approve
+        else
+            print_error "No var file found for environment $env. Please ensure terraform.$env.tfvars exists."
+            exit 1
+        fi
     fi
     
     cd ..
