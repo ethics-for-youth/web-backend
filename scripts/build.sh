@@ -198,6 +198,17 @@ terraform {
     path = "terraform.tfstate"
   }
 }
+
+# Default AWS Provider
+provider "aws" {
+  region = var.aws_region
+}
+
+# AWS Provider for us-east-1 (required for ACM certificates used with CloudFront)
+provider "aws" {
+  alias  = "us_east_1"
+  region = "us-east-1"
+}
 EOF
             # Format the generated backend file
             terraform fmt backend.tf
