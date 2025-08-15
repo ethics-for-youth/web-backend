@@ -2,7 +2,7 @@ name: Deploy to QA Environment
 
 on:
   push:
-    branches: [ main ]
+    branches: [ qa ]
     paths:
       - 'terraform/**'
       - 'lambda_functions/**'
