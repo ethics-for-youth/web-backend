@@ -364,29 +364,24 @@ destroy_terraform() {
         terraform init -backend-config="backend-${env}.tfbackend"
     fi
     
-    # Use workspace script if available
-    if [ -f "workspace.sh" ]; then
-        chmod +x workspace.sh
-        ./workspace.sh destroy "$env"
+
+    # Manual workspace management
+    print_status "Setting up workspace: $env"
+    if terraform workspace list | grep -q "^[* ]\s*$env$"; then
+        print_status "Selecting existing workspace: $env"
+        terraform workspace select "$env"
     else
-        # Manual workspace management
-        print_status "Setting up workspace: $env"
-        if terraform workspace list | grep -q "^[* ]\s*$env$"; then
-            print_status "Selecting existing workspace: $env"
-            terraform workspace select "$env"
-        else
-            print_status "Creating new workspace: $env"
-            terraform workspace new "$env"
-        fi
-        
-        # Use var file for destroy to ensure consistency
-        if [ -f "terraform.$env.tfvars" ]; then
-            print_status "Using var file: terraform.$env.tfvars"
-            terraform destroy -var-file="terraform.$env.tfvars" -auto-approve
-        else
-            print_error "No var file found for environment $env. Please ensure terraform.$env.tfvars exists."
-            exit 1
-        fi
+        print_status "Creating new workspace: $env"
+        terraform workspace new "$env"
+    fi
+    
+    # Use var file for destroy to ensure consistency
+    if [ -f "terraform.$env.tfvars" ]; then
+        print_status "Using var file: terraform.$env.tfvars"
+        terraform destroy -var-file="terraform.$env.tfvars" -auto-approve
+    else
+        print_error "No var file found for environment $env. Please ensure terraform.$env.tfvars exists."
+        exit 1
     fi
     
     cd ..

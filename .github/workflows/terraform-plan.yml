@@ -53,8 +53,6 @@ jobs:
     - name: Make scripts executable
       run: |
         chmod +x scripts/build.sh
-        chmod +x terraform/workspace.sh
-        chmod +x terraform/backend-setup/workspace.sh
         
     - name: Plan Terraform changes
       id: plan
