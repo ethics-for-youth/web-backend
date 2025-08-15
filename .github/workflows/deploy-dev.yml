@@ -56,7 +56,7 @@ jobs:
     name: Wait for Dev Deployment Approval
     runs-on: ubuntu-latest
     needs: [validate, plan]
-    if: ${{ !github.event.inputs.skip_approval }}
+    # if: ${{ !github.event.inputs.skip_approval }}
     outputs:
       approved: ${{ steps.approval.outputs.approved }}
     steps:
