@@ -21,7 +21,7 @@ variable "project_name" {
 variable "environment_configs" {
   description = "Environment-specific configurations for dev, qa, and prod"
   type = map(object({
-    
+
     # -----------------------------------------------------------------------------
     # STATIC WEBSITE HOSTING CONFIGURATION
     # -----------------------------------------------------------------------------
@@ -29,7 +29,7 @@ variable "environment_configs" {
     static_hosting_bucket_suffix = string       # Unique suffix for static hosting bucket
     cors_allowed_origins         = list(string) # CORS origins for static hosting
     cloudfront_price_class       = string       # CloudFront pricing tier (PriceClass_100/All)
-    
+
     # -----------------------------------------------------------------------------
     # DNS AND DOMAIN CONFIGURATION
     # -----------------------------------------------------------------------------
@@ -37,7 +37,7 @@ variable "environment_configs" {
     domain_name          = string       # Primary domain name (e.g., "example.com")
     certificate_sans     = list(string) # Additional domains for SSL certificate
     create_www_record    = bool         # Create www subdomain record
-    
+
     # -----------------------------------------------------------------------------
     # APPLICATION S3 BUCKET CONFIGURATION
     # -----------------------------------------------------------------------------
@@ -47,7 +47,7 @@ variable "environment_configs" {
     s3_kms_key_id           = string       # KMS key ID for encryption (null for default)
     s3_enable_cors          = bool         # Enable CORS for app bucket
     s3_cors_allowed_origins = list(string) # CORS origins for app bucket
-    
+
     # S3 Lifecycle rules for cost optimization
     s3_lifecycle_rules = list(object({
       id     = string
@@ -76,7 +76,7 @@ variable "environment_configs" {
         storage_class             = string
       })))
     }))
-    
+
     # -----------------------------------------------------------------------------
     # RESOURCE TAGGING
     # -----------------------------------------------------------------------------

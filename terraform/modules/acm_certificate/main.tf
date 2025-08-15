@@ -25,11 +25,11 @@ resource "aws_route53_record" "cert_validation" {
   count = length(local.unique_domains)
 
   allow_overwrite = true
-  name = tolist(aws_acm_certificate.main.domain_validation_options)[count.index].resource_record_name
-  records = [tolist(aws_acm_certificate.main.domain_validation_options)[count.index].resource_record_value]
-  ttl = 60
-  type = tolist(aws_acm_certificate.main.domain_validation_options)[count.index].resource_record_type
-  zone_id = var.hosted_zone_id
+  name            = tolist(aws_acm_certificate.main.domain_validation_options)[count.index].resource_record_name
+  records         = [tolist(aws_acm_certificate.main.domain_validation_options)[count.index].resource_record_value]
+  ttl             = 60
+  type            = tolist(aws_acm_certificate.main.domain_validation_options)[count.index].resource_record_type
+  zone_id         = var.hosted_zone_id
 }
 
 # Local values to deduplicate domains
