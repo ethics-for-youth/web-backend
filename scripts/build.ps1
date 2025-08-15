@@ -423,15 +423,11 @@ function Destroy-Terraform {
             terraform init -backend-config="backend-$Env.tfbackend"
         }
         
-        # Use workspace script if available
-        if (Test-Path "workspace.ps1") {
-            & .\workspace.ps1 destroy $Env
-        }
-        else {
-            # Manual workspace management
-            Set-TerraformWorkspace $Env
-            terraform destroy -auto-approve
-        }
+
+        # Manual workspace management
+        Set-TerraformWorkspace $Env
+        terraform destroy -auto-approve
+
     }
     finally {
         Set-Location $originalLocation

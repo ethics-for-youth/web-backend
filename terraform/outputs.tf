@@ -24,6 +24,27 @@ output "efy_api_gateway_id" {
   value       = module.efy_api_gateway.api_gateway_id
 }
 
+# S3 Bucket Outputs
+output "app_s3_bucket_name" {
+  description = "Name of the application S3 bucket"
+  value       = module.app_s3_bucket.bucket_id
+}
+
+output "app_s3_bucket_arn" {
+  description = "ARN of the application S3 bucket"
+  value       = module.app_s3_bucket.bucket_arn
+}
+
+output "app_s3_bucket_domain_name" {
+  description = "Domain name of the application S3 bucket"
+  value       = module.app_s3_bucket.bucket_domain_name
+}
+
+output "app_s3_bucket_region" {
+  description = "Region of the application S3 bucket"
+  value       = module.app_s3_bucket.bucket_region
+}
+
 # DynamoDB Table Names
 output "events_table_name" {
   description = "Name of the Events DynamoDB table"
@@ -88,4 +109,54 @@ output "suggestions_lambda_arns" {
 output "common_tags" {
   description = "Common tags applied to all resources"
   value       = local.common_tags
+}
+
+# Static Website Hosting Outputs
+output "static_website_bucket_name" {
+  description = "Name of the S3 bucket for static website hosting"
+  value       = length(module.static_hosting) > 0 ? module.static_hosting[0].bucket_id : null
+}
+
+output "static_website_bucket_endpoint" {
+  description = "Website endpoint of the S3 bucket"
+  value       = length(module.static_hosting) > 0 ? module.static_hosting[0].website_endpoint : null
+}
+
+output "cloudfront_distribution_id" {
+  description = "CloudFront Distribution ID"
+  value       = length(module.cloudfront) > 0 ? module.cloudfront[0].distribution_id : null
+}
+
+output "cloudfront_distribution_domain_name" {
+  description = "CloudFront Distribution domain name"
+  value       = length(module.cloudfront) > 0 ? module.cloudfront[0].distribution_domain_name : null
+}
+
+output "custom_domain_name" {
+  description = "Custom domain name for the website"
+  value       = local.env_config.enable_custom_domain ? local.env_config.domain_name : null
+}
+
+output "route53_hosted_zone_id" {
+  description = "Route 53 hosted zone ID"
+  value       = length(module.route53_hosted_zone) > 0 ? module.route53_hosted_zone[0].hosted_zone_id : null
+}
+
+output "route53_name_servers" {
+  description = "Route 53 hosted zone name servers"
+  value       = length(module.route53_hosted_zone) > 0 ? module.route53_hosted_zone[0].hosted_zone_name_servers : null
+}
+
+output "acm_certificate_arn" {
+  description = "ACM certificate ARN"
+  value       = length(module.acm_certificate) > 0 ? module.acm_certificate[0].certificate_arn : null
+}
+
+output "website_urls" {
+  description = "Website URLs"
+  value = {
+    cloudfront_url    = length(module.cloudfront) > 0 ? "https://${module.cloudfront[0].distribution_domain_name}" : null
+    custom_domain_url = local.env_config.enable_custom_domain ? "https://${local.env_config.domain_name}" : null
+    s3_website_url    = length(module.static_hosting) > 0 ? "http://${module.static_hosting[0].website_endpoint}" : null
+  }
 }

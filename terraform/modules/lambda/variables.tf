@@ -41,3 +41,9 @@ variable "dynamodb_table_arns" {
   type        = list(string)
   default     = []
 }
+
+variable "s3_bucket_arns" {
+  description = "List of S3 bucket ARNs that the Lambda function needs access to"
+  type        = list(string)
+  default     = []
+}
