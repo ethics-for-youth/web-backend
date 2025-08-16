@@ -16,6 +16,10 @@ environment_configs = {
     certificate_sans     = ["qa.efy.org.in"]
     create_www_record    = true
 
+    # API Gateway Integration
+    enable_api_gateway = true
+    api_gateway_region = "ap-south-1"
+
     # Application S3 Bucket
     s3_bucket_suffix        = "efy-qa-unique"
     s3_enable_versioning    = true
