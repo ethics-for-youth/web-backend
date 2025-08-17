@@ -59,7 +59,6 @@ resource "aws_cloudfront_distribution" "main" {
     compress               = true
   }
 
-<<<<<<< HEAD
   # Cache behavior for API Gateway endpoints (/api/*)
   dynamic "ordered_cache_behavior" {
     for_each = var.enable_api_gateway ? [1] : []
@@ -85,8 +84,6 @@ resource "aws_cloudfront_distribution" "main" {
     }
   }
 
-=======
->>>>>>> 809a5a46a57058fcc190be61de8afc4728bf8797
   # Custom error responses
   dynamic "custom_error_response" {
     for_each = var.custom_error_responses
