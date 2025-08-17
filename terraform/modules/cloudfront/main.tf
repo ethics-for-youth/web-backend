@@ -155,4 +155,6 @@ resource "aws_s3_bucket_policy" "cloudfront_oac_policy" {
       }
     ]
   })
+
+  depends_on = [aws_cloudfront_distribution.main]
 }
