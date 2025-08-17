@@ -139,8 +139,4 @@ resource "aws_s3_bucket_policy" "cloudfront_oac_policy" {
       }
     ]
   })
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 809a5a46a57058fcc190be61de8afc4728bf8797
