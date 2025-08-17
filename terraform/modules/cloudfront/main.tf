@@ -22,6 +22,7 @@ resource "aws_cloudfront_distribution" "main" {
     content {
       domain_name = var.api_gateway_domain_name
       origin_id   = "ApiGateway-${var.api_gateway_region}"
+      origin_path = "/default"
 
       custom_origin_config {
         http_port              = 80
@@ -63,24 +64,39 @@ resource "aws_cloudfront_distribution" "main" {
   dynamic "ordered_cache_behavior" {
     for_each = var.enable_api_gateway ? [1] : []
     content {
-      path_pattern     = "/api/*"
-      allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
-      cached_methods   = ["GET", "HEAD"]
-      target_origin_id = "ApiGateway-${var.api_gateway_region}"
+      path_pattern           = "/api/*"
+      allowed_methods        = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+      cached_methods         = ["GET", "HEAD"]
+      target_origin_id       = "ApiGateway-${var.api_gateway_region}"
+      compress               = false
+      viewer_protocol_policy = "https-only"
 
       forwarded_values {
         query_string = true
-        headers      = ["*"]
+        headers = [
+          "Authorization",
+          "CloudFront-Forwarded-Proto",
+          "CloudFront-Is-Desktop-Viewer",
+          "CloudFront-Is-Mobile-Viewer",
+          "CloudFront-Is-SmartTV-Viewer",
+          "CloudFront-Is-Tablet-Viewer",
+          "CloudFront-Viewer-Country",
+          "Host",
+          "Origin",
+          "Referer",
+          "User-Agent",
+          "X-Forwarded-For",
+          "X-Forwarded-Host",
+          "X-Forwarded-Proto"
+        ]
         cookies {
           forward = "all"
         }
       }
 
-      viewer_protocol_policy = "https-only"
-      min_ttl                = 0
-      default_ttl            = 0
-      max_ttl                = 0
-      compress               = false
+      min_ttl     = 0
+      default_ttl = 0
+      max_ttl     = 0
     }
   }
 
