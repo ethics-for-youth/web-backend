@@ -39,6 +39,12 @@ variable "environment_configs" {
     create_www_record    = bool         # Create www subdomain record
 
     # -----------------------------------------------------------------------------
+    # API GATEWAY INTEGRATION CONFIGURATION
+    # -----------------------------------------------------------------------------
+    enable_api_gateway = bool   # Enable API Gateway integration with CloudFront
+    api_gateway_region = string # AWS region for API Gateway deployment
+
+    # -----------------------------------------------------------------------------
     # APPLICATION S3 BUCKET CONFIGURATION
     # -----------------------------------------------------------------------------
     s3_bucket_suffix        = string       # Unique suffix for app data bucket

@@ -824,6 +824,11 @@ module "cloudfront" {
   acm_certificate_arn = local.env_config.enable_custom_domain && length(module.acm_certificate) > 0 ? module.acm_certificate[0].certificate_arn : null
   price_class         = local.env_config.cloudfront_price_class
 
+  # API Gateway Integration
+  enable_api_gateway      = local.env_config.enable_api_gateway
+  api_gateway_domain_name = local.env_config.enable_api_gateway ? "${module.efy_api_gateway.api_gateway_id}.execute-api.${local.env_config.api_gateway_region}.amazonaws.com" : ""
+  api_gateway_region      = local.env_config.api_gateway_region
+
   custom_error_responses = [
     {
       error_code            = 404
@@ -841,7 +846,7 @@ module "cloudfront" {
 
   tags = local.common_tags
 
-  depends_on = [module.static_hosting, module.acm_certificate]
+  depends_on = [module.static_hosting, module.acm_certificate, module.efy_api_gateway]
 }
 
 # Route 53 DNS Records for CloudFront (created after CloudFront)
