@@ -32,12 +32,6 @@ resource "aws_api_gateway_method" "events_post" {
   authorization = "NONE"
 }
 
-resource "aws_api_gateway_method" "events_options" {
-  rest_api_id   = aws_api_gateway_rest_api.efy_api.id
-  resource_id   = aws_api_gateway_resource.events.id
-  http_method   = "OPTIONS"
-  authorization = "NONE"
-}
 
 resource "aws_api_gateway_method" "events_get_by_id" {
   rest_api_id   = aws_api_gateway_rest_api.efy_api.id
@@ -60,12 +54,6 @@ resource "aws_api_gateway_method" "events_delete" {
   authorization = "NONE"
 }
 
-resource "aws_api_gateway_method" "events_id_options" {
-  rest_api_id   = aws_api_gateway_rest_api.efy_api.id
-  resource_id   = aws_api_gateway_resource.events_id.id
-  http_method   = "OPTIONS"
-  authorization = "NONE"
-}
 
 # Events Integrations
 resource "aws_api_gateway_integration" "events_get" {
@@ -158,12 +146,6 @@ resource "aws_api_gateway_method" "competitions_post" {
   authorization = "NONE"
 }
 
-resource "aws_api_gateway_method" "competitions_options" {
-  rest_api_id   = aws_api_gateway_rest_api.efy_api.id
-  resource_id   = aws_api_gateway_resource.competitions.id
-  http_method   = "OPTIONS"
-  authorization = "NONE"
-}
 
 resource "aws_api_gateway_method" "competitions_get_by_id" {
   rest_api_id   = aws_api_gateway_rest_api.efy_api.id
@@ -179,12 +161,6 @@ resource "aws_api_gateway_method" "competitions_register" {
   authorization = "NONE"
 }
 
-resource "aws_api_gateway_method" "competitions_register_options" {
-  rest_api_id   = aws_api_gateway_rest_api.efy_api.id
-  resource_id   = aws_api_gateway_resource.competitions_register.id
-  http_method   = "OPTIONS"
-  authorization = "NONE"
-}
 
 resource "aws_api_gateway_method" "competitions_results" {
   rest_api_id   = aws_api_gateway_rest_api.efy_api.id
@@ -271,12 +247,6 @@ resource "aws_api_gateway_method" "volunteers_join" {
   authorization = "NONE"
 }
 
-resource "aws_api_gateway_method" "volunteers_join_options" {
-  rest_api_id   = aws_api_gateway_rest_api.efy_api.id
-  resource_id   = aws_api_gateway_resource.volunteers_join.id
-  http_method   = "OPTIONS"
-  authorization = "NONE"
-}
 
 resource "aws_api_gateway_method" "volunteers_get" {
   rest_api_id   = aws_api_gateway_rest_api.efy_api.id
@@ -292,12 +262,6 @@ resource "aws_api_gateway_method" "volunteers_put" {
   authorization = "NONE"
 }
 
-resource "aws_api_gateway_method" "volunteers_id_options" {
-  rest_api_id   = aws_api_gateway_rest_api.efy_api.id
-  resource_id   = aws_api_gateway_resource.volunteers_id.id
-  http_method   = "OPTIONS"
-  authorization = "NONE"
-}
 
 # Volunteers Integrations
 resource "aws_api_gateway_integration" "volunteers_join" {
@@ -345,12 +309,6 @@ resource "aws_api_gateway_method" "suggestions_post" {
   authorization = "NONE"
 }
 
-resource "aws_api_gateway_method" "suggestions_options" {
-  rest_api_id   = aws_api_gateway_rest_api.efy_api.id
-  resource_id   = aws_api_gateway_resource.suggestions.id
-  http_method   = "OPTIONS"
-  authorization = "NONE"
-}
 
 resource "aws_api_gateway_method" "suggestions_get" {
   rest_api_id   = aws_api_gateway_rest_api.efy_api.id
@@ -380,138 +338,17 @@ resource "aws_api_gateway_integration" "suggestions_get" {
   uri                     = var.suggestions_get_lambda_arn
 }
 
-# CORS OPTIONS Integrations - MOCK Type
-resource "aws_api_gateway_integration" "events_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.events.id
-  http_method = aws_api_gateway_method.events_options.http_method
-  type        = "MOCK"
 
-  request_templates = {
-    "application/json" = "{ \"statusCode\": 200 }"
-  }
-}
 
-resource "aws_api_gateway_integration" "events_id_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.events_id.id
-  http_method = aws_api_gateway_method.events_id_options.http_method
-  type        = "MOCK"
 
-  request_templates = {
-    "application/json" = "{ \"statusCode\": 200 }"
-  }
-}
 
-resource "aws_api_gateway_integration" "competitions_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.competitions.id
-  http_method = aws_api_gateway_method.competitions_options.http_method
-  type        = "MOCK"
 
-  request_templates = {
-    "application/json" = "{ \"statusCode\": 200 }"
-  }
-}
 
-resource "aws_api_gateway_integration" "competitions_register_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.competitions_register.id
-  http_method = aws_api_gateway_method.competitions_register_options.http_method
-  type        = "MOCK"
 
-  request_templates = {
-    "application/json" = "{ \"statusCode\": 200 }"
-  }
-}
 
-resource "aws_api_gateway_integration" "volunteers_join_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.volunteers_join.id
-  http_method = aws_api_gateway_method.volunteers_join_options.http_method
-  type        = "MOCK"
 
-  request_templates = {
-    "application/json" = "{ \"statusCode\": 200 }"
-  }
-}
 
-resource "aws_api_gateway_integration" "volunteers_id_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.volunteers_id.id
-  http_method = aws_api_gateway_method.volunteers_id_options.http_method
-  type        = "MOCK"
 
-  request_templates = {
-    "application/json" = "{ \"statusCode\": 200 }"
-  }
-}
-
-resource "aws_api_gateway_integration" "suggestions_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.suggestions.id
-  http_method = aws_api_gateway_method.suggestions_options.http_method
-  type        = "MOCK"
-
-  request_templates = {
-    "application/json" = "{ \"statusCode\": 200 }"
-  }
-}
-
-resource "aws_api_gateway_integration" "courses_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.courses.id
-  http_method = aws_api_gateway_method.courses_options.http_method
-  type        = "MOCK"
-
-  request_templates = {
-    "application/json" = "{ \"statusCode\": 200 }"
-  }
-}
-
-resource "aws_api_gateway_integration" "courses_id_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.courses_id.id
-  http_method = aws_api_gateway_method.courses_id_options.http_method
-  type        = "MOCK"
-
-  request_templates = {
-    "application/json" = "{ \"statusCode\": 200 }"
-  }
-}
-
-resource "aws_api_gateway_integration" "registrations_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.registrations.id
-  http_method = aws_api_gateway_method.registrations_options.http_method
-  type        = "MOCK"
-
-  request_templates = {
-    "application/json" = "{ \"statusCode\": 200 }"
-  }
-}
-
-resource "aws_api_gateway_integration" "registrations_id_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.registrations_id.id
-  http_method = aws_api_gateway_method.registrations_id_options.http_method
-  type        = "MOCK"
-
-  request_templates = {
-    "application/json" = "{ \"statusCode\": 200 }"
-  }
-}
-
-resource "aws_api_gateway_integration" "messages_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.messages.id
-  http_method = aws_api_gateway_method.messages_options.http_method
-  type        = "MOCK"
-
-  request_templates = {
-    "application/json" = "{ \"statusCode\": 200 }"
-  }
-}
 
 # Lambda permissions for API Gateway
 resource "aws_lambda_permission" "events_get" {
@@ -662,12 +499,6 @@ resource "aws_api_gateway_method" "courses_post" {
   authorization = "NONE"
 }
 
-resource "aws_api_gateway_method" "courses_options" {
-  rest_api_id   = aws_api_gateway_rest_api.efy_api.id
-  resource_id   = aws_api_gateway_resource.courses.id
-  http_method   = "OPTIONS"
-  authorization = "NONE"
-}
 
 resource "aws_api_gateway_method" "courses_get_by_id" {
   rest_api_id   = aws_api_gateway_rest_api.efy_api.id
@@ -690,12 +521,6 @@ resource "aws_api_gateway_method" "courses_delete" {
   authorization = "NONE"
 }
 
-resource "aws_api_gateway_method" "courses_id_options" {
-  rest_api_id   = aws_api_gateway_rest_api.efy_api.id
-  resource_id   = aws_api_gateway_resource.courses_id.id
-  http_method   = "OPTIONS"
-  authorization = "NONE"
-}
 
 # Courses Integrations
 resource "aws_api_gateway_integration" "courses_get" {
@@ -810,12 +635,6 @@ resource "aws_api_gateway_method" "registrations_post" {
   authorization = "NONE"
 }
 
-resource "aws_api_gateway_method" "registrations_options" {
-  rest_api_id   = aws_api_gateway_rest_api.efy_api.id
-  resource_id   = aws_api_gateway_resource.registrations.id
-  http_method   = "OPTIONS"
-  authorization = "NONE"
-}
 
 resource "aws_api_gateway_method" "registrations_get" {
   rest_api_id   = aws_api_gateway_rest_api.efy_api.id
@@ -831,12 +650,6 @@ resource "aws_api_gateway_method" "registrations_put" {
   authorization = "NONE"
 }
 
-resource "aws_api_gateway_method" "registrations_id_options" {
-  rest_api_id   = aws_api_gateway_rest_api.efy_api.id
-  resource_id   = aws_api_gateway_resource.registrations_id.id
-  http_method   = "OPTIONS"
-  authorization = "NONE"
-}
 
 # Registrations Integrations
 resource "aws_api_gateway_integration" "registrations_post" {
@@ -909,12 +722,6 @@ resource "aws_api_gateway_method" "messages_post" {
   authorization = "NONE"
 }
 
-resource "aws_api_gateway_method" "messages_options" {
-  rest_api_id   = aws_api_gateway_rest_api.efy_api.id
-  resource_id   = aws_api_gateway_resource.messages.id
-  http_method   = "OPTIONS"
-  authorization = "NONE"
-}
 
 resource "aws_api_gateway_method" "messages_get" {
   rest_api_id   = aws_api_gateway_rest_api.efy_api.id
@@ -1002,343 +809,7 @@ resource "aws_lambda_permission" "admin_stats_get" {
   source_arn    = "${aws_api_gateway_rest_api.efy_api.execution_arn}/*/*"
 }
 
-# CORS Method Responses for OPTIONS methods
-resource "aws_api_gateway_method_response" "events_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.events.id
-  http_method = aws_api_gateway_method.events_options.http_method
-  status_code = "200"
 
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = true
-    "method.response.header.Access-Control-Allow-Methods" = true
-    "method.response.header.Access-Control-Allow-Origin"  = true
-    "method.response.header.Access-Control-Max-Age"       = true
-  }
-}
-
-resource "aws_api_gateway_method_response" "events_id_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.events_id.id
-  http_method = aws_api_gateway_method.events_id_options.http_method
-  status_code = "200"
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = true
-    "method.response.header.Access-Control-Allow-Methods" = true
-    "method.response.header.Access-Control-Allow-Origin"  = true
-    "method.response.header.Access-Control-Max-Age"       = true
-  }
-}
-
-resource "aws_api_gateway_method_response" "competitions_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.competitions.id
-  http_method = aws_api_gateway_method.competitions_options.http_method
-  status_code = "200"
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = true
-    "method.response.header.Access-Control-Allow-Methods" = true
-    "method.response.header.Access-Control-Allow-Origin"  = true
-    "method.response.header.Access-Control-Max-Age"       = true
-  }
-}
-
-resource "aws_api_gateway_method_response" "competitions_register_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.competitions_register.id
-  http_method = aws_api_gateway_method.competitions_register_options.http_method
-  status_code = "200"
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = true
-    "method.response.header.Access-Control-Allow-Methods" = true
-    "method.response.header.Access-Control-Allow-Origin"  = true
-    "method.response.header.Access-Control-Max-Age"       = true
-  }
-}
-
-resource "aws_api_gateway_method_response" "volunteers_join_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.volunteers_join.id
-  http_method = aws_api_gateway_method.volunteers_join_options.http_method
-  status_code = "200"
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = true
-    "method.response.header.Access-Control-Allow-Methods" = true
-    "method.response.header.Access-Control-Allow-Origin"  = true
-    "method.response.header.Access-Control-Max-Age"       = true
-  }
-}
-
-resource "aws_api_gateway_method_response" "volunteers_id_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.volunteers_id.id
-  http_method = aws_api_gateway_method.volunteers_id_options.http_method
-  status_code = "200"
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = true
-    "method.response.header.Access-Control-Allow-Methods" = true
-    "method.response.header.Access-Control-Allow-Origin"  = true
-    "method.response.header.Access-Control-Max-Age"       = true
-  }
-}
-
-resource "aws_api_gateway_method_response" "suggestions_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.suggestions.id
-  http_method = aws_api_gateway_method.suggestions_options.http_method
-  status_code = "200"
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = true
-    "method.response.header.Access-Control-Allow-Methods" = true
-    "method.response.header.Access-Control-Allow-Origin"  = true
-    "method.response.header.Access-Control-Max-Age"       = true
-  }
-}
-
-resource "aws_api_gateway_method_response" "courses_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.courses.id
-  http_method = aws_api_gateway_method.courses_options.http_method
-  status_code = "200"
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = true
-    "method.response.header.Access-Control-Allow-Methods" = true
-    "method.response.header.Access-Control-Allow-Origin"  = true
-    "method.response.header.Access-Control-Max-Age"       = true
-  }
-}
-
-resource "aws_api_gateway_method_response" "courses_id_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.courses_id.id
-  http_method = aws_api_gateway_method.courses_id_options.http_method
-  status_code = "200"
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = true
-    "method.response.header.Access-Control-Allow-Methods" = true
-    "method.response.header.Access-Control-Allow-Origin"  = true
-    "method.response.header.Access-Control-Max-Age"       = true
-  }
-}
-
-resource "aws_api_gateway_method_response" "registrations_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.registrations.id
-  http_method = aws_api_gateway_method.registrations_options.http_method
-  status_code = "200"
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = true
-    "method.response.header.Access-Control-Allow-Methods" = true
-    "method.response.header.Access-Control-Allow-Origin"  = true
-    "method.response.header.Access-Control-Max-Age"       = true
-  }
-}
-
-resource "aws_api_gateway_method_response" "registrations_id_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.registrations_id.id
-  http_method = aws_api_gateway_method.registrations_id_options.http_method
-  status_code = "200"
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = true
-    "method.response.header.Access-Control-Allow-Methods" = true
-    "method.response.header.Access-Control-Allow-Origin"  = true
-    "method.response.header.Access-Control-Max-Age"       = true
-  }
-}
-
-resource "aws_api_gateway_method_response" "messages_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.messages.id
-  http_method = aws_api_gateway_method.messages_options.http_method
-  status_code = "200"
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = true
-    "method.response.header.Access-Control-Allow-Methods" = true
-    "method.response.header.Access-Control-Allow-Origin"  = true
-    "method.response.header.Access-Control-Max-Age"       = true
-  }
-}
-
-# CORS Integration Responses for OPTIONS methods
-resource "aws_api_gateway_integration_response" "events_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.events.id
-  http_method = aws_api_gateway_method.events_options.http_method
-  status_code = aws_api_gateway_method_response.events_options.status_code
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
-    "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,OPTIONS'"
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
-    "method.response.header.Access-Control-Max-Age"       = "'86400'"
-  }
-}
-
-resource "aws_api_gateway_integration_response" "events_id_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.events_id.id
-  http_method = aws_api_gateway_method.events_id_options.http_method
-  status_code = aws_api_gateway_method_response.events_id_options.status_code
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
-    "method.response.header.Access-Control-Allow-Methods" = "'GET,PUT,DELETE,OPTIONS'"
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
-    "method.response.header.Access-Control-Max-Age"       = "'86400'"
-  }
-}
-
-resource "aws_api_gateway_integration_response" "competitions_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.competitions.id
-  http_method = aws_api_gateway_method.competitions_options.http_method
-  status_code = aws_api_gateway_method_response.competitions_options.status_code
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
-    "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,OPTIONS'"
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
-    "method.response.header.Access-Control-Max-Age"       = "'86400'"
-  }
-}
-
-resource "aws_api_gateway_integration_response" "competitions_register_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.competitions_register.id
-  http_method = aws_api_gateway_method.competitions_register_options.http_method
-  status_code = aws_api_gateway_method_response.competitions_register_options.status_code
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
-    "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
-    "method.response.header.Access-Control-Max-Age"       = "'86400'"
-  }
-}
-
-resource "aws_api_gateway_integration_response" "volunteers_join_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.volunteers_join.id
-  http_method = aws_api_gateway_method.volunteers_join_options.http_method
-  status_code = aws_api_gateway_method_response.volunteers_join_options.status_code
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
-    "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
-    "method.response.header.Access-Control-Max-Age"       = "'86400'"
-  }
-}
-
-resource "aws_api_gateway_integration_response" "volunteers_id_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.volunteers_id.id
-  http_method = aws_api_gateway_method.volunteers_id_options.http_method
-  status_code = aws_api_gateway_method_response.volunteers_id_options.status_code
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
-    "method.response.header.Access-Control-Allow-Methods" = "'PUT,OPTIONS'"
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
-    "method.response.header.Access-Control-Max-Age"       = "'86400'"
-  }
-}
-
-resource "aws_api_gateway_integration_response" "suggestions_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.suggestions.id
-  http_method = aws_api_gateway_method.suggestions_options.http_method
-  status_code = aws_api_gateway_method_response.suggestions_options.status_code
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
-    "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,OPTIONS'"
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
-    "method.response.header.Access-Control-Max-Age"       = "'86400'"
-  }
-}
-
-resource "aws_api_gateway_integration_response" "courses_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.courses.id
-  http_method = aws_api_gateway_method.courses_options.http_method
-  status_code = aws_api_gateway_method_response.courses_options.status_code
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
-    "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,OPTIONS'"
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
-    "method.response.header.Access-Control-Max-Age"       = "'86400'"
-  }
-}
-
-resource "aws_api_gateway_integration_response" "courses_id_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.courses_id.id
-  http_method = aws_api_gateway_method.courses_id_options.http_method
-  status_code = aws_api_gateway_method_response.courses_id_options.status_code
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
-    "method.response.header.Access-Control-Allow-Methods" = "'GET,PUT,DELETE,OPTIONS'"
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
-    "method.response.header.Access-Control-Max-Age"       = "'86400'"
-  }
-}
-
-resource "aws_api_gateway_integration_response" "registrations_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.registrations.id
-  http_method = aws_api_gateway_method.registrations_options.http_method
-  status_code = aws_api_gateway_method_response.registrations_options.status_code
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
-    "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,OPTIONS'"
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
-    "method.response.header.Access-Control-Max-Age"       = "'86400'"
-  }
-}
-
-resource "aws_api_gateway_integration_response" "registrations_id_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.registrations_id.id
-  http_method = aws_api_gateway_method.registrations_id_options.http_method
-  status_code = aws_api_gateway_method_response.registrations_id_options.status_code
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
-    "method.response.header.Access-Control-Allow-Methods" = "'PUT,OPTIONS'"
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
-    "method.response.header.Access-Control-Max-Age"       = "'86400'"
-  }
-}
-
-resource "aws_api_gateway_integration_response" "messages_options" {
-  rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.messages.id
-  http_method = aws_api_gateway_method.messages_options.http_method
-  status_code = aws_api_gateway_method_response.messages_options.status_code
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
-    "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,OPTIONS'"
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
-    "method.response.header.Access-Control-Max-Age"       = "'86400'"
-  }
-}
 
 # API Gateway deployment
 resource "aws_api_gateway_deployment" "efy_api_deployment" {
@@ -1368,23 +839,48 @@ resource "aws_api_gateway_deployment" "efy_api_deployment" {
     aws_api_gateway_integration.registrations_put,
     aws_api_gateway_integration.messages_post,
     aws_api_gateway_integration.messages_get,
-    aws_api_gateway_integration.admin_stats_get,
-    # OPTIONS integrations
-    aws_api_gateway_integration.events_options,
-    aws_api_gateway_integration.events_id_options,
-    aws_api_gateway_integration.competitions_options,
-    aws_api_gateway_integration.competitions_register_options,
-    aws_api_gateway_integration.volunteers_join_options,
-    aws_api_gateway_integration.volunteers_id_options,
-    aws_api_gateway_integration.suggestions_options,
-    aws_api_gateway_integration.courses_options,
-    aws_api_gateway_integration.courses_id_options,
-    aws_api_gateway_integration.registrations_options,
-    aws_api_gateway_integration.registrations_id_options,
-    aws_api_gateway_integration.messages_options
+    aws_api_gateway_integration.admin_stats_get
   ]
 
   rest_api_id = aws_api_gateway_rest_api.efy_api.id
+
+  # Force new deployment when API structure changes
+  triggers = {
+    redeployment = sha1(jsonencode([
+      aws_api_gateway_rest_api.efy_api.id,
+      # Track all integration changes
+      aws_api_gateway_integration.events_get.id,
+      aws_api_gateway_integration.events_post.id,
+      aws_api_gateway_integration.events_get_by_id.id,
+      aws_api_gateway_integration.events_put.id,
+      aws_api_gateway_integration.events_delete.id,
+      aws_api_gateway_integration.competitions_get.id,
+      aws_api_gateway_integration.competitions_post.id,
+      aws_api_gateway_integration.competitions_get_by_id.id,
+      aws_api_gateway_integration.competitions_register.id,
+      aws_api_gateway_integration.competitions_results.id,
+      aws_api_gateway_integration.volunteers_join.id,
+      aws_api_gateway_integration.volunteers_get.id,
+      aws_api_gateway_integration.volunteers_put.id,
+      aws_api_gateway_integration.suggestions_post.id,
+      aws_api_gateway_integration.suggestions_get.id,
+      aws_api_gateway_integration.courses_get.id,
+      aws_api_gateway_integration.courses_post.id,
+      aws_api_gateway_integration.courses_get_by_id.id,
+      aws_api_gateway_integration.courses_put.id,
+      aws_api_gateway_integration.courses_delete.id,
+      aws_api_gateway_integration.registrations_post.id,
+      aws_api_gateway_integration.registrations_get.id,
+      aws_api_gateway_integration.registrations_put.id,
+      aws_api_gateway_integration.messages_post.id,
+      aws_api_gateway_integration.messages_get.id,
+      aws_api_gateway_integration.admin_stats_get.id,
+    ]))
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # API Gateway stage
