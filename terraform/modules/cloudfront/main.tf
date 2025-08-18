@@ -78,8 +78,28 @@ resource "aws_cloudfront_distribution" "main" {
       compress               = false
       viewer_protocol_policy = "https-only"
 
-      cache_policy_id          = data.aws_cloudfront_cache_policy.caching_disabled.id
-      origin_request_policy_id = data.aws_cloudfront_origin_request_policy.all_viewer_except_host.id
+      forwarded_values {
+        query_string = true
+        headers = [
+          "Authorization",
+          "CloudFront-Forwarded-Proto",
+          "CloudFront-Is-Desktop-Viewer",
+          "CloudFront-Is-Mobile-Viewer",
+          "CloudFront-Is-SmartTV-Viewer",
+          "CloudFront-Is-Tablet-Viewer",
+          "CloudFront-Viewer-Country",
+          "Host",
+          "Origin",
+          "Referer",
+          "User-Agent",
+          "X-Forwarded-For",
+          "X-Forwarded-Host",
+          "X-Forwarded-Proto"
+        ]
+        cookies {
+          forward = "all"
+        }
+      }
 
       min_ttl     = 0
       default_ttl = 0
