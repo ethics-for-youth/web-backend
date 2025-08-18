@@ -1,10 +1,10 @@
-data "aws_cloudfront_cache_policy" "caching_disabled" {
-  name = "Managed-CachingDisabled"
-}
+# data "aws_cloudfront_cache_policy" "caching_disabled" {
+#   name = "Managed-CachingDisabled"
+# }
 
-data "aws_cloudfront_origin_request_policy" "all_viewer_except_host" {
-  name = "Managed-AllViewerExceptHostHeader"
-}
+# data "aws_cloudfront_origin_request_policy" "all_viewer_except_host" {
+#   name = "Managed-AllViewerExceptHostHeader"
+# }
 
 # Origin Access Control for S3
 resource "aws_cloudfront_origin_access_control" "s3_oac" {
