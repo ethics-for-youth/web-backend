@@ -13,7 +13,7 @@ environment_configs = {
     # DNS & Domain (disabled for QA)
     enable_custom_domain = true
     domain_name          = "qa.efy.org.in"
-    certificate_sans     = ["qa.efy.org.in"]
+    certificate_sans     = ["www.qa.efy.org.in"]
     create_www_record    = true
 
     # API Gateway Integration
