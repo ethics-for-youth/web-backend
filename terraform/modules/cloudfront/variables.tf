@@ -131,3 +131,22 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+# API Gateway Integration Variables
+variable "enable_api_gateway" {
+  description = "Enable API Gateway integration"
+  type        = bool
+  default     = false
+}
+
+variable "api_gateway_domain_name" {
+  description = "API Gateway execution domain name"
+  type        = string
+  default     = ""
+}
+
+variable "api_gateway_region" {
+  description = "API Gateway region"
+  type        = string
+  default     = "us-east-1"
+}
