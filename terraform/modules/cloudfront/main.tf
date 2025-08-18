@@ -1,3 +1,11 @@
+data "aws_cloudfront_cache_policy" "caching_disabled" {
+  name = "Managed-CachingDisabled"
+}
+
+data "aws_cloudfront_origin_request_policy" "all_viewer_except_host" {
+  name = "Managed-AllViewerExceptHostHeader"
+}
+
 # Origin Access Control for S3
 resource "aws_cloudfront_origin_access_control" "s3_oac" {
   name                              = "${var.distribution_name}-oac"
@@ -22,7 +30,6 @@ resource "aws_cloudfront_distribution" "main" {
     content {
       domain_name = var.api_gateway_domain_name
       origin_id   = "ApiGateway-${var.api_gateway_region}"
-      origin_path = "/default"
 
       custom_origin_config {
         http_port              = 80
@@ -71,28 +78,8 @@ resource "aws_cloudfront_distribution" "main" {
       compress               = false
       viewer_protocol_policy = "https-only"
 
-      forwarded_values {
-        query_string = true
-        headers = [
-          "Authorization",
-          "CloudFront-Forwarded-Proto",
-          "CloudFront-Is-Desktop-Viewer",
-          "CloudFront-Is-Mobile-Viewer",
-          "CloudFront-Is-SmartTV-Viewer",
-          "CloudFront-Is-Tablet-Viewer",
-          "CloudFront-Viewer-Country",
-          "Host",
-          "Origin",
-          "Referer",
-          "User-Agent",
-          "X-Forwarded-For",
-          "X-Forwarded-Host",
-          "X-Forwarded-Proto"
-        ]
-        cookies {
-          forward = "all"
-        }
-      }
+      cache_policy_id          = data.aws_cloudfront_cache_policy.caching_disabled.id
+      origin_request_policy_id = data.aws_cloudfront_origin_request_policy.all_viewer_except_host.id
 
       min_ttl     = 0
       default_ttl = 0
