@@ -78,28 +78,8 @@ resource "aws_cloudfront_distribution" "main" {
       compress               = false
       viewer_protocol_policy = "https-only"
 
-      forwarded_values {
-        query_string = true
-        headers = [
-          "Authorization",
-          "CloudFront-Forwarded-Proto",
-          "CloudFront-Is-Desktop-Viewer",
-          "CloudFront-Is-Mobile-Viewer",
-          "CloudFront-Is-SmartTV-Viewer",
-          "CloudFront-Is-Tablet-Viewer",
-          "CloudFront-Viewer-Country",
-          "Host",
-          "Origin",
-          "Referer",
-          "User-Agent",
-          "X-Forwarded-For",
-          "X-Forwarded-Host",
-          "X-Forwarded-Proto"
-        ]
-        cookies {
-          forward = "all"
-        }
-      }
+      cache_policy_id            = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
+      origin_request_policy_id   = "b689b0a8-53d0-40ab-baf2-68738e2966ac"
 
       min_ttl     = 0
       default_ttl = 0
