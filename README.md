@@ -353,5 +353,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 📞 Support
 
 For questions or support, please contact:
-- Email: tech@ethicsforyouth.org
-- GitHub Issues: [Create an issue](https://github.com/your-org/efy-backend/issues) 
+- Email: ethicsforyouth@gmail.com
+- GitHub Issues: [Create an issue](https://github.com/ethics-for-youth/efy-backend/issues) 
