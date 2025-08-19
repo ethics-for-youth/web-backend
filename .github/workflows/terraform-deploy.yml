@@ -56,8 +56,6 @@ jobs:
     - name: Make scripts executable
       run: |
         chmod +x scripts/build.sh
-        chmod +x terraform/workspace.sh
-        chmod +x terraform/backend-setup/workspace.sh
         
     # Download plan file and pre-built artifacts from plan step
     # This ensures we use the exact same zip files that were used during planning
@@ -103,6 +101,5 @@ jobs:
     - name: Get deployment outputs
       run: |
         cd terraform
-        ./workspace.sh show
         terraform output
       id: outputs 

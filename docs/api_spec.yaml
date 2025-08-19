@@ -5,9 +5,9 @@ info:
   version: 2.0.0
   contact:
     name: EFY Infrastructure Team
-    email: tech@ethicsforyouth.org
+    email: ethicsforyouth@gmail.com
 servers:
-  - url: https://{api-id}.execute-api.ap-south-1.amazonaws.com/default
+  - url: https://dev.efy.org.in/api/
     description: Default API Gateway stage
     variables:
       api-id:
