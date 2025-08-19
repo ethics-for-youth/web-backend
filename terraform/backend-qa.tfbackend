@@ -1,4 +1,4 @@
-bucket         = "efy-web-backend-qa-terraform-state-030382357640"
+bucket         = "efy-web-backend-dev-terraform-state-030382357640" # dev and qa are in same account
 key            = "terraform.tfstate"
 region         = "ap-south-1"
 use_lockfile   = true

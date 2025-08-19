@@ -24,6 +24,34 @@ locals {
   )
 }
 
+# S3 Bucket for Application Data
+module "app_s3_bucket" {
+  source = "./modules/s3_bucket"
+
+  bucket_name = "${var.project_name}-${local.current_environment}-app-data-${local.env_config.s3_bucket_suffix}"
+
+  enable_versioning = local.env_config.s3_enable_versioning
+  sse_algorithm     = local.env_config.s3_sse_algorithm
+  kms_master_key_id = local.env_config.s3_kms_key_id
+
+  # Security settings
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+
+  # CORS configuration for web applications
+  enable_cors          = local.env_config.s3_enable_cors
+  cors_allowed_origins = local.env_config.s3_cors_allowed_origins
+  cors_allowed_methods = ["GET", "PUT", "POST", "DELETE", "HEAD"]
+  cors_allowed_headers = ["*"]
+
+  # Lifecycle rules for cost optimization
+  lifecycle_rules = local.env_config.s3_lifecycle_rules
+
+  tags = local.common_tags
+}
+
 # DynamoDB Tables
 module "dynamodb" {
   source = "./modules/dynamodb"
@@ -73,9 +101,11 @@ module "events_get_lambda" {
 
   environment_variables = {
     EVENTS_TABLE_NAME = module.dynamodb.events_table_name
+    S3_BUCKET_NAME    = module.app_s3_bucket.bucket_id
   }
 
   dynamodb_table_arns = [module.dynamodb.events_table_arn]
+  s3_bucket_arns      = [module.app_s3_bucket.bucket_arn]
 
   tags = local.common_tags
 }
@@ -725,3 +755,111 @@ module "efy_api_gateway" {
 
   tags = local.common_tags
 }
+
+# S3 Bucket for Static Website Hosting
+module "static_hosting" {
+  count  = local.env_config.enable_static_hosting ? 1 : 0
+  source = "./modules/s3_static_hosting"
+
+  bucket_name = "${var.project_name}-${local.current_environment}-static-${local.env_config.static_hosting_bucket_suffix}"
+
+  index_document = "index.html"
+  error_document = "error.html"
+
+  enable_cors          = true
+  cors_allowed_origins = local.env_config.cors_allowed_origins
+
+  enable_versioning = local.current_environment == "prod"
+
+  tags = local.common_tags
+}
+
+# Route 53 Hosted Zone (created first, independent)
+module "route53_hosted_zone" {
+  count  = local.env_config.enable_custom_domain ? 1 : 0
+  source = "./modules/route53"
+
+  domain_name               = local.env_config.domain_name
+  cloudfront_domain_name    = ""    # Don't create CloudFront records yet
+  cloudfront_hosted_zone_id = ""    # Don't create CloudFront records yet
+  create_www_record         = false # Don't create www record yet
+
+  tags = local.common_tags
+}
+
+# ACM Certificate (depends only on Route53 hosted zone)
+module "acm_certificate" {
+  count  = local.env_config.enable_custom_domain ? 1 : 0
+  source = "./modules/acm_certificate"
+
+  providers = {
+    aws = aws.us_east_1
+  }
+
+  domain_name               = local.env_config.domain_name
+  subject_alternative_names = local.env_config.certificate_sans
+  hosted_zone_id            = length(module.route53_hosted_zone) > 0 ? module.route53_hosted_zone[0].hosted_zone_id : ""
+
+  tags = local.common_tags
+
+  depends_on = [module.route53_hosted_zone]
+}
+
+# CloudFront Distribution (depends on S3 and ACM certificate)
+module "cloudfront" {
+  count  = local.env_config.enable_static_hosting ? 1 : 0
+  source = "./modules/cloudfront"
+
+  distribution_name     = "${var.project_name}-${local.current_environment}-static"
+  s3_bucket_name        = length(module.static_hosting) > 0 ? module.static_hosting[0].bucket_id : ""
+  s3_bucket_domain_name = length(module.static_hosting) > 0 ? module.static_hosting[0].bucket_regional_domain_name : ""
+  s3_bucket_arn         = length(module.static_hosting) > 0 ? module.static_hosting[0].bucket_arn : ""
+
+  domain_names = local.env_config.enable_custom_domain ? compact([
+    local.env_config.domain_name,
+    local.env_config.create_www_record ? "www.${local.env_config.domain_name}" : null
+  ]) : []
+
+  comment             = "${var.project_name} ${local.current_environment} static website"
+  acm_certificate_arn = local.env_config.enable_custom_domain && length(module.acm_certificate) > 0 ? module.acm_certificate[0].certificate_arn : null
+  price_class         = local.env_config.cloudfront_price_class
+
+  # API Gateway Integration
+  enable_api_gateway      = local.env_config.enable_api_gateway
+  api_gateway_domain_name = local.env_config.enable_api_gateway ? "${module.efy_api_gateway.api_gateway_id}.execute-api.${local.env_config.api_gateway_region}.amazonaws.com" : ""
+  api_gateway_region      = local.env_config.api_gateway_region
+
+  custom_error_responses = [
+    {
+      error_code            = 404
+      response_code         = 200
+      response_page_path    = "/index.html"
+      error_caching_min_ttl = 300
+    },
+    {
+      error_code            = 403
+      response_code         = 200
+      response_page_path    = "/index.html"
+      error_caching_min_ttl = 300
+    }
+  ]
+
+  tags = local.common_tags
+
+  depends_on = [module.static_hosting, module.acm_certificate, module.efy_api_gateway]
+}
+
+# Route 53 DNS Records for CloudFront (created after CloudFront)
+module "route53_dns_records" {
+  count  = local.env_config.enable_custom_domain && local.env_config.enable_static_hosting ? 1 : 0
+  source = "./modules/route53_dns_records"
+
+  hosted_zone_id            = length(module.route53_hosted_zone) > 0 ? module.route53_hosted_zone[0].hosted_zone_id : ""
+  domain_name               = local.env_config.domain_name
+  cloudfront_domain_name    = length(module.cloudfront) > 0 ? module.cloudfront[0].distribution_domain_name : ""
+  cloudfront_hosted_zone_id = length(module.cloudfront) > 0 ? module.cloudfront[0].distribution_hosted_zone_id : ""
+  create_www_record         = local.env_config.create_www_record
+
+  depends_on = [module.cloudfront, module.route53_hosted_zone]
+}
+
