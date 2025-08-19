@@ -15,14 +15,14 @@ const response = (statusCode, body, headers = {}) => {
     };
 };
 
-const successResponse = (data, message = 'Success') => {
-    return response(200, { success: true, message, data });
+const successResponse = (data, message = 'Success', statusCode = 200) => {
+    return response(statusCode, { success: true, message, data });
 };
 
 const errorResponse = (error, statusCode = 400) => {
-    return response(statusCode, { 
-        success: false, 
-        error: error.message || error 
+    return response(statusCode, {
+        success: false,
+        error: error.message || error
     });
 };
 
@@ -50,10 +50,15 @@ const parseJSON = (str) => {
     }
 };
 
+// Utility to check empty/whitespace string
+const isEmptyString = (value) => typeof value === 'string' && value.trim() === '';
+
+
 module.exports = {
     response,
     successResponse,
     errorResponse,
     validateRequired,
-    parseJSON
+    parseJSON,
+    isEmptyString
 };
