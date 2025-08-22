@@ -60,13 +60,14 @@ All Lambda functions follow the same structure:
 
 ### Database Tables
 The system uses DynamoDB with the following tables:
-- `EVENTS_TABLE_NAME` - Events and workshops
-- `COMPETITIONS_TABLE_NAME` - Competitions and contests
+- `EVENTS_TABLE_NAME` - Events and workshops (includes registrationFee field)
+- `COMPETITIONS_TABLE_NAME` - Competitions and contests (includes registrationFee field)
 - `VOLUNTEERS_TABLE_NAME` - Volunteer applications  
 - `SUGGESTIONS_TABLE_NAME` - Community suggestions
-- `COURSES_TABLE_NAME` - Educational courses
-- `REGISTRATIONS_TABLE_NAME` - Event/competition registrations
+- `COURSES_TABLE_NAME` - Educational courses (includes registrationFee field)
+- `REGISTRATIONS_TABLE_NAME` - Event/competition registrations (includes payment tracking)
 - `MESSAGES_TABLE_NAME` - Community messages and feedback
+- `PAYMENTS_TABLE_NAME` - Payment orders and webhook events
 
 ### Multi-Environment Setup
 - **Workspaces**: Terraform workspaces for environment isolation (dev/qa/prod)
@@ -100,6 +101,16 @@ The API follows RESTful conventions with endpoints for:
 5. Run `npm run plan:dev` to preview infrastructure changes
 6. Run `npm run deploy:dev` to deploy to development environment
 7. Test endpoints using `./scripts/test_endpoints.sh`
+8. Test registration fees using `./scripts/test_registration_fee.sh`
+9. Test payment integration using `./scripts/test_payment_integration_improved.sh`
+
+### Registration Fee Integration
+All events, competitions, and courses now support registration fees:
+- **Events**: `registrationFee` field (defaults to 0 for free events)
+- **Competitions**: `registrationFee` field (defaults to 0 for free competitions)  
+- **Courses**: `registrationFee` field (defaults to 0 for free courses)
+- **Registrations**: Tracks `registrationFee`, `paymentStatus`, and `paymentId`
+- **Integration**: Compatible with Razorpay payment gateway for paid registrations
 
 ### Important Notes
 - All Lambda functions use Node.js runtime with AWS SDK v3

@@ -1870,6 +1870,12 @@ components:
           type: string
           format: date-time
           example: "2024-02-10T23:59:59Z"
+        registrationFee:
+          type: number
+          format: float
+          description: Registration fee in major currency unit (e.g., INR)
+          example: 150.00
+          minimum: 0
         status:
           type: string
           enum: [active, cancelled, completed]
@@ -1915,6 +1921,12 @@ components:
             type: string
         maxParticipants:
           type: integer
+        registrationFee:
+          type: number
+          format: float
+          description: Competition registration fee in major currency unit (e.g., INR)
+          example: 200.00
+          minimum: 0
         status:
           type: string
           enum: [open, closed, completed]
@@ -2154,6 +2166,12 @@ components:
           type: string
           example: "Mushaf, notebook, recording app"
           description: Required materials
+        registrationFee:
+          type: number
+          format: float
+          description: Course registration fee in major currency unit (e.g., INR)
+          example: 500.00
+          minimum: 0
         status:
           type: string
           enum: [active, inactive, completed, cancelled]
@@ -2218,6 +2236,21 @@ components:
           enum: [registered, cancelled, completed]
           example: "registered"
           description: Registration status
+        registrationFee:
+          type: number
+          format: float
+          description: Registration fee applicable at time of registration
+          example: 150.00
+          minimum: 0
+        paymentStatus:
+          type: string
+          enum: [pending, paid, failed]
+          example: "pending"
+          description: Payment status for the registration
+        paymentId:
+          type: string
+          example: "order_29QQoUBi66xm2f"
+          description: Razorpay payment/order ID if applicable
         notes:
           type: string
           example: "First time participant, excited to join!"
