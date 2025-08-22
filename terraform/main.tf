@@ -63,6 +63,7 @@ module "dynamodb" {
   courses_table_name       = "${var.project_name}-${local.current_environment}-courses"
   registrations_table_name = "${var.project_name}-${local.current_environment}-registrations"
   messages_table_name      = "${var.project_name}-${local.current_environment}-messages"
+  payments_table_name      = "${var.project_name}-${local.current_environment}-payments"
 
   tags = local.common_tags
 }
@@ -679,6 +680,62 @@ module "admin_stats_get_lambda" {
   tags = local.common_tags
 }
 
+# Payment Lambda Functions
+module "payments_create_order_lambda" {
+  source = "./modules/lambda"
+
+  function_name = "${var.project_name}-${local.current_environment}-payments-create-order"
+  handler       = "index.handler"
+  runtime       = "nodejs18.x"
+  source_dir    = "../lambda_functions/payments_create_order"
+
+  layers = [
+    module.dependencies_layer.layer_arn,
+    module.utility_layer.layer_arn
+  ]
+
+  environment_variables = {
+    RAZORPAY_KEY_ID     = var.razorpay_key_id
+    RAZORPAY_KEY_SECRET = var.razorpay_key_secret
+    PAYMENTS_TABLE_NAME = module.dynamodb.payments_table_name
+  }
+
+  dynamodb_table_arns = [
+    module.dynamodb.payments_table_arn
+  ]
+
+  timeout = 30
+
+  tags = local.common_tags
+}
+
+module "payments_webhook_lambda" {
+  source = "./modules/lambda"
+
+  function_name = "${var.project_name}-${local.current_environment}-payments-webhook"
+  handler       = "index.handler"
+  runtime       = "nodejs18.x"
+  source_dir    = "../lambda_functions/payments_webhook"
+
+  layers = [
+    module.dependencies_layer.layer_arn,
+    module.utility_layer.layer_arn
+  ]
+
+  environment_variables = {
+    RAZORPAY_WEBHOOK_SECRET = var.razorpay_webhook_secret
+    PAYMENTS_TABLE_NAME     = module.dynamodb.payments_table_name
+  }
+
+  dynamodb_table_arns = [
+    module.dynamodb.payments_table_arn
+  ]
+
+  timeout = 30
+
+  tags = local.common_tags
+}
+
 # API Gateway for EFY Platform
 module "efy_api_gateway" {
   source = "./modules/efy_api_gateway"
@@ -752,6 +809,12 @@ module "efy_api_gateway" {
   # Admin Stats Lambda ARNs and Function Names
   admin_stats_get_lambda_arn           = module.admin_stats_get_lambda.lambda_invoke_arn
   admin_stats_get_lambda_function_name = module.admin_stats_get_lambda.lambda_function_name
+
+  # Payment Lambda ARNs and Function Names
+  payments_create_order_lambda_arn           = module.payments_create_order_lambda.lambda_invoke_arn
+  payments_create_order_lambda_function_name = module.payments_create_order_lambda.lambda_function_name
+  payments_webhook_lambda_arn                = module.payments_webhook_lambda.lambda_invoke_arn
+  payments_webhook_lambda_function_name      = module.payments_webhook_lambda.lambda_function_name
 
   tags = local.common_tags
 }

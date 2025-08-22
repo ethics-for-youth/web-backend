@@ -809,7 +809,77 @@ resource "aws_lambda_permission" "admin_stats_get" {
   source_arn    = "${aws_api_gateway_rest_api.efy_api.execution_arn}/*/*"
 }
 
+# Payments Resource
+resource "aws_api_gateway_resource" "payments" {
+  rest_api_id = aws_api_gateway_rest_api.efy_api.id
+  parent_id   = aws_api_gateway_rest_api.efy_api.root_resource_id
+  path_part   = "payments"
+}
 
+resource "aws_api_gateway_resource" "payments_create_order" {
+  rest_api_id = aws_api_gateway_rest_api.efy_api.id
+  parent_id   = aws_api_gateway_resource.payments.id
+  path_part   = "create-order"
+}
+
+resource "aws_api_gateway_resource" "payments_webhook" {
+  rest_api_id = aws_api_gateway_rest_api.efy_api.id
+  parent_id   = aws_api_gateway_resource.payments.id
+  path_part   = "webhook"
+}
+
+# Payments Methods
+resource "aws_api_gateway_method" "payments_create_order_post" {
+  rest_api_id   = aws_api_gateway_rest_api.efy_api.id
+  resource_id   = aws_api_gateway_resource.payments_create_order.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_method" "payments_webhook_post" {
+  rest_api_id   = aws_api_gateway_rest_api.efy_api.id
+  resource_id   = aws_api_gateway_resource.payments_webhook.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+# Payments Integrations
+resource "aws_api_gateway_integration" "payments_create_order_post" {
+  rest_api_id = aws_api_gateway_rest_api.efy_api.id
+  resource_id = aws_api_gateway_resource.payments_create_order.id
+  http_method = aws_api_gateway_method.payments_create_order_post.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.payments_create_order_lambda_arn
+}
+
+resource "aws_api_gateway_integration" "payments_webhook_post" {
+  rest_api_id = aws_api_gateway_rest_api.efy_api.id
+  resource_id = aws_api_gateway_resource.payments_webhook.id
+  http_method = aws_api_gateway_method.payments_webhook_post.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.payments_webhook_lambda_arn
+}
+
+# Payments Lambda Permissions
+resource "aws_lambda_permission" "payments_create_order_post" {
+  statement_id  = "AllowExecutionFromAPIGateway-payments-create-order-post"
+  action        = "lambda:InvokeFunction"
+  function_name = var.payments_create_order_lambda_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.efy_api.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "payments_webhook_post" {
+  statement_id  = "AllowExecutionFromAPIGateway-payments-webhook-post"
+  action        = "lambda:InvokeFunction"
+  function_name = var.payments_webhook_lambda_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.efy_api.execution_arn}/*/*"
+}
 
 # API Gateway deployment
 resource "aws_api_gateway_deployment" "efy_api_deployment" {
@@ -839,7 +909,9 @@ resource "aws_api_gateway_deployment" "efy_api_deployment" {
     aws_api_gateway_integration.registrations_put,
     aws_api_gateway_integration.messages_post,
     aws_api_gateway_integration.messages_get,
-    aws_api_gateway_integration.admin_stats_get
+    aws_api_gateway_integration.admin_stats_get,
+    aws_api_gateway_integration.payments_create_order_post,
+    aws_api_gateway_integration.payments_webhook_post
   ]
 
   rest_api_id = aws_api_gateway_rest_api.efy_api.id
@@ -875,6 +947,8 @@ resource "aws_api_gateway_deployment" "efy_api_deployment" {
       aws_api_gateway_integration.messages_post.id,
       aws_api_gateway_integration.messages_get.id,
       aws_api_gateway_integration.admin_stats_get.id,
+      aws_api_gateway_integration.payments_create_order_post.id,
+      aws_api_gateway_integration.payments_webhook_post.id,
     ]))
   }
 

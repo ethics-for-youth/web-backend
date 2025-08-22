@@ -271,6 +271,27 @@ variable "admin_stats_get_lambda_function_name" {
   type        = string
 }
 
+# Payment Lambda Variables
+variable "payments_create_order_lambda_arn" {
+  description = "ARN of the Payments Create Order Lambda function"
+  type        = string
+}
+
+variable "payments_create_order_lambda_function_name" {
+  description = "Function name of the Payments Create Order Lambda"
+  type        = string
+}
+
+variable "payments_webhook_lambda_arn" {
+  description = "ARN of the Payments Webhook Lambda function"
+  type        = string
+}
+
+variable "payments_webhook_lambda_function_name" {
+  description = "Function name of the Payments Webhook Lambda"
+  type        = string
+}
+
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)

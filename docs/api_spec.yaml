@@ -1551,6 +1551,294 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+  # Payment Endpoints
+  /payments/create-order:
+    post:
+      summary: Create a new payment order
+      description: Creates a new payment order using Razorpay for processing payments
+      operationId: createPaymentOrder
+      tags:
+        - Payments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - amount
+              properties:
+                amount:
+                  type: number
+                  format: float
+                  description: Payment amount in major currency unit (e.g., INR, USD)
+                  example: 100.00
+                  minimum: 0.01
+                currency:
+                  type: string
+                  description: Payment currency code
+                  example: "INR"
+                  default: "INR"
+                  enum: ["INR", "USD"]
+                receipt:
+                  type: string
+                  description: Unique receipt identifier for the order
+                  example: "receipt_event_123"
+                  maxLength: 40
+                notes:
+                  type: object
+                  description: Additional metadata for the order
+                  example:
+                    customer_id: "cust_123"
+                    event_id: "event_456"
+                    purpose: "event_registration"
+            examples:
+              event_registration:
+                summary: Event registration payment
+                value:
+                  amount: 150.00
+                  currency: "INR"
+                  receipt: "event_reg_20240125_001"
+                  notes:
+                    customer_id: "user_123"
+                    event_id: "event_456"
+                    event_name: "Islamic History Workshop"
+              competition_fee:
+                summary: Competition entry fee
+                value:
+                  amount: 250.00
+                  currency: "INR"
+                  receipt: "comp_reg_20240125_002"
+                  notes:
+                    customer_id: "user_789"
+                    competition_id: "comp_123"
+                    competition_name: "Quran Recitation Competition"
+      responses:
+        '201':
+          description: Payment order created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Order created successfully"
+                  data:
+                    $ref: '#/components/schemas/PaymentOrder'
+        '400':
+          description: Bad request - Invalid input parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missing_amount:
+                  summary: Missing required amount field
+                  value:
+                    success: false
+                    error:
+                      message: "Missing required fields: amount"
+                      code: "VALIDATION_ERROR"
+                invalid_amount:
+                  summary: Invalid amount value
+                  value:
+                    success: false
+                    error:
+                      message: "Amount must be a positive number"
+                      code: "VALIDATION_ERROR"
+        '500':
+          description: Internal server error or Razorpay API error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                razorpay_error:
+                  summary: Razorpay API error
+                  value:
+                    success: false
+                    error:
+                      message: "Your account is not activated. Please activate your account."
+                      code: "BAD_REQUEST_ERROR"
+                      details:
+                        code: "BAD_REQUEST_ERROR"
+                        description: "Your account is not activated. Please activate your account."
+                credentials_error:
+                  summary: Missing credentials
+                  value:
+                    success: false
+                    error:
+                      message: "Razorpay credentials not configured. Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET environment variables."
+                      code: "CONFIGURATION_ERROR"
+
+  /payments/webhook:
+    post:
+      summary: Handle Razorpay webhook events
+      description: Processes webhook events from Razorpay for payment status updates and notifications
+      operationId: handlePaymentWebhook
+      tags:
+        - Payments
+      parameters:
+        - name: X-Razorpay-Signature
+          in: header
+          required: true
+          description: HMAC SHA256 signature for webhook verification
+          schema:
+            type: string
+            example: "2ef0fa0e4b94440e8a3f4f4c2e5b09c7a8d8f8a3e9e4f4c2e5b09c7a8d8f8a3"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Webhook payload from Razorpay
+              properties:
+                event:
+                  type: string
+                  description: Type of webhook event
+                  enum: 
+                    - "payment.captured"
+                    - "payment.failed"
+                    - "payment.authorized"
+                    - "order.paid"
+                    - "refund.created"
+                  example: "payment.captured"
+                payload:
+                  type: object
+                  description: Event payload containing entity data
+                  properties:
+                    payment:
+                      type: object
+                      properties:
+                        entity:
+                          $ref: '#/components/schemas/RazorpayPayment'
+                    order:
+                      type: object
+                      properties:
+                        entity:
+                          $ref: '#/components/schemas/RazorpayOrder'
+                    refund:
+                      type: object
+                      properties:
+                        entity:
+                          $ref: '#/components/schemas/RazorpayRefund'
+            examples:
+              payment_captured:
+                summary: Payment captured successfully
+                value:
+                  event: "payment.captured"
+                  payload:
+                    payment:
+                      entity:
+                        id: "pay_29QQoUBi66xm2f"
+                        order_id: "order_BEK7VF8eprKqbD"
+                        amount: 15000
+                        currency: "INR"
+                        status: "captured"
+                        method: "card"
+                        captured_at: 1704096000
+                        created_at: 1704095940
+              payment_failed:
+                summary: Payment failed
+                value:
+                  event: "payment.failed"
+                  payload:
+                    payment:
+                      entity:
+                        id: "pay_29QQoUBi66xm2f"
+                        order_id: "order_BEK7VF8eprKqbD"
+                        amount: 15000
+                        currency: "INR"
+                        status: "failed"
+                        method: "card"
+                        error_code: "BAD_REQUEST_ERROR"
+                        error_description: "Payment failed"
+                        created_at: 1704095940
+      responses:
+        '200':
+          description: Webhook processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Webhook processed successfully"
+                  data:
+                    type: object
+                    properties:
+                      eventType:
+                        type: string
+                        example: "payment.captured"
+                      processed:
+                        type: boolean
+                        example: true
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2024-01-25T10:30:00Z"
+                      requestId:
+                        type: string
+                        example: "aws-request-id-123"
+        '400':
+          description: Bad request - Invalid signature or malformed payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_signature:
+                  summary: Invalid webhook signature
+                  value:
+                    success: false
+                    error:
+                      message: "Invalid signature"
+                      code: "WEBHOOK_ERROR"
+                missing_signature:
+                  summary: Missing webhook signature
+                  value:
+                    success: false
+                    error:
+                      message: "Missing webhook signature"
+                      code: "WEBHOOK_ERROR"
+                invalid_json:
+                  summary: Invalid JSON payload
+                  value:
+                    success: false
+                    error:
+                      message: "Invalid JSON in webhook body"
+                      code: "WEBHOOK_ERROR"
+        '500':
+          description: Internal server error during webhook processing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                configuration_error:
+                  summary: Webhook secret not configured
+                  value:
+                    success: false
+                    error:
+                      message: "Webhook secret not configured"
+                      code: "CONFIGURATION_ERROR"
+                database_error:
+                  summary: Database operation failed
+                  value:
+                    success: false
+                    error:
+                      message: "Failed to update payment status in database"
+                      code: "DATABASE_ERROR"
+
 components:
   schemas:
     Event:
@@ -2019,6 +2307,181 @@ components:
           format: date-time
           example: "2024-01-25T10:30:00Z"
           description: Message last update timestamp
+
+    # Payment-related schemas
+    PaymentOrder:
+      type: object
+      description: Razorpay payment order details
+      properties:
+        orderId:
+          type: string
+          description: Unique Razorpay order identifier
+          example: "order_29QQoUBi66xm2f"
+        amount:
+          type: integer
+          description: Payment amount in smallest currency unit (paise for INR)
+          example: 15000
+        currency:
+          type: string
+          description: Payment currency code
+          example: "INR"
+        status:
+          type: string
+          description: Order status
+          enum: ["created", "attempted", "paid"]
+          example: "created"
+        receipt:
+          type: string
+          description: Unique receipt identifier
+          example: "receipt_event_123"
+        notes:
+          type: object
+          description: Additional metadata
+          example:
+            customer_id: "cust_123"
+            event_id: "event_456"
+            created_via: "efy_backend_lambda"
+            created_at: "2024-01-25T10:30:00Z"
+        createdAt:
+          type: integer
+          description: Order creation timestamp (Unix timestamp)
+          example: 1704096000
+        requestId:
+          type: string
+          description: AWS request ID for tracking
+          example: "aws-request-id-123"
+        timestamp:
+          type: string
+          format: date-time
+          description: Response generation timestamp
+          example: "2024-01-25T10:30:00Z"
+
+    RazorpayPayment:
+      type: object
+      description: Razorpay payment entity from webhook
+      properties:
+        id:
+          type: string
+          description: Unique payment identifier
+          example: "pay_29QQoUBi66xm2f"
+        order_id:
+          type: string
+          description: Associated order identifier
+          example: "order_BEK7VF8eprKqbD"
+        amount:
+          type: integer
+          description: Payment amount in smallest currency unit
+          example: 15000
+        currency:
+          type: string
+          description: Payment currency
+          example: "INR"
+        status:
+          type: string
+          description: Payment status
+          enum: ["created", "authorized", "captured", "refunded", "failed"]
+          example: "captured"
+        method:
+          type: string
+          description: Payment method used
+          example: "card"
+        captured_at:
+          type: integer
+          description: Payment capture timestamp (Unix timestamp)
+          example: 1704096000
+        created_at:
+          type: integer
+          description: Payment creation timestamp (Unix timestamp)
+          example: 1704095940
+        error_code:
+          type: string
+          description: Error code for failed payments
+          example: "BAD_REQUEST_ERROR"
+        error_description:
+          type: string
+          description: Error description for failed payments
+          example: "Payment failed"
+
+    RazorpayOrder:
+      type: object
+      description: Razorpay order entity from webhook
+      properties:
+        id:
+          type: string
+          description: Unique order identifier
+          example: "order_BEK7VF8eprKqbD"
+        amount:
+          type: integer
+          description: Order amount in smallest currency unit
+          example: 15000
+        currency:
+          type: string
+          description: Order currency
+          example: "INR"
+        status:
+          type: string
+          description: Order status
+          enum: ["created", "attempted", "paid"]
+          example: "paid"
+        created_at:
+          type: integer
+          description: Order creation timestamp (Unix timestamp)
+          example: 1704095940
+
+    RazorpayRefund:
+      type: object
+      description: Razorpay refund entity from webhook
+      properties:
+        id:
+          type: string
+          description: Unique refund identifier
+          example: "rfnd_29QQoUBi66xm2f"
+        payment_id:
+          type: string
+          description: Associated payment identifier
+          example: "pay_29QQoUBi66xm2f"
+        amount:
+          type: integer
+          description: Refund amount in smallest currency unit
+          example: 15000
+        currency:
+          type: string
+          description: Refund currency
+          example: "INR"
+        status:
+          type: string
+          description: Refund status
+          enum: ["pending", "processed", "failed"]
+          example: "processed"
+        created_at:
+          type: integer
+          description: Refund creation timestamp (Unix timestamp)
+          example: 1704096000
+
+    ErrorResponse:
+      type: object
+      description: Standard error response format
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+              description: Human-readable error message
+              example: "Missing required fields: amount"
+            code:
+              type: string
+              description: Error code for programmatic handling
+              example: "VALIDATION_ERROR"
+            details:
+              type: object
+              description: Additional error details (optional)
+              example:
+                field: "amount"
+                value: null
 
   responses:
     BadRequest:

@@ -47,3 +47,9 @@ variable "s3_bucket_arns" {
   type        = list(string)
   default     = []
 }
+
+variable "timeout" {
+  description = "Timeout for the Lambda function"
+  type        = number
+  default     = 30
+}
