@@ -25,6 +25,7 @@ jobs:
   validate:
     uses: ./.github/workflows/terraform-validate.yml
     with:
+      environment: qa
       aws-region: ${{ vars.AWS_REGION }}
     secrets:
       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}

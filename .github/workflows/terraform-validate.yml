@@ -57,7 +57,7 @@ jobs:
         
     - name: Validate Terraform configuration
       run: |
-        echo "razorpay_key_id=${{ secrets.razorpay-key-id }}" >> terraform/terraform.tfvars
-        echo "razorpay_key_secret=${{ secrets.razorpay-key-secret }}" >> terraform/terraform.tfvars
-        echo "razorpay_webhook_secret=${{ secrets.razorpay-webhook-secret }}" >> terraform/terraform.tfvars
+        echo "razorpay_key_id         = \"${{ secrets.razorpay-key-id }}\"" >> terraform/terraform.tfvars
+        echo "razorpay_key_secret     = \"${{ secrets.razorpay-key-secret }}\"" >> terraform/terraform.tfvars
+        echo "razorpay_webhook_secret = \"${{ secrets.razorpay-webhook-secret }}\"" >> terraform/terraform.tfvars
         ./scripts/build.sh validate 

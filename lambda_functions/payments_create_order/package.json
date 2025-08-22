@@ -1,0 +1,20 @@
+{
+  "name": "payments-create-order",
+  "version": "1.0.0",
+  "description": "Lambda function for creating Razorpay payment orders",
+  "main": "index.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "razorpay": "^2.9.2"
+  },
+  "keywords": [
+    "aws-lambda",
+    "razorpay",
+    "payments",
+    "orders"
+  ],
+  "author": "Ethics For Youth",
+  "license": "MIT"
+}
