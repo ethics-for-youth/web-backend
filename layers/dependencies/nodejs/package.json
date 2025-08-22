@@ -8,9 +8,9 @@
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.x",
     "@aws-sdk/lib-dynamodb": "^3.x",
-    "lodash": "^4.17.21",
-    "joi": "^17.6.0",
     "bcrypt": "^5.0.1",
-    "razorpay": "^2.9.2"
+    "joi": "^17.6.0",
+    "lodash": "^4.17.21",
+    "razorpay": "^2.9.6"
   }
 }
