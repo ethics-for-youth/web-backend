@@ -28,8 +28,11 @@ jobs:
   plan:
     name: Plan Terraform Changes
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
     outputs:
       plan-file: ${{ steps.plan.outputs.plan-file }}
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4

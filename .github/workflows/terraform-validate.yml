@@ -8,6 +8,11 @@ on:
         type: string
         default: ${{ vars.AWS_REGION }}
         description: 'AWS region for validation'
+      environment:
+        required: false
+        type: string
+        default: dev
+        description: 'Environment for validation'
     secrets:
       aws-access-key-id:
         required: true
@@ -24,6 +29,7 @@ jobs:
   validate:
     name: Validate Terraform
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
     
     steps:
     - name: Checkout code
