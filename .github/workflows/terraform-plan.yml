@@ -66,9 +66,9 @@ jobs:
     - name: Plan Terraform changes
       id: plan
       run: |
-        echo "razorpay_key_id=${{ secrets.razorpay-key-id }}" >> terraform/terraform.tfvars
-        echo "razorpay_key_secret=${{ secrets.razorpay-key-secret }}" >> terraform/terraform.tfvars
-        echo "razorpay_webhook_secret=${{ secrets.razorpay-webhook-secret }}" >> terraform/terraform.tfvars
+        echo "razorpay_key_id         = \"${{ secrets.razorpay-key-id }}\"" >> terraform/terraform.tfvars
+        echo "razorpay_key_secret     = \"${{ secrets.razorpay-key-secret }}\"" >> terraform/terraform.tfvars
+        echo "razorpay_webhook_secret = \"${{ secrets.razorpay-webhook-secret }}\"" >> terraform/terraform.tfvars
         ./scripts/build.sh plan ${{ inputs.environment }}
         echo "plan-file=terraform/terraform-plan-${{ inputs.environment }}.tfplan" >> $GITHUB_OUTPUT
       
