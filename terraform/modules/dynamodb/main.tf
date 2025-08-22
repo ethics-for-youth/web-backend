@@ -125,16 +125,16 @@ resource "aws_dynamodb_table" "payments" {
 
   # Global Secondary Index for querying by payment status
   global_secondary_index {
-    name     = "StatusIndex"
-    hash_key = "status"
-    range_key = "createdAt"
+    name            = "StatusIndex"
+    hash_key        = "status"
+    range_key       = "createdAt"
     projection_type = "ALL"
   }
 
   # Global Secondary Index for querying by payment ID
   global_secondary_index {
-    name     = "PaymentIndex"
-    hash_key = "paymentId"
+    name            = "PaymentIndex"
+    hash_key        = "paymentId"
     projection_type = "ALL"
   }
 
