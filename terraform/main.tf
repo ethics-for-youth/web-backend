@@ -547,10 +547,18 @@ module "registrations_post_lambda" {
   ]
 
   environment_variables = {
-    REGISTRATIONS_TABLE_NAME = module.dynamodb.registrations_table_name
+    REGISTRATIONS_TABLE_NAME = module.dynamodb.registrations_table_name,
+    COURSES_TABLE_NAME       = module.dynamodb.courses_table_name,
+    EVENTS_TABLE_NAME        = module.dynamodb.events_table_name,
+    COMPETITIONS_TABLE_NAME  = module.dynamodb.competitions_table_name
   }
 
-  dynamodb_table_arns = [module.dynamodb.registrations_table_arn]
+  dynamodb_table_arns = [
+    module.dynamodb.registrations_table_arn,
+    module.dynamodb.aws_dynamodb_table.courses.arn,
+    module.dynamodb.aws_dynamodb_table.events.arn,
+    module.dynamodb.aws_dynamodb_table.competitions.arn
+  ]
 
   tags = local.common_tags
 }
@@ -569,10 +577,18 @@ module "registrations_get_lambda" {
   ]
 
   environment_variables = {
-    REGISTRATIONS_TABLE_NAME = module.dynamodb.registrations_table_name
+    REGISTRATIONS_TABLE_NAME = module.dynamodb.registrations_table_name,
+    COURSES_TABLE_NAME       = module.dynamodb.courses_table_name,
+    EVENTS_TABLE_NAME        = module.dynamodb.events_table_name,
+    COMPETITIONS_TABLE_NAME  = module.dynamodb.competitions_table_name
   }
 
-  dynamodb_table_arns = [module.dynamodb.registrations_table_arn]
+  dynamodb_table_arns = [
+    module.dynamodb.registrations_table_arn,
+    module.dynamodb.aws_dynamodb_table.courses.arn,
+    module.dynamodb.aws_dynamodb_table.events.arn,
+    module.dynamodb.aws_dynamodb_table.competitions.arn
+  ]
 
   tags = local.common_tags
 }
