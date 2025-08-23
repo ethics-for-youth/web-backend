@@ -555,9 +555,9 @@ module "registrations_post_lambda" {
 
   dynamodb_table_arns = [
     module.dynamodb.registrations_table_arn,
-    module.dynamodb.aws_dynamodb_table.courses.arn,
-    module.dynamodb.aws_dynamodb_table.events.arn,
-    module.dynamodb.aws_dynamodb_table.competitions.arn
+    aws_dynamodb_table.courses.arn,
+    aws_dynamodb_table.events.arn,
+    aws_dynamodb_table.competitions.arn
   ]
 
   tags = local.common_tags
@@ -585,9 +585,9 @@ module "registrations_get_lambda" {
 
   dynamodb_table_arns = [
     module.dynamodb.registrations_table_arn,
-    module.dynamodb.aws_dynamodb_table.courses.arn,
-    module.dynamodb.aws_dynamodb_table.events.arn,
-    module.dynamodb.aws_dynamodb_table.competitions.arn
+    aws_dynamodb_table.courses.arn,
+    aws_dynamodb_table.events.arn,
+    aws_dynamodb_table.competitions.arn
   ]
 
   tags = local.common_tags
