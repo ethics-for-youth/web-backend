@@ -22,16 +22,16 @@ async function validateItemExists(itemId, itemType) {
         default:
             throw new Error(`Invalid itemType: ${itemType}`);
     }
-    console.log("objectaaa", tableName)
     const command = new GetCommand({
         TableName: tableName,
         Key: { id: itemId }
     });
-    console.log("add", command)
     const result = await docClient.send(command);
 
     if (!result.Item) {
-        throw new Error(`${itemType} with ID ${itemId} does not exist`);
+        const error = new Error(`${itemType} with ID ${itemId} does not exist`);
+        error.code = "ITEM_NOT_FOUND";
+        throw error;
     }
 
     return result.Item;
@@ -47,8 +47,8 @@ exports.handler = async (event) => {
         // Validate required fields
         validateRequired(body, ['userId', 'itemId', 'itemType', 'userEmail', 'userName']);
 
-        // Validate existance of event or competition or course
-        validateItemExists(body.itemId, body.itemType)
+        // Validate existence of event, competition, or course
+        await validateItemExists(body.itemId, body.itemType);
 
         const tableName = process.env.REGISTRATIONS_TABLE_NAME;
         const registrationId = `reg_${Date.now()}_${Math.random().toString(36).substring(7)}`;
@@ -56,12 +56,12 @@ exports.handler = async (event) => {
         const registrationItem = {
             id: registrationId,
             userId: body.userId,
-            itemId: body.itemId, // Event, competition, or course ID
-            itemType: body.itemType, // 'event', 'competition', or 'course'
+            itemId: body.itemId,
+            itemType: body.itemType,
             userEmail: body.userEmail,
             userName: body.userName,
             userPhone: body.userPhone || null,
-            status: 'registered', // registered, cancelled, completed
+            status: 'registered',
             notes: body.notes || null,
             registeredAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
@@ -84,6 +84,14 @@ exports.handler = async (event) => {
 
     } catch (error) {
         console.error('Error in registrations_post function:', error);
-        return errorResponse(error, error.message.includes('Missing required') ? 400 : 500);
+        if (error.message.includes('Missing required')) {
+            return errorResponse(error, 400);
+        } else if (error.code === "ITEM_NOT_FOUND") {
+            return errorResponse(error, 404);
+        } else if (error.message.startsWith('Invalid itemType')) {
+            return errorResponse(error, 400);
+        } else {
+            return errorResponse(error, 500);
+        }
     }
 };
