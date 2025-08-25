@@ -4,10 +4,12 @@
 echo "🧪 Testing Razorpay Payment Integration with Database"
 echo ""
 
+API_BASE_URL="https://dev.efy.org.in/api"
+
 # Check if API_BASE_URL is provided
 if [ -z "$API_BASE_URL" ]; then
     echo "❌ Please set API_BASE_URL environment variable"
-    echo "Example: export API_BASE_URL=https://your-api-gateway-url"
+    echo "Example: export API_BASE_URL=https://dev.efy.org.in/api"
     exit 1
 fi
 

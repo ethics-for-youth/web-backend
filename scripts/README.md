@@ -72,7 +72,7 @@ chmod +x scripts/test_endpoints.sh
 **What it tests**:
 - Events POST endpoint (`/events`)
 - Competitions POST endpoint (`/competitions`) 
-- Volunteers POST endpoint (`/volunteers/join`)
+- Volunteers POST endpoint (`/volunteers/apply`)
 - Suggestions POST endpoint (`/suggestions`)
 
 **Sample Output**:

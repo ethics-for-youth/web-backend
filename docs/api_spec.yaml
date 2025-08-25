@@ -514,11 +514,11 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 
   # Volunteers Endpoints
-  /volunteers/join:
+  /volunteers/apply:
     post:
       summary: Submit volunteer application
-      description: Submit a request to join as a volunteer
-      operationId: joinVolunteers
+      description: Submit a request to apply as a volunteer
+      operationId: applyVolunteers
       tags:
         - Volunteers
       requestBody:
