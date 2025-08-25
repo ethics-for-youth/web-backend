@@ -1,0 +1,423 @@
+// Lambda function for handling Razorpay webhooks
+const { successResponse, errorResponse } = require('/opt/nodejs/utils');
+const crypto = require('crypto');
+const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBDocumentClient, PutCommand, UpdateCommand, GetCommand } = require('@aws-sdk/lib-dynamodb');
+
+const client = new DynamoDBClient({ region: process.env.AWS_REGION });
+const docClient = DynamoDBDocumentClient.from(client);
+
+// Database helper functions
+const createPaymentRecord = async (orderId, paymentId, paymentData) => {
+    try {
+        const tableName = process.env.PAYMENTS_TABLE_NAME;
+        
+        const paymentRecord = {
+            orderId: orderId,
+            paymentId: paymentId,
+            amount: paymentData.amount,
+            currency: paymentData.currency,
+            status: paymentData.status,
+            method: paymentData.method,
+            razorpayOrderId: orderId,
+            razorpayPaymentId: paymentId,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            metadata: {
+                captured_at: paymentData.captured_at,
+                created_at: paymentData.created_at,
+                error_code: paymentData.error_code || null,
+                error_description: paymentData.error_description || null
+            }
+        };
+        
+        const command = new PutCommand({
+            TableName: tableName,
+            Item: paymentRecord,
+            ConditionExpression: 'attribute_not_exists(paymentId)'
+        });
+        
+        await docClient.send(command);
+        console.log(`Payment record created: ${paymentId} for order: ${orderId}`);
+        
+        return paymentRecord;
+    } catch (error) {
+        if (error.name === 'ConditionalCheckFailedException') {
+            console.log(`Payment record already exists: ${paymentId}`);
+            return await getPaymentRecord(orderId, paymentId);
+        }
+        console.error('Error creating payment record:', error);
+        throw new Error(`Failed to create payment record: ${error.message}`);
+    }
+};
+
+const updatePaymentStatus = async (orderId, paymentId, status, paymentData = {}) => {
+    try {
+        const tableName = process.env.PAYMENTS_TABLE_NAME;
+        
+        const updateExpression = 'SET #status = :status, updatedAt = :updatedAt';
+        const expressionAttributeNames = { '#status': 'status' };
+        const expressionAttributeValues = {
+            ':status': status,
+            ':updatedAt': new Date().toISOString()
+        };
+        
+        // Add additional fields based on payment data
+        if (paymentData.captured_at) {
+            updateExpression += ', metadata.captured_at = :captured_at';
+            expressionAttributeValues[':captured_at'] = paymentData.captured_at;
+        }
+        
+        if (paymentData.error_code) {
+            updateExpression += ', metadata.error_code = :error_code, metadata.error_description = :error_description';
+            expressionAttributeValues[':error_code'] = paymentData.error_code;
+            expressionAttributeValues[':error_description'] = paymentData.error_description || null;
+        }
+        
+        const command = new UpdateCommand({
+            TableName: tableName,
+            Key: { orderId, paymentId },
+            UpdateExpression: updateExpression,
+            ExpressionAttributeNames: expressionAttributeNames,
+            ExpressionAttributeValues: expressionAttributeValues,
+            ReturnValues: 'ALL_NEW'
+        });
+        
+        const result = await docClient.send(command);
+        console.log(`Payment status updated: ${paymentId} -> ${status}`);
+        
+        return result.Attributes;
+    } catch (error) {
+        console.error('Error updating payment status:', error);
+        throw new Error(`Failed to update payment status: ${error.message}`);
+    }
+};
+
+const getPaymentRecord = async (orderId, paymentId) => {
+    try {
+        const tableName = process.env.PAYMENTS_TABLE_NAME;
+        
+        const command = new GetCommand({
+            TableName: tableName,
+            Key: { orderId, paymentId }
+        });
+        
+        const result = await docClient.send(command);
+        return result.Item || null;
+    } catch (error) {
+        console.error('Error retrieving payment record:', error);
+        throw new Error(`Failed to retrieve payment record: ${error.message}`);
+    }
+};
+
+const createRefundRecord = async (refundData) => {
+    try {
+        const tableName = process.env.PAYMENTS_TABLE_NAME;
+        
+        // Find the original payment record
+        const originalPayment = await getPaymentRecord(refundData.order_id || 'unknown', refundData.payment_id);
+        
+        const refundRecord = {
+            orderId: originalPayment?.orderId || 'unknown',
+            paymentId: `refund_${refundData.id}`,
+            amount: -Math.abs(refundData.amount), // Negative amount for refunds
+            currency: refundData.currency,
+            status: 'refunded',
+            method: 'refund',
+            razorpayRefundId: refundData.id,
+            razorpayPaymentId: refundData.payment_id,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            metadata: {
+                refund_status: refundData.status,
+                created_at: refundData.created_at,
+                original_payment_id: refundData.payment_id
+            }
+        };
+        
+        const command = new PutCommand({
+            TableName: tableName,
+            Item: refundRecord
+        });
+        
+        await docClient.send(command);
+        console.log(`Refund record created: ${refundData.id} for payment: ${refundData.payment_id}`);
+        
+        return refundRecord;
+    } catch (error) {
+        console.error('Error creating refund record:', error);
+        throw new Error(`Failed to create refund record: ${error.message}`);
+    }
+};
+
+// Webhook signature validation
+const validateWebhookSignature = (body, signature, secret) => {
+    try {
+        // Extract signature from header
+        const receivedSignature = signature;
+        
+        // Generate expected signature
+        const expectedSignature = crypto
+            .createHmac('sha256', secret)
+            .update(body, 'utf8')
+            .digest('hex');
+        
+        // Compare signatures using timingSafeEqual to prevent timing attacks
+        const receivedBuffer = Buffer.from(receivedSignature, 'hex');
+        const expectedBuffer = Buffer.from(expectedSignature, 'hex');
+        
+        if (receivedBuffer.length !== expectedBuffer.length) {
+            return false;
+        }
+        
+        return crypto.timingSafeEqual(receivedBuffer, expectedBuffer);
+    } catch (error) {
+        console.error('Error validating webhook signature:', error);
+        return false;
+    }
+};
+
+// Process different webhook events
+const processWebhookEvent = async (event, eventData) => {
+    const { event: eventType, payload } = eventData;
+    
+    console.log(`Processing webhook event: ${eventType}`);
+    console.log('Payload:', JSON.stringify(payload, null, 2));
+    
+    switch (eventType) {
+        case 'payment.captured':
+            await handlePaymentCaptured(payload.payment.entity);
+            break;
+            
+        case 'payment.failed':
+            await handlePaymentFailed(payload.payment.entity);
+            break;
+            
+        case 'payment.authorized':
+            await handlePaymentAuthorized(payload.payment.entity);
+            break;
+            
+        case 'order.paid':
+            await handleOrderPaid(payload.order.entity, payload.payment.entity);
+            break;
+            
+        case 'refund.created':
+            await handleRefundCreated(payload.refund.entity);
+            break;
+            
+        default:
+            console.log(`Unhandled webhook event type: ${eventType}`);
+            break;
+    }
+    
+    return {
+        eventType,
+        processed: true,
+        timestamp: new Date().toISOString(),
+        requestId: event.requestContext?.requestId
+    };
+};
+
+// Event handlers with database integration
+const handlePaymentCaptured = async (payment) => {
+    console.log('Payment Captured:', {
+        paymentId: payment.id,
+        orderId: payment.order_id,
+        amount: payment.amount,
+        currency: payment.currency,
+        status: payment.status,
+        method: payment.method,
+        capturedAt: payment.captured_at
+    });
+    
+    try {
+        // Check if payment record exists, create if not
+        let paymentRecord = await getPaymentRecord(payment.order_id, payment.id);
+        
+        if (!paymentRecord) {
+            paymentRecord = await createPaymentRecord(payment.order_id, payment.id, payment);
+        } else {
+            // Update existing record with captured status
+            paymentRecord = await updatePaymentStatus(payment.order_id, payment.id, 'captured', payment);
+        }
+        
+        console.log('Payment captured and saved to database:', paymentRecord);
+        return paymentRecord;
+    } catch (error) {
+        console.error('Error handling payment captured event:', error);
+        throw error;
+    }
+};
+
+const handlePaymentFailed = async (payment) => {
+    console.log('Payment Failed:', {
+        paymentId: payment.id,
+        orderId: payment.order_id,
+        amount: payment.amount,
+        currency: payment.currency,
+        status: payment.status,
+        errorCode: payment.error_code,
+        errorDescription: payment.error_description,
+        failedAt: payment.created_at
+    });
+    
+    try {
+        // Check if payment record exists, create if not
+        let paymentRecord = await getPaymentRecord(payment.order_id, payment.id);
+        
+        if (!paymentRecord) {
+            paymentRecord = await createPaymentRecord(payment.order_id, payment.id, payment);
+        } else {
+            // Update existing record with failed status
+            paymentRecord = await updatePaymentStatus(payment.order_id, payment.id, 'failed', payment);
+        }
+        
+        console.log('Payment failure saved to database:', paymentRecord);
+        return paymentRecord;
+    } catch (error) {
+        console.error('Error handling payment failed event:', error);
+        throw error;
+    }
+};
+
+const handlePaymentAuthorized = async (payment) => {
+    console.log('Payment Authorized:', {
+        paymentId: payment.id,
+        orderId: payment.order_id,
+        amount: payment.amount,
+        currency: payment.currency,
+        status: payment.status,
+        method: payment.method,
+        authorizedAt: payment.created_at
+    });
+    
+    try {
+        // Check if payment record exists, create if not
+        let paymentRecord = await getPaymentRecord(payment.order_id, payment.id);
+        
+        if (!paymentRecord) {
+            paymentRecord = await createPaymentRecord(payment.order_id, payment.id, payment);
+        } else {
+            // Update existing record with authorized status
+            paymentRecord = await updatePaymentStatus(payment.order_id, payment.id, 'authorized', payment);
+        }
+        
+        console.log('Payment authorization saved to database:', paymentRecord);
+        return paymentRecord;
+    } catch (error) {
+        console.error('Error handling payment authorized event:', error);
+        throw error;
+    }
+};
+
+const handleOrderPaid = async (order, payment) => {
+    console.log('Order Paid:', {
+        orderId: order.id,
+        paymentId: payment.id,
+        amount: order.amount,
+        currency: order.currency,
+        status: order.status,
+        paidAt: order.created_at
+    });
+    
+    try {
+        // Update payment record to mark order as paid
+        const paymentRecord = await updatePaymentStatus(order.id, payment.id, 'paid', {
+            ...payment,
+            order_status: 'paid'
+        });
+        
+        console.log('Order paid status saved to database:', paymentRecord);
+        return paymentRecord;
+    } catch (error) {
+        console.error('Error handling order paid event:', error);
+        throw error;
+    }
+};
+
+const handleRefundCreated = async (refund) => {
+    console.log('Refund Created:', {
+        refundId: refund.id,
+        paymentId: refund.payment_id,
+        amount: refund.amount,
+        currency: refund.currency,
+        status: refund.status,
+        createdAt: refund.created_at
+    });
+    
+    try {
+        // Create refund record
+        const refundRecord = await createRefundRecord(refund);
+        
+        console.log('Refund saved to database:', refundRecord);
+        return refundRecord;
+    } catch (error) {
+        console.error('Error handling refund created event:', error);
+        throw error;
+    }
+};
+
+exports.handler = async (event) => {
+    try {
+        console.log('Webhook Event:', JSON.stringify(event, null, 2));
+        
+        // Get webhook secret from environment variables
+        const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+        if (!webhookSecret) {
+            console.error('RAZORPAY_WEBHOOK_SECRET not configured');
+            return errorResponse('Webhook secret not configured', 500);
+        }
+        
+        // Get request body and signature
+        const body = event.body;
+        const signature = event.headers['x-razorpay-signature'] || event.headers['X-Razorpay-Signature'];
+        
+        if (!body) {
+            return errorResponse('Missing request body', 400);
+        }
+        
+        if (!signature) {
+            return errorResponse('Missing webhook signature', 400);
+        }
+        
+        // Validate webhook signature
+        const isValidSignature = validateWebhookSignature(body, signature, webhookSecret);
+        
+        if (!isValidSignature) {
+            console.error('Invalid webhook signature');
+            return errorResponse('Invalid signature', 400);
+        }
+        
+        console.log('Webhook signature validated successfully');
+        
+        // Parse webhook data
+        let webhookData;
+        try {
+            webhookData = JSON.parse(body);
+        } catch (error) {
+            console.error('Error parsing webhook JSON:', error);
+            return errorResponse('Invalid JSON in webhook body', 400);
+        }
+        
+        // Process the webhook event
+        const result = await processWebhookEvent(event, webhookData);
+        
+        console.log('Webhook processed successfully:', result);
+        
+        return successResponse(result, 'Webhook processed successfully');
+        
+    } catch (error) {
+        console.error('Error in payments_webhook function:', error);
+        
+        // Handle database-specific errors
+        if (error.message && error.message.includes('Failed to')) {
+            return errorResponse({
+                message: 'Database operation failed',
+                code: 'DATABASE_ERROR',
+                details: error.message
+            }, 500);
+        }
+        
+        return errorResponse(error, 500);
+    }
+};

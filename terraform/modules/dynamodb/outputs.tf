@@ -67,3 +67,13 @@ output "messages_table_arn" {
   description = "ARN of the Messages table"
   value       = aws_dynamodb_table.messages.arn
 }
+
+output "payments_table_name" {
+  description = "Name of the Payments table"
+  value       = aws_dynamodb_table.payments.name
+}
+
+output "payments_table_arn" {
+  description = "ARN of the Payments table"
+  value       = aws_dynamodb_table.payments.arn
+}

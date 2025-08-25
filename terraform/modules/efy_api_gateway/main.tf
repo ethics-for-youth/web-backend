@@ -227,10 +227,10 @@ resource "aws_api_gateway_resource" "volunteers" {
   path_part   = "volunteers"
 }
 
-resource "aws_api_gateway_resource" "volunteers_join" {
+resource "aws_api_gateway_resource" "volunteers_apply" {
   rest_api_id = aws_api_gateway_rest_api.efy_api.id
   parent_id   = aws_api_gateway_resource.volunteers.id
-  path_part   = "join"
+  path_part   = "apply"
 }
 
 resource "aws_api_gateway_resource" "volunteers_id" {
@@ -240,9 +240,9 @@ resource "aws_api_gateway_resource" "volunteers_id" {
 }
 
 # Volunteers Methods
-resource "aws_api_gateway_method" "volunteers_join" {
+resource "aws_api_gateway_method" "volunteers_apply" {
   rest_api_id   = aws_api_gateway_rest_api.efy_api.id
-  resource_id   = aws_api_gateway_resource.volunteers_join.id
+  resource_id   = aws_api_gateway_resource.volunteers_apply.id
   http_method   = "POST"
   authorization = "NONE"
 }
@@ -264,14 +264,14 @@ resource "aws_api_gateway_method" "volunteers_put" {
 
 
 # Volunteers Integrations
-resource "aws_api_gateway_integration" "volunteers_join" {
+resource "aws_api_gateway_integration" "volunteers_apply" {
   rest_api_id = aws_api_gateway_rest_api.efy_api.id
-  resource_id = aws_api_gateway_resource.volunteers_join.id
-  http_method = aws_api_gateway_method.volunteers_join.http_method
+  resource_id = aws_api_gateway_resource.volunteers_apply.id
+  http_method = aws_api_gateway_method.volunteers_apply.http_method
 
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
-  uri                     = var.volunteers_join_lambda_arn
+  uri                     = var.volunteers_apply_lambda_arn
 }
 
 resource "aws_api_gateway_integration" "volunteers_get" {
@@ -431,10 +431,10 @@ resource "aws_lambda_permission" "competitions_results" {
   source_arn    = "${aws_api_gateway_rest_api.efy_api.execution_arn}/*/*"
 }
 
-resource "aws_lambda_permission" "volunteers_join" {
-  statement_id  = "AllowExecutionFromAPIGateway-volunteers-join"
+resource "aws_lambda_permission" "volunteers_apply" {
+  statement_id  = "AllowExecutionFromAPIGateway-volunteers-apply"
   action        = "lambda:InvokeFunction"
-  function_name = var.volunteers_join_lambda_function_name
+  function_name = var.volunteers_apply_lambda_function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_api_gateway_rest_api.efy_api.execution_arn}/*/*"
 }
@@ -809,7 +809,77 @@ resource "aws_lambda_permission" "admin_stats_get" {
   source_arn    = "${aws_api_gateway_rest_api.efy_api.execution_arn}/*/*"
 }
 
+# Payments Resource
+resource "aws_api_gateway_resource" "payments" {
+  rest_api_id = aws_api_gateway_rest_api.efy_api.id
+  parent_id   = aws_api_gateway_rest_api.efy_api.root_resource_id
+  path_part   = "payments"
+}
 
+resource "aws_api_gateway_resource" "payments_create_order" {
+  rest_api_id = aws_api_gateway_rest_api.efy_api.id
+  parent_id   = aws_api_gateway_resource.payments.id
+  path_part   = "create-order"
+}
+
+resource "aws_api_gateway_resource" "payments_webhook" {
+  rest_api_id = aws_api_gateway_rest_api.efy_api.id
+  parent_id   = aws_api_gateway_resource.payments.id
+  path_part   = "webhook"
+}
+
+# Payments Methods
+resource "aws_api_gateway_method" "payments_create_order_post" {
+  rest_api_id   = aws_api_gateway_rest_api.efy_api.id
+  resource_id   = aws_api_gateway_resource.payments_create_order.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_method" "payments_webhook_post" {
+  rest_api_id   = aws_api_gateway_rest_api.efy_api.id
+  resource_id   = aws_api_gateway_resource.payments_webhook.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+# Payments Integrations
+resource "aws_api_gateway_integration" "payments_create_order_post" {
+  rest_api_id = aws_api_gateway_rest_api.efy_api.id
+  resource_id = aws_api_gateway_resource.payments_create_order.id
+  http_method = aws_api_gateway_method.payments_create_order_post.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.payments_create_order_lambda_arn
+}
+
+resource "aws_api_gateway_integration" "payments_webhook_post" {
+  rest_api_id = aws_api_gateway_rest_api.efy_api.id
+  resource_id = aws_api_gateway_resource.payments_webhook.id
+  http_method = aws_api_gateway_method.payments_webhook_post.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.payments_webhook_lambda_arn
+}
+
+# Payments Lambda Permissions
+resource "aws_lambda_permission" "payments_create_order_post" {
+  statement_id  = "AllowExecutionFromAPIGateway-payments-create-order-post"
+  action        = "lambda:InvokeFunction"
+  function_name = var.payments_create_order_lambda_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.efy_api.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "payments_webhook_post" {
+  statement_id  = "AllowExecutionFromAPIGateway-payments-webhook-post"
+  action        = "lambda:InvokeFunction"
+  function_name = var.payments_webhook_lambda_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.efy_api.execution_arn}/*/*"
+}
 
 # API Gateway deployment
 resource "aws_api_gateway_deployment" "efy_api_deployment" {
@@ -824,7 +894,7 @@ resource "aws_api_gateway_deployment" "efy_api_deployment" {
     aws_api_gateway_integration.competitions_get_by_id,
     aws_api_gateway_integration.competitions_register,
     aws_api_gateway_integration.competitions_results,
-    aws_api_gateway_integration.volunteers_join,
+    aws_api_gateway_integration.volunteers_apply,
     aws_api_gateway_integration.volunteers_get,
     aws_api_gateway_integration.volunteers_put,
     aws_api_gateway_integration.suggestions_post,
@@ -839,7 +909,9 @@ resource "aws_api_gateway_deployment" "efy_api_deployment" {
     aws_api_gateway_integration.registrations_put,
     aws_api_gateway_integration.messages_post,
     aws_api_gateway_integration.messages_get,
-    aws_api_gateway_integration.admin_stats_get
+    aws_api_gateway_integration.admin_stats_get,
+    aws_api_gateway_integration.payments_create_order_post,
+    aws_api_gateway_integration.payments_webhook_post
   ]
 
   rest_api_id = aws_api_gateway_rest_api.efy_api.id
@@ -859,7 +931,7 @@ resource "aws_api_gateway_deployment" "efy_api_deployment" {
       aws_api_gateway_integration.competitions_get_by_id.id,
       aws_api_gateway_integration.competitions_register.id,
       aws_api_gateway_integration.competitions_results.id,
-      aws_api_gateway_integration.volunteers_join.id,
+      aws_api_gateway_integration.volunteers_apply.id,
       aws_api_gateway_integration.volunteers_get.id,
       aws_api_gateway_integration.volunteers_put.id,
       aws_api_gateway_integration.suggestions_post.id,
@@ -875,6 +947,8 @@ resource "aws_api_gateway_deployment" "efy_api_deployment" {
       aws_api_gateway_integration.messages_post.id,
       aws_api_gateway_integration.messages_get.id,
       aws_api_gateway_integration.admin_stats_get.id,
+      aws_api_gateway_integration.payments_create_order_post.id,
+      aws_api_gateway_integration.payments_webhook_post.id,
     ]))
   }
 

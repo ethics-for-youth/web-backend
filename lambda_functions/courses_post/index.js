@@ -32,6 +32,7 @@ exports.handler = async (event) => {
             endDate: body.endDate || null,
             schedule: body.schedule || null, // e.g., "Sundays 2-4 PM"
             materials: body.materials || null, // Required materials or resources
+            registrationFee: body.registrationFee || 0,
             status: 'active',
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()

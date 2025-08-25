@@ -106,13 +106,13 @@ variable "competitions_results_lambda_function_name" {
 }
 
 # Volunteers Lambda Variables
-variable "volunteers_join_lambda_arn" {
-  description = "ARN of the Volunteers Join Lambda function"
+variable "volunteers_apply_lambda_arn" {
+  description = "ARN of the Volunteers Apply Lambda function"
   type        = string
 }
 
-variable "volunteers_join_lambda_function_name" {
-  description = "Function name of the Volunteers Join Lambda"
+variable "volunteers_apply_lambda_function_name" {
+  description = "Function name of the Volunteers Apply Lambda"
   type        = string
 }
 
@@ -268,6 +268,27 @@ variable "admin_stats_get_lambda_arn" {
 
 variable "admin_stats_get_lambda_function_name" {
   description = "Function name of the Admin Stats GET Lambda"
+  type        = string
+}
+
+# Payment Lambda Variables
+variable "payments_create_order_lambda_arn" {
+  description = "ARN of the Payments Create Order Lambda function"
+  type        = string
+}
+
+variable "payments_create_order_lambda_function_name" {
+  description = "Function name of the Payments Create Order Lambda"
+  type        = string
+}
+
+variable "payments_webhook_lambda_arn" {
+  description = "ARN of the Payments Webhook Lambda function"
+  type        = string
+}
+
+variable "payments_webhook_lambda_function_name" {
+  description = "Function name of the Payments Webhook Lambda"
   type        = string
 }
 

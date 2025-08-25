@@ -1,0 +1,47 @@
+# =============================================================================
+# CURSOR RULES FOR EFY WEB BACKEND
+# =============================================================================
+
+# Project Overview
+This is a serverless AWS Lambda backend for Ethics For Youth (EFY) platform.
+Built with Node.js, AWS Lambda, DynamoDB, and Terraform for infrastructure.
+
+# Architecture
+- Serverless: AWS Lambda functions for all API endpoints
+- Database: DynamoDB for data persistence
+- API Gateway: REST API with public endpoints
+- Infrastructure: Terraform for infrastructure as code
+- CI/CD: GitHub Actions for automated deployment
+
+# Key Technologies
+- Node.js 18.x - 20.x
+- AWS SDK v3
+- DynamoDB DocumentClient
+- Terraform >= 1.0
+- GitHub Actions
+
+# Code Style
+- Use ES6+ features
+- Consistent error handling with utility functions
+- AWS SDK v3 patterns
+- Terraform best practices
+- RESTful API design
+
+# Security
+- No authentication implemented (all endpoints are public)
+- CORS enabled for web frontend access
+- Input validation on all endpoints
+- Environment variables for configuration
+
+# File Structure
+- lambda_functions/: Individual Lambda functions
+- layers/: Shared code and dependencies
+- terraform/: Infrastructure as code
+- scripts/: Build and deployment scripts
+- docs/: API documentation
+
+# Important Notes
+- All Lambda functions use utility layer at /opt/nodejs/utils
+- Environment variables are set by Terraform
+- CORS headers are included in all responses
+- Error responses follow consistent format

@@ -25,10 +25,14 @@ jobs:
   validate:
     uses: ./.github/workflows/terraform-validate.yml
     with:
+      environment: qa
       aws-region: ${{ vars.AWS_REGION }}
     secrets:
       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
       aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      razorpay-key-id: ${{ secrets.RAZORPAY_KEY_ID }}
+      razorpay-key-secret: ${{ secrets.RAZORPAY_KEY_SECRET }}
+      razorpay-webhook-secret: ${{ secrets.RAZORPAY_WEBHOOK_SECRET }}
 
   plan:
     uses: ./.github/workflows/terraform-plan.yml
@@ -39,6 +43,9 @@ jobs:
     secrets:
       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
       aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      razorpay-key-id: ${{ secrets.RAZORPAY_KEY_ID }}
+      razorpay-key-secret: ${{ secrets.RAZORPAY_KEY_SECRET }}
+      razorpay-webhook-secret: ${{ secrets.RAZORPAY_WEBHOOK_SECRET }}
 
   wait-for-approval:
     name: Wait for QA Deployment Approval

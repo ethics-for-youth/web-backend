@@ -29,6 +29,7 @@ exports.handler = async (event) => {
             isPublished: false,
             maxParticipants: body.maxParticipants || null,
             registrationDeadline: body.registrationDeadline || null,
+            registrationFee: body.registrationFee || 0,
             status: 'active',
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
