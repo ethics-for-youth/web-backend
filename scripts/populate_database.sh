@@ -223,7 +223,7 @@ make_post_request "/courses" '{
 # 4. Submit Volunteer Applications
 echo "🤝 Creating Volunteer Applications..."
 
-make_post_request "/volunteers/join" '{
+make_post_request "/volunteers/apply" '{
     "name": "Priya Sharma",
     "email": "priya.sharma@example.com",
     "phone": "+91-9876543210",
@@ -234,7 +234,7 @@ make_post_request "/volunteers/join" '{
     "preferredRoles": ["Event Coordinator", "Community Outreach"]
 }' "Creating volunteer application for Priya Sharma"
 
-make_post_request "/volunteers/join" '{
+make_post_request "/volunteers/apply" '{
     "name": "Rahul Gupta",
     "email": "rahul.gupta@example.com",
     "phone": "+91-9876543211",
@@ -245,7 +245,7 @@ make_post_request "/volunteers/join" '{
     "preferredRoles": ["Technical Mentor", "Workshop Facilitator"]
 }' "Creating volunteer application for Rahul Gupta"
 
-make_post_request "/volunteers/join" '{
+make_post_request "/volunteers/apply" '{
     "name": "Anjali Reddy",
     "email": "anjali.reddy@example.com",
     "phone": "+91-9876543212",
@@ -256,7 +256,7 @@ make_post_request "/volunteers/join" '{
     "preferredRoles": ["Health Advisor", "Medical Support"]
 }' "Creating volunteer application for Anjali Reddy"
 
-make_post_request "/volunteers/join" '{
+make_post_request "/volunteers/apply" '{
     "name": "Vikram Singh",
     "email": "vikram.singh@example.com",
     "phone": "+91-9876543213",
@@ -267,7 +267,7 @@ make_post_request "/volunteers/join" '{
     "preferredRoles": ["Event Photographer", "Social Media Manager"]
 }' "Creating volunteer application for Vikram Singh"
 
-make_post_request "/volunteers/join" '{
+make_post_request "/volunteers/apply" '{
     "name": "Meera Patel",
     "email": "meera.patel@example.com",
     "phone": "+91-9876543214",

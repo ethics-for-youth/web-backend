@@ -46,7 +46,7 @@ curl -X POST \
     "skills": ["Testing"],
     "availability": "Weekends"
   }' \
-  "$API_BASE_URL/volunteers/join"
+  "$API_BASE_URL/volunteers/apply"
 echo ""
 echo ""
 

@@ -4,7 +4,7 @@
 # This script fetches real IDs from events, courses, and competitions tables
 # then creates realistic mock registrations using those IDs
 
-API_BASE_URL="https://qa.efy.org.in/api"
+API_BASE_URL="https://dev.efy.org.in/api"
 
 echo "🚀 Starting EFY Registration Table Population..."
 echo "API Base URL: $API_BASE_URL"

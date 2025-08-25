@@ -36,7 +36,7 @@ A youth-driven platform for organizing Islamic educational events, competitions,
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/volunteers/join` | Submit volunteer application |
+| `POST` | `/volunteers/apply` | Submit volunteer application |
 | `GET` | `/volunteers` | List volunteers (basic info) |
 | `PUT` | `/volunteers/{id}` | Update volunteer status |
 
