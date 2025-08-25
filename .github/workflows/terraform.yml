@@ -72,6 +72,9 @@ jobs:
     secrets:
       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
       aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      razorpay-key-id: ${{ secrets.RAZORPAY_KEY_ID }}
+      razorpay-key-secret: ${{ secrets.RAZORPAY_KEY_SECRET }}
+      razorpay-webhook-secret: ${{ secrets.RAZORPAY_WEBHOOK_SECRET }}
 
   comment-plan:
     name: Comment PR with Plan Link
@@ -115,6 +118,9 @@ jobs:
     secrets:
       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
       aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      razorpay-key-id: ${{ secrets.RAZORPAY_KEY_ID }}
+      razorpay-key-secret: ${{ secrets.RAZORPAY_KEY_SECRET }}
+      razorpay-webhook-secret: ${{ secrets.RAZORPAY_WEBHOOK_SECRET }}
 
   comment-plan-qa:
     name: Comment PR with QA Plan Link
@@ -158,6 +164,9 @@ jobs:
     secrets:
       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
       aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      razorpay-key-id: ${{ secrets.RAZORPAY_KEY_ID }}
+      razorpay-key-secret: ${{ secrets.RAZORPAY_KEY_SECRET }}
+      razorpay-webhook-secret: ${{ secrets.RAZORPAY_WEBHOOK_SECRET }}
 
   comment-plan-prod:
     name: Comment PR with Prod Plan Link
