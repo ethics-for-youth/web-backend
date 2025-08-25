@@ -14,6 +14,7 @@ resource "aws_lambda_function" "this" {
   role          = aws_iam_role.lambda_role.arn
   handler       = var.handler
   runtime       = var.runtime
+  timeout       = var.timeout
 
   # This hash ensures function updates when code changes
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
@@ -73,7 +74,8 @@ resource "aws_iam_role_policy" "lambda_dynamodb" {
           "dynamodb:UpdateItem",
           "dynamodb:DeleteItem",
           "dynamodb:Scan",
-          "dynamodb:Query"
+          "dynamodb:Query",
+          "dynamodb:BatchGetItem"
         ]
         Resource = var.dynamodb_table_arns
       }

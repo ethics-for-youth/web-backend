@@ -91,3 +91,25 @@ variable "environment_configs" {
   # Empty default - actual values provided via .tfvars files
   default = {}
 }
+
+# =============================================================================
+# PAYMENT GATEWAY CONFIGURATION
+# =============================================================================
+
+variable "razorpay_key_id" {
+  description = "Razorpay API Key ID for payment processing"
+  type        = string
+  sensitive   = true
+}
+
+variable "razorpay_key_secret" {
+  description = "Razorpay API Key Secret for payment processing"
+  type        = string
+  sensitive   = true
+}
+
+variable "razorpay_webhook_secret" {
+  description = "Razorpay Webhook Secret for signature validation"
+  type        = string
+  sensitive   = true
+}
