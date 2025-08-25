@@ -311,13 +311,13 @@ module "competitions_results_lambda" {
 }
 
 # Volunteers Lambda Functions
-module "volunteers_join_lambda" {
+module "volunteers_apply_lambda" {
   source = "./modules/lambda"
 
-  function_name = "${var.project_name}-${local.current_environment}-volunteers-join"
+  function_name = "${var.project_name}-${local.current_environment}-volunteers-apply"
   handler       = "index.handler"
   runtime       = "nodejs18.x"
-  source_dir    = "../lambda_functions/volunteers_join"
+  source_dir    = "../lambda_functions/volunteers_apply"
 
   layers = [
     module.dependencies_layer.layer_arn,
@@ -783,12 +783,12 @@ module "efy_api_gateway" {
   competitions_results_lambda_function_name   = module.competitions_results_lambda.lambda_function_name
 
   # Volunteers Lambda ARNs and Function Names
-  volunteers_join_lambda_arn           = module.volunteers_join_lambda.lambda_invoke_arn
-  volunteers_join_lambda_function_name = module.volunteers_join_lambda.lambda_function_name
-  volunteers_get_lambda_arn            = module.volunteers_get_lambda.lambda_invoke_arn
-  volunteers_get_lambda_function_name  = module.volunteers_get_lambda.lambda_function_name
-  volunteers_put_lambda_arn            = module.volunteers_put_lambda.lambda_invoke_arn
-  volunteers_put_lambda_function_name  = module.volunteers_put_lambda.lambda_function_name
+  volunteers_apply_lambda_arn           = module.volunteers_apply_lambda.lambda_invoke_arn
+  volunteers_apply_lambda_function_name = module.volunteers_apply_lambda.lambda_function_name
+  volunteers_get_lambda_arn             = module.volunteers_get_lambda.lambda_invoke_arn
+  volunteers_get_lambda_function_name   = module.volunteers_get_lambda.lambda_function_name
+  volunteers_put_lambda_arn             = module.volunteers_put_lambda.lambda_invoke_arn
+  volunteers_put_lambda_function_name   = module.volunteers_put_lambda.lambda_function_name
 
   # Suggestions Lambda ARNs and Function Names
   suggestions_post_lambda_arn           = module.suggestions_post_lambda.lambda_invoke_arn

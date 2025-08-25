@@ -106,13 +106,13 @@ variable "competitions_results_lambda_function_name" {
 }
 
 # Volunteers Lambda Variables
-variable "volunteers_join_lambda_arn" {
-  description = "ARN of the Volunteers Join Lambda function"
+variable "volunteers_apply_lambda_arn" {
+  description = "ARN of the Volunteers Apply Lambda function"
   type        = string
 }
 
-variable "volunteers_join_lambda_function_name" {
-  description = "Function name of the Volunteers Join Lambda"
+variable "volunteers_apply_lambda_function_name" {
+  description = "Function name of the Volunteers Apply Lambda"
   type        = string
 }
 

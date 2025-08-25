@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Simple test script for individual endpoints
-API_BASE_URL="https://d4ca8ryveb.execute-api.ap-south-1.amazonaws.com/default"
+API_BASE_URL="https://dev.efy.org.in/api"
 
 echo "🧪 Testing Individual POST Endpoints..."
 echo "API Base URL: $API_BASE_URL"

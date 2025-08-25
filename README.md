@@ -130,7 +130,7 @@ terraform apply terraform-plan-dev.tfplan
 │   ├── competitions_post/     # POST /competitions
 │   ├── competitions_register/ # POST /competitions/{id}/register
 │   ├── competitions_results/  # GET /competitions/{id}/results
-│   ├── volunteers_join/       # POST /volunteers/join
+│   ├── volunteers_apply/      # POST /volunteers/apply
 │   ├── volunteers_get/        # GET /volunteers
 │   ├── volunteers_put/        # PUT /volunteers/{id}
 │   ├── suggestions_post/      # POST /suggestions

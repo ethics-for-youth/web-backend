@@ -55,7 +55,7 @@ exports.handler = async (event) => {
         return successResponse(data, 'Volunteer application submitted successfully');
 
     } catch (error) {
-        console.error('Error in volunteers_join function:', error);
+        console.error('Error in volunteers_apply function:', error);
         return errorResponse(error, error.message.includes('Missing required') ? 400 : 500);
     }
 };

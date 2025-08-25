@@ -3,7 +3,7 @@
 # EFY API Database Population Script
 # This script populates the database with dummy data for testing
 
-API_BASE_URL="https://d4ca8ryveb.execute-api.ap-south-1.amazonaws.com/default"
+API_BASE_URL="https://dev.efy.org.in/api"
 
 echo "🚀 Starting EFY API Database Population..."
 echo "API Base URL: $API_BASE_URL"
