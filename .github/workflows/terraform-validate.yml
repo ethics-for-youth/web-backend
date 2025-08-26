@@ -8,16 +8,28 @@ on:
         type: string
         default: ${{ vars.AWS_REGION }}
         description: 'AWS region for validation'
+      environment:
+        required: false
+        type: string
+        default: dev
+        description: 'Environment for validation'
     secrets:
       aws-access-key-id:
         required: true
       aws-secret-access-key:
+        required: true
+      razorpay-key-id:
+        required: true
+      razorpay-key-secret:
+        required: true
+      razorpay-webhook-secret:
         required: true
 
 jobs:
   validate:
     name: Validate Terraform
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
     
     steps:
     - name: Checkout code
@@ -50,4 +62,8 @@ jobs:
         chmod +x scripts/build.sh
         
     - name: Validate Terraform configuration
-      run: ./scripts/build.sh validate 
+      run: |
+        echo "razorpay_key_id         = \"${{ secrets.razorpay-key-id }}\"" >> terraform/terraform.tfvars
+        echo "razorpay_key_secret     = \"${{ secrets.razorpay-key-secret }}\"" >> terraform/terraform.tfvars
+        echo "razorpay_webhook_secret = \"${{ secrets.razorpay-webhook-secret }}\"" >> terraform/terraform.tfvars
+        ./scripts/build.sh validate 

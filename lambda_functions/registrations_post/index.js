@@ -61,7 +61,10 @@ exports.handler = async (event) => {
             userEmail: body.userEmail,
             userName: body.userName,
             userPhone: body.userPhone || null,
-            status: 'registered',
+            registrationFee: body.registrationFee || 0, // Fee applicable at time of registration
+            paymentStatus: body.paymentStatus || 'pending', // pending, paid, failed
+            paymentId: body.paymentId || null, // Razorpay payment/order ID if applicable
+            status: 'registered', // registered, cancelled, completed
             notes: body.notes || null,
             registeredAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
