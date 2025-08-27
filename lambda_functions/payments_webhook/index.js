@@ -62,6 +62,12 @@ const updatePaymentStatus = async (orderId, paymentId, status, paymentData = {})
             ':status': status,
             ':updatedAt': new Date().toISOString()
         };
+        // Initialize metadata as a map if it doesn't exist
+        const existingRecord = await getPaymentRecord(orderId, paymentId);
+        if (!existingRecord?.metadata) {
+            updateExpression += ', metadata = :metadata';
+            expressionAttributeValues[':metadata'] = {};
+        }
 
         if (paymentData.captured_at) {
             updateExpression += ', metadata.captured_at = :captured_at';
@@ -355,7 +361,13 @@ const handleOrderPaid = async (order, payment) => {
     });
 
     try {
-        const paymentRecord = await updatePaymentStatus(order.id, payment.id, 'paid', {
+        let paymentRecord = await getPaymentRecord(order.id, payment.id);
+        if (!paymentRecord) {
+            // Create a new payment record if it doesn't exist
+            paymentRecord = await createPaymentRecord(order.id, payment.id, payment);
+        }
+        // Update the payment status
+        paymentRecord = await updatePaymentStatus(order.id, payment.id, 'paid', {
             ...payment,
             order_status: 'paid'
         });
