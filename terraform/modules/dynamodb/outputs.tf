@@ -77,3 +77,43 @@ output "payments_table_arn" {
   description = "ARN of the Payments table"
   value       = aws_dynamodb_table.payments.arn
 }
+
+output "permissions_table_name" {
+  description = "Name of the Permissions table"
+  value       = aws_dynamodb_table.permissions.name
+}
+
+output "permissions_table_arn" {
+  description = "ARN of the Permissions table"
+  value       = aws_dynamodb_table.permissions.arn
+}
+
+output "users_table_name" {
+  description = "Name of the Users table"
+  value       = aws_dynamodb_table.users.name
+}
+
+output "users_table_arn" {
+  description = "ARN of the Users table"
+  value       = aws_dynamodb_table.users.arn
+}
+
+output "volunteer_tasks_table_name" {
+  description = "Name of the Volunteer Tasks table"
+  value       = aws_dynamodb_table.volunteer_tasks.name
+}
+
+output "volunteer_tasks_table_arn" {
+  description = "ARN of the Volunteer Tasks table"
+  value       = aws_dynamodb_table.volunteer_tasks.arn
+}
+
+output "volunteer_applications_table_name" {
+  description = "Name of the Volunteer Applications table"
+  value       = aws_dynamodb_table.volunteer_applications.name
+}
+
+output "volunteer_applications_table_arn" {
+  description = "ARN of the Volunteer Applications table"
+  value       = aws_dynamodb_table.volunteer_applications.arn
+}

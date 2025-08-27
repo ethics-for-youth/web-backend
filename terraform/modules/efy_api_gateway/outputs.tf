@@ -23,4 +23,9 @@ output "stage_name" {
   value       = aws_api_gateway_stage.efy_api_stage.stage_name
 }
 
+output "cognito_authorizer_id" {
+  description = "ID of the Cognito authorizer (if enabled)"
+  value       = var.enable_cognito_auth ? aws_api_gateway_authorizer.cognito[0].id : null
+}
+
 data "aws_region" "current" {}

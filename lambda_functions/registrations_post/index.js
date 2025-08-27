@@ -1,10 +1,17 @@
 // Import from utility layer
-const { successResponse, errorResponse, validateRequired, parseJSON } = require('/opt/nodejs/utils');
+const { successResponse, errorResponse, validateRequired, parseJSON, createAuthMiddleware } = require('/opt/nodejs/utils');
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
 const { DynamoDBDocumentClient, PutCommand, GetCommand } = require('@aws-sdk/lib-dynamodb');
 
 const client = new DynamoDBClient({ region: process.env.AWS_REGION });
 const docClient = DynamoDBDocumentClient.from(client);
+
+// Initialize auth middleware
+const auth = createAuthMiddleware(
+    process.env.COGNITO_USER_POOL_ID,
+    process.env.AWS_REGION,
+    process.env.PERMISSIONS_TABLE_NAME
+);
 
 async function validateItemExists(itemId, itemType) {
     let tableName;
@@ -41,11 +48,42 @@ exports.handler = async (event) => {
     try {
         console.log('Event: ', JSON.stringify(event, null, 2));
 
+        let authContext = null;
+
+        // Skip authentication if disabled (backward compatibility)
+        if (process.env.ENABLE_AUTH === 'true') {
+            // Authenticate and authorize request (students, volunteers, admins can register)
+            const authResult = await auth.authenticateRequest(event, 'registrations', 'create');
+            
+            if (!authResult.isAuthenticated) {
+                console.log('Authentication failed:', authResult.error);
+                return errorResponse(authResult.error, authResult.statusCode);
+            }
+            
+            if (!authResult.isAuthorized) {
+                console.log('Authorization failed:', authResult.error);
+                return errorResponse(authResult.error, authResult.statusCode);
+            }
+            
+            authContext = authResult.authContext;
+            console.log('Authenticated user registering:', authContext.email, 'Role:', authContext.role);
+        }
+
         // Parse request body
         const body = parseJSON(event.body || '{}');
 
+        // Use authenticated user's information if available, otherwise use body
+        const userId = authContext ? authContext.userId : body.userId;
+        const userEmail = authContext ? authContext.email : body.userEmail;
+        const userName = authContext ? authContext.username || authContext.email : body.userName;
+
         // Validate required fields
-        validateRequired(body, ['userId', 'itemId', 'itemType', 'userEmail', 'userName']);
+        validateRequired(body, ['itemId', 'itemType']);
+        
+        // When authenticated, we don't require userId, userEmail, userName in body
+        if (!authContext) {
+            validateRequired(body, ['userId', 'userEmail', 'userName']);
+        }
 
         // Validate existence of event, competition, or course
         await validateItemExists(body.itemId, body.itemType);
@@ -55,11 +93,11 @@ exports.handler = async (event) => {
 
         const registrationItem = {
             id: registrationId,
-            userId: body.userId,
+            userId: userId,
             itemId: body.itemId, // Event, competition, or course ID
             itemType: body.itemType, // 'event', 'competition', or 'course'
-            userEmail: body.userEmail,
-            userName: body.userName,
+            userEmail: userEmail,
+            userName: userName,
             userPhone: body.userPhone || null,
             registrationFee: body.registrationFee || 0, // Fee applicable at time of registration
             paymentStatus: body.paymentStatus || 'pending', // pending, paid, failed

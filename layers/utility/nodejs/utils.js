@@ -54,11 +54,19 @@ const parseJSON = (str) => {
 const isEmptyString = (value) => typeof value === 'string' && value.trim() === '';
 
 
+const { AuthMiddleware, createAuthMiddleware, extractUserIdFromPath, extractResourceId } = require('./auth');
+const { PermissionsManager } = require('./permissions');
+
 module.exports = {
     response,
     successResponse,
     errorResponse,
     validateRequired,
     parseJSON,
-    isEmptyString
+    isEmptyString,
+    AuthMiddleware,
+    createAuthMiddleware,
+    extractUserIdFromPath,
+    extractResourceId,
+    PermissionsManager
 };

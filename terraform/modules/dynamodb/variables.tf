@@ -38,6 +38,26 @@ variable "payments_table_name" {
   type        = string
 }
 
+variable "permissions_table_name" {
+  description = "Name of the Permissions DynamoDB table for RBAC"
+  type        = string
+}
+
+variable "users_table_name" {
+  description = "Name of the Users DynamoDB table for Cognito user mappings"
+  type        = string
+}
+
+variable "volunteer_tasks_table_name" {
+  description = "Name of the Volunteer Tasks DynamoDB table"
+  type        = string
+}
+
+variable "volunteer_applications_table_name" {
+  description = "Name of the Volunteer Applications DynamoDB table"
+  type        = string
+}
+
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)

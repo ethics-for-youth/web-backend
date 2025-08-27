@@ -1,14 +1,42 @@
 // Import from utility layer
-const { successResponse, errorResponse, parseJSON } = require('/opt/nodejs/utils');
+const { successResponse, errorResponse, parseJSON, createAuthMiddleware } = require('/opt/nodejs/utils');
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
 const { DynamoDBDocumentClient, GetCommand, UpdateCommand } = require('@aws-sdk/lib-dynamodb');
 
 const client = new DynamoDBClient({ region: process.env.AWS_REGION });
 const docClient = DynamoDBDocumentClient.from(client);
 
+// Initialize auth middleware
+const auth = createAuthMiddleware(
+    process.env.COGNITO_USER_POOL_ID,
+    process.env.AWS_REGION,
+    process.env.PERMISSIONS_TABLE_NAME
+);
+
 exports.handler = async (event) => {
     try {
         console.log('Event: ', JSON.stringify(event, null, 2));
+
+        let authContext = null;
+
+        // Skip authentication if disabled (backward compatibility)
+        if (process.env.ENABLE_AUTH === 'true') {
+            // Authenticate and authorize request (admin only for updating events)
+            const authResult = await auth.authenticateRequest(event, 'events', 'update');
+            
+            if (!authResult.isAuthenticated) {
+                console.log('Authentication failed:', authResult.error);
+                return errorResponse(authResult.error, authResult.statusCode);
+            }
+            
+            if (!authResult.isAuthorized) {
+                console.log('Authorization failed:', authResult.error);
+                return errorResponse(authResult.error, authResult.statusCode);
+            }
+            
+            authContext = authResult.authContext;
+            console.log('Authenticated user updating event:', authContext.email, 'Role:', authContext.role);
+        }
 
         const eventId = event.pathParameters?.id;
         if (!eventId) {
@@ -64,6 +92,17 @@ exports.handler = async (event) => {
         updateExpression.push('#updatedAt = :updatedAt');
         expressionAttributeNames['#updatedAt'] = 'updatedAt';
         expressionAttributeValues[':updatedAt'] = new Date().toISOString();
+
+        // Add updatedBy information if authenticated
+        if (authContext) {
+            updateExpression.push('#updatedBy = :updatedBy');
+            expressionAttributeNames['#updatedBy'] = 'updatedBy';
+            expressionAttributeValues[':updatedBy'] = authContext.userId;
+
+            updateExpression.push('#updatedByEmail = :updatedByEmail');
+            expressionAttributeNames['#updatedByEmail'] = 'updatedByEmail';
+            expressionAttributeValues[':updatedByEmail'] = authContext.email;
+        }
 
         // Perform update
         const result = await docClient.send(

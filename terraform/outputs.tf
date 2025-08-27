@@ -13,6 +13,47 @@ output "utility_layer_arn" {
   value       = module.utility_layer.layer_arn
 }
 
+# Cognito Outputs
+output "cognito_user_pool_id" {
+  description = "ID of the Cognito User Pool"
+  value       = module.cognito.user_pool_id
+}
+
+output "cognito_user_pool_client_id" {
+  description = "ID of the Cognito User Pool Client"
+  value       = module.cognito.user_pool_client_id
+}
+
+output "cognito_identity_pool_id" {
+  description = "ID of the Cognito Identity Pool"
+  value       = module.cognito.identity_pool_id
+}
+
+output "cognito_user_pool_domain" {
+  description = "Domain of the Cognito User Pool"
+  value       = module.cognito.user_pool_domain
+}
+
+output "cognito_jwks_uri" {
+  description = "JWKS URI for JWT token validation"
+  value       = module.cognito.jwks_uri
+}
+
+output "cognito_user_roles" {
+  description = "Cognito user roles and their ARNs"
+  value = {
+    student_role_arn   = module.cognito.student_role_arn
+    teacher_role_arn   = module.cognito.teacher_role_arn
+    volunteer_role_arn = module.cognito.volunteer_role_arn
+    admin_role_arn     = module.cognito.admin_role_arn
+  }
+}
+
+output "cognito_user_groups" {
+  description = "Cognito user pool groups"
+  value       = module.cognito.user_groups
+}
+
 # EFY API Gateway Outputs
 output "efy_api_gateway_url" {
   description = "URL of the EFY API Gateway"
@@ -22,6 +63,11 @@ output "efy_api_gateway_url" {
 output "efy_api_gateway_id" {
   description = "ID of the EFY API Gateway"
   value       = module.efy_api_gateway.api_gateway_id
+}
+
+output "cognito_authorizer_id" {
+  description = "ID of the Cognito authorizer (if enabled)"
+  value       = module.efy_api_gateway.cognito_authorizer_id
 }
 
 # S3 Bucket Outputs
@@ -64,6 +110,27 @@ output "volunteers_table_name" {
 output "suggestions_table_name" {
   description = "Name of the Suggestions DynamoDB table"
   value       = module.dynamodb.suggestions_table_name
+}
+
+# RBAC Table Names
+output "permissions_table_name" {
+  description = "Name of the Permissions DynamoDB table"
+  value       = module.dynamodb.permissions_table_name
+}
+
+output "users_table_name" {
+  description = "Name of the Users DynamoDB table"
+  value       = module.dynamodb.users_table_name
+}
+
+output "volunteer_tasks_table_name" {
+  description = "Name of the Volunteer Tasks DynamoDB table"
+  value       = module.dynamodb.volunteer_tasks_table_name
+}
+
+output "volunteer_applications_table_name" {
+  description = "Name of the Volunteer Applications DynamoDB table"
+  value       = module.dynamodb.volunteer_applications_table_name
 }
 
 # Lambda Function ARNs

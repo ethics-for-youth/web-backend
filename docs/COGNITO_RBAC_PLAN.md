@@ -138,7 +138,7 @@ terraform/modules/cognito/
 
 #### Key Resources to Create:
 - `aws_cognito_user_pool` - User authentication and management
-- `aws_cognito_user_pool_groups` - Role-based groups (student, teacher, volunteer, admin)
+- `aws_cognito_user_groups` - Role-based groups (student, teacher, volunteer, admin)
 - `aws_cognito_identity_pool` - AWS credentials for authenticated users
 - `aws_iam_role` - IAM roles for each user group
 - `aws_iam_role_policy` - Permission policies for each role

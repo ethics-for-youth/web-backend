@@ -65,8 +65,43 @@ module "dynamodb" {
   messages_table_name      = "${var.project_name}-${local.current_environment}-messages"
   payments_table_name      = "${var.project_name}-${local.current_environment}-payments"
 
+  # RBAC Tables
+  permissions_table_name            = "${var.project_name}-${local.current_environment}-permissions"
+  users_table_name                  = "${var.project_name}-${local.current_environment}-users"
+  volunteer_tasks_table_name        = "${var.project_name}-${local.current_environment}-volunteer-tasks"
+  volunteer_applications_table_name = "${var.project_name}-${local.current_environment}-volunteer-applications"
+
   tags = local.common_tags
 }
+
+# Cognito Authentication
+module "cognito" {
+  source = "./modules/cognito"
+
+  environment                       = local.current_environment
+  user_pool_name                    = "${var.project_name}-${local.current_environment}-user-pool"
+  identity_pool_name                = "${var.project_name}-${local.current_environment}-identity-pool"
+  user_pool_domain                  = "${var.project_name}-${local.current_environment}"
+  cognito_authenticated_role_name   = "${var.project_name}-${local.current_environment}-cognito-authenticated"
+  cognito_unauthenticated_role_name = "${var.project_name}-${local.current_environment}-cognito-unauthenticated"
+
+  aws_region = var.aws_region
+  account_id = data.aws_caller_identity.current.account_id
+
+  callback_urls = [
+    "https://localhost:3000/callback",
+    "http://localhost:3000/callback"
+  ]
+  logout_urls = [
+    "https://localhost:3000/logout",
+    "http://localhost:3000/logout"
+  ]
+
+  tags = local.common_tags
+}
+
+# Data source to get current AWS account ID
+data "aws_caller_identity" "current" {}
 
 # Dependencies Layer
 module "dependencies_layer" {
@@ -101,12 +136,19 @@ module "events_get_lambda" {
   ]
 
   environment_variables = {
-    EVENTS_TABLE_NAME = module.dynamodb.events_table_name
-    S3_BUCKET_NAME    = module.app_s3_bucket.bucket_id
+    EVENTS_TABLE_NAME           = module.dynamodb.events_table_name
+    S3_BUCKET_NAME              = module.app_s3_bucket.bucket_id
+    COGNITO_USER_POOL_ID        = module.cognito.user_pool_id
+    COGNITO_USER_POOL_CLIENT_ID = module.cognito.user_pool_client_id
+    PERMISSIONS_TABLE_NAME      = module.dynamodb.permissions_table_name
+    ENABLE_AUTH                 = "false" # Set to "true" when ready to enable authentication
   }
 
-  dynamodb_table_arns = [module.dynamodb.events_table_arn]
-  s3_bucket_arns      = [module.app_s3_bucket.bucket_arn]
+  dynamodb_table_arns = [
+    module.dynamodb.events_table_arn,
+    module.dynamodb.permissions_table_arn
+  ]
+  s3_bucket_arns = [module.app_s3_bucket.bucket_arn]
 
   tags = local.common_tags
 }
@@ -147,10 +189,17 @@ module "events_post_lambda" {
   ]
 
   environment_variables = {
-    EVENTS_TABLE_NAME = module.dynamodb.events_table_name
+    EVENTS_TABLE_NAME           = module.dynamodb.events_table_name
+    COGNITO_USER_POOL_ID        = module.cognito.user_pool_id
+    COGNITO_USER_POOL_CLIENT_ID = module.cognito.user_pool_client_id
+    PERMISSIONS_TABLE_NAME      = module.dynamodb.permissions_table_name
+    ENABLE_AUTH                 = "false" # Set to "true" when ready to enable authentication
   }
 
-  dynamodb_table_arns = [module.dynamodb.events_table_arn]
+  dynamodb_table_arns = [
+    module.dynamodb.events_table_arn,
+    module.dynamodb.permissions_table_arn
+  ]
 
   tags = local.common_tags
 }
@@ -214,10 +263,17 @@ module "competitions_get_lambda" {
   ]
 
   environment_variables = {
-    COMPETITIONS_TABLE_NAME = module.dynamodb.competitions_table_name
+    COMPETITIONS_TABLE_NAME     = module.dynamodb.competitions_table_name
+    COGNITO_USER_POOL_ID        = module.cognito.user_pool_id
+    COGNITO_USER_POOL_CLIENT_ID = module.cognito.user_pool_client_id
+    PERMISSIONS_TABLE_NAME      = module.dynamodb.permissions_table_name
+    ENABLE_AUTH                 = "false" # Set to "true" when ready to enable authentication
   }
 
-  dynamodb_table_arns = [module.dynamodb.competitions_table_arn]
+  dynamodb_table_arns = [
+    module.dynamodb.competitions_table_arn,
+    module.dynamodb.permissions_table_arn
+  ]
 
   tags = local.common_tags
 }
@@ -236,10 +292,17 @@ module "competitions_get_by_id_lambda" {
   ]
 
   environment_variables = {
-    COMPETITIONS_TABLE_NAME = module.dynamodb.competitions_table_name
+    COMPETITIONS_TABLE_NAME     = module.dynamodb.competitions_table_name
+    COGNITO_USER_POOL_ID        = module.cognito.user_pool_id
+    COGNITO_USER_POOL_CLIENT_ID = module.cognito.user_pool_client_id
+    PERMISSIONS_TABLE_NAME      = module.dynamodb.permissions_table_name
+    ENABLE_AUTH                 = "false" # Set to "true" when ready to enable authentication
   }
 
-  dynamodb_table_arns = [module.dynamodb.competitions_table_arn]
+  dynamodb_table_arns = [
+    module.dynamodb.competitions_table_arn,
+    module.dynamodb.permissions_table_arn
+  ]
 
   tags = local.common_tags
 }
@@ -258,10 +321,17 @@ module "competitions_post_lambda" {
   ]
 
   environment_variables = {
-    COMPETITIONS_TABLE_NAME = module.dynamodb.competitions_table_name
+    COMPETITIONS_TABLE_NAME     = module.dynamodb.competitions_table_name
+    COGNITO_USER_POOL_ID        = module.cognito.user_pool_id
+    COGNITO_USER_POOL_CLIENT_ID = module.cognito.user_pool_client_id
+    PERMISSIONS_TABLE_NAME      = module.dynamodb.permissions_table_name
+    ENABLE_AUTH                 = "false" # Set to "true" when ready to enable authentication
   }
 
-  dynamodb_table_arns = [module.dynamodb.competitions_table_arn]
+  dynamodb_table_arns = [
+    module.dynamodb.competitions_table_arn,
+    module.dynamodb.permissions_table_arn
+  ]
 
   tags = local.common_tags
 }
@@ -280,10 +350,17 @@ module "competitions_register_lambda" {
   ]
 
   environment_variables = {
-    COMPETITIONS_TABLE_NAME = module.dynamodb.competitions_table_name
+    COMPETITIONS_TABLE_NAME     = module.dynamodb.competitions_table_name
+    COGNITO_USER_POOL_ID        = module.cognito.user_pool_id
+    COGNITO_USER_POOL_CLIENT_ID = module.cognito.user_pool_client_id
+    PERMISSIONS_TABLE_NAME      = module.dynamodb.permissions_table_name
+    ENABLE_AUTH                 = "false" # Set to "true" when ready to enable authentication
   }
 
-  dynamodb_table_arns = [module.dynamodb.competitions_table_arn]
+  dynamodb_table_arns = [
+    module.dynamodb.competitions_table_arn,
+    module.dynamodb.permissions_table_arn
+  ]
 
   tags = local.common_tags
 }
@@ -302,10 +379,17 @@ module "competitions_results_lambda" {
   ]
 
   environment_variables = {
-    COMPETITIONS_TABLE_NAME = module.dynamodb.competitions_table_name
+    COMPETITIONS_TABLE_NAME     = module.dynamodb.competitions_table_name
+    COGNITO_USER_POOL_ID        = module.cognito.user_pool_id
+    COGNITO_USER_POOL_CLIENT_ID = module.cognito.user_pool_client_id
+    PERMISSIONS_TABLE_NAME      = module.dynamodb.permissions_table_name
+    ENABLE_AUTH                 = "false" # Set to "true" when ready to enable authentication
   }
 
-  dynamodb_table_arns = [module.dynamodb.competitions_table_arn]
+  dynamodb_table_arns = [
+    module.dynamodb.competitions_table_arn,
+    module.dynamodb.permissions_table_arn
+  ]
 
   tags = local.common_tags
 }
@@ -325,10 +409,17 @@ module "volunteers_apply_lambda" {
   ]
 
   environment_variables = {
-    VOLUNTEERS_TABLE_NAME = module.dynamodb.volunteers_table_name
+    VOLUNTEERS_TABLE_NAME       = module.dynamodb.volunteers_table_name
+    COGNITO_USER_POOL_ID        = module.cognito.user_pool_id
+    COGNITO_USER_POOL_CLIENT_ID = module.cognito.user_pool_client_id
+    PERMISSIONS_TABLE_NAME      = module.dynamodb.permissions_table_name
+    ENABLE_AUTH                 = "false" # Set to "true" when ready to enable authentication
   }
 
-  dynamodb_table_arns = [module.dynamodb.volunteers_table_arn]
+  dynamodb_table_arns = [
+    module.dynamodb.volunteers_table_arn,
+    module.dynamodb.permissions_table_arn
+  ]
 
   tags = local.common_tags
 }
@@ -347,10 +438,17 @@ module "volunteers_get_lambda" {
   ]
 
   environment_variables = {
-    VOLUNTEERS_TABLE_NAME = module.dynamodb.volunteers_table_name
+    VOLUNTEERS_TABLE_NAME       = module.dynamodb.volunteers_table_name
+    COGNITO_USER_POOL_ID        = module.cognito.user_pool_id
+    COGNITO_USER_POOL_CLIENT_ID = module.cognito.user_pool_client_id
+    PERMISSIONS_TABLE_NAME      = module.dynamodb.permissions_table_name
+    ENABLE_AUTH                 = "false" # Set to "true" when ready to enable authentication
   }
 
-  dynamodb_table_arns = [module.dynamodb.volunteers_table_arn]
+  dynamodb_table_arns = [
+    module.dynamodb.volunteers_table_arn,
+    module.dynamodb.permissions_table_arn
+  ]
 
   tags = local.common_tags
 }
@@ -369,10 +467,17 @@ module "volunteers_put_lambda" {
   ]
 
   environment_variables = {
-    VOLUNTEERS_TABLE_NAME = module.dynamodb.volunteers_table_name
+    VOLUNTEERS_TABLE_NAME       = module.dynamodb.volunteers_table_name
+    COGNITO_USER_POOL_ID        = module.cognito.user_pool_id
+    COGNITO_USER_POOL_CLIENT_ID = module.cognito.user_pool_client_id
+    PERMISSIONS_TABLE_NAME      = module.dynamodb.permissions_table_name
+    ENABLE_AUTH                 = "false" # Set to "true" when ready to enable authentication
   }
 
-  dynamodb_table_arns = [module.dynamodb.volunteers_table_arn]
+  dynamodb_table_arns = [
+    module.dynamodb.volunteers_table_arn,
+    module.dynamodb.permissions_table_arn
+  ]
 
   tags = local.common_tags
 }
@@ -392,10 +497,17 @@ module "suggestions_post_lambda" {
   ]
 
   environment_variables = {
-    SUGGESTIONS_TABLE_NAME = module.dynamodb.suggestions_table_name
+    SUGGESTIONS_TABLE_NAME      = module.dynamodb.suggestions_table_name
+    COGNITO_USER_POOL_ID        = module.cognito.user_pool_id
+    COGNITO_USER_POOL_CLIENT_ID = module.cognito.user_pool_client_id
+    PERMISSIONS_TABLE_NAME      = module.dynamodb.permissions_table_name
+    ENABLE_AUTH                 = "false" # Set to "true" when ready to enable authentication
   }
 
-  dynamodb_table_arns = [module.dynamodb.suggestions_table_arn]
+  dynamodb_table_arns = [
+    module.dynamodb.suggestions_table_arn,
+    module.dynamodb.permissions_table_arn
+  ]
 
   tags = local.common_tags
 }
@@ -414,10 +526,17 @@ module "suggestions_get_lambda" {
   ]
 
   environment_variables = {
-    SUGGESTIONS_TABLE_NAME = module.dynamodb.suggestions_table_name
+    SUGGESTIONS_TABLE_NAME      = module.dynamodb.suggestions_table_name
+    COGNITO_USER_POOL_ID        = module.cognito.user_pool_id
+    COGNITO_USER_POOL_CLIENT_ID = module.cognito.user_pool_client_id
+    PERMISSIONS_TABLE_NAME      = module.dynamodb.permissions_table_name
+    ENABLE_AUTH                 = "false" # Set to "true" when ready to enable authentication
   }
 
-  dynamodb_table_arns = [module.dynamodb.suggestions_table_arn]
+  dynamodb_table_arns = [
+    module.dynamodb.suggestions_table_arn,
+    module.dynamodb.permissions_table_arn
+  ]
 
   tags = local.common_tags
 }
@@ -437,10 +556,17 @@ module "courses_get_lambda" {
   ]
 
   environment_variables = {
-    COURSES_TABLE_NAME = module.dynamodb.courses_table_name
+    COURSES_TABLE_NAME          = module.dynamodb.courses_table_name
+    COGNITO_USER_POOL_ID        = module.cognito.user_pool_id
+    COGNITO_USER_POOL_CLIENT_ID = module.cognito.user_pool_client_id
+    PERMISSIONS_TABLE_NAME      = module.dynamodb.permissions_table_name
+    ENABLE_AUTH                 = "false" # Set to "true" when ready to enable authentication
   }
 
-  dynamodb_table_arns = [module.dynamodb.courses_table_arn]
+  dynamodb_table_arns = [
+    module.dynamodb.courses_table_arn,
+    module.dynamodb.permissions_table_arn
+  ]
 
   tags = local.common_tags
 }
@@ -459,10 +585,17 @@ module "courses_get_by_id_lambda" {
   ]
 
   environment_variables = {
-    COURSES_TABLE_NAME = module.dynamodb.courses_table_name
+    COURSES_TABLE_NAME          = module.dynamodb.courses_table_name
+    COGNITO_USER_POOL_ID        = module.cognito.user_pool_id
+    COGNITO_USER_POOL_CLIENT_ID = module.cognito.user_pool_client_id
+    PERMISSIONS_TABLE_NAME      = module.dynamodb.permissions_table_name
+    ENABLE_AUTH                 = "false" # Set to "true" when ready to enable authentication
   }
 
-  dynamodb_table_arns = [module.dynamodb.courses_table_arn]
+  dynamodb_table_arns = [
+    module.dynamodb.courses_table_arn,
+    module.dynamodb.permissions_table_arn
+  ]
 
   tags = local.common_tags
 }
@@ -481,10 +614,17 @@ module "courses_post_lambda" {
   ]
 
   environment_variables = {
-    COURSES_TABLE_NAME = module.dynamodb.courses_table_name
+    COURSES_TABLE_NAME          = module.dynamodb.courses_table_name
+    COGNITO_USER_POOL_ID        = module.cognito.user_pool_id
+    COGNITO_USER_POOL_CLIENT_ID = module.cognito.user_pool_client_id
+    PERMISSIONS_TABLE_NAME      = module.dynamodb.permissions_table_name
+    ENABLE_AUTH                 = "false" # Set to "true" when ready to enable authentication
   }
 
-  dynamodb_table_arns = [module.dynamodb.courses_table_arn]
+  dynamodb_table_arns = [
+    module.dynamodb.courses_table_arn,
+    module.dynamodb.permissions_table_arn
+  ]
 
   tags = local.common_tags
 }
@@ -503,10 +643,17 @@ module "courses_put_lambda" {
   ]
 
   environment_variables = {
-    COURSES_TABLE_NAME = module.dynamodb.courses_table_name
+    COURSES_TABLE_NAME          = module.dynamodb.courses_table_name
+    COGNITO_USER_POOL_ID        = module.cognito.user_pool_id
+    COGNITO_USER_POOL_CLIENT_ID = module.cognito.user_pool_client_id
+    PERMISSIONS_TABLE_NAME      = module.dynamodb.permissions_table_name
+    ENABLE_AUTH                 = "false" # Set to "true" when ready to enable authentication
   }
 
-  dynamodb_table_arns = [module.dynamodb.courses_table_arn]
+  dynamodb_table_arns = [
+    module.dynamodb.courses_table_arn,
+    module.dynamodb.permissions_table_arn
+  ]
 
   tags = local.common_tags
 }
@@ -525,10 +672,17 @@ module "courses_delete_lambda" {
   ]
 
   environment_variables = {
-    COURSES_TABLE_NAME = module.dynamodb.courses_table_name
+    COURSES_TABLE_NAME          = module.dynamodb.courses_table_name
+    COGNITO_USER_POOL_ID        = module.cognito.user_pool_id
+    COGNITO_USER_POOL_CLIENT_ID = module.cognito.user_pool_client_id
+    PERMISSIONS_TABLE_NAME      = module.dynamodb.permissions_table_name
+    ENABLE_AUTH                 = "false" # Set to "true" when ready to enable authentication
   }
 
-  dynamodb_table_arns = [module.dynamodb.courses_table_arn]
+  dynamodb_table_arns = [
+    module.dynamodb.courses_table_arn,
+    module.dynamodb.permissions_table_arn
+  ]
 
   tags = local.common_tags
 }
@@ -548,17 +702,22 @@ module "registrations_post_lambda" {
   ]
 
   environment_variables = {
-    REGISTRATIONS_TABLE_NAME = module.dynamodb.registrations_table_name,
-    COURSES_TABLE_NAME       = module.dynamodb.courses_table_name,
-    EVENTS_TABLE_NAME        = module.dynamodb.events_table_name,
-    COMPETITIONS_TABLE_NAME  = module.dynamodb.competitions_table_name
+    REGISTRATIONS_TABLE_NAME    = module.dynamodb.registrations_table_name,
+    COURSES_TABLE_NAME          = module.dynamodb.courses_table_name,
+    EVENTS_TABLE_NAME           = module.dynamodb.events_table_name,
+    COMPETITIONS_TABLE_NAME     = module.dynamodb.competitions_table_name
+    COGNITO_USER_POOL_ID        = module.cognito.user_pool_id
+    COGNITO_USER_POOL_CLIENT_ID = module.cognito.user_pool_client_id
+    PERMISSIONS_TABLE_NAME      = module.dynamodb.permissions_table_name
+    ENABLE_AUTH                 = "false" # Set to "true" when ready to enable authentication
   }
 
   dynamodb_table_arns = [
     module.dynamodb.registrations_table_arn,
     module.dynamodb.courses_table_arn,
     module.dynamodb.events_table_arn,
-    module.dynamodb.competitions_table_arn
+    module.dynamodb.competitions_table_arn,
+    module.dynamodb.permissions_table_arn
   ]
 
   tags = local.common_tags
@@ -578,17 +737,22 @@ module "registrations_get_lambda" {
   ]
 
   environment_variables = {
-    REGISTRATIONS_TABLE_NAME = module.dynamodb.registrations_table_name,
-    COURSES_TABLE_NAME       = module.dynamodb.courses_table_name,
-    EVENTS_TABLE_NAME        = module.dynamodb.events_table_name,
-    COMPETITIONS_TABLE_NAME  = module.dynamodb.competitions_table_name
+    REGISTRATIONS_TABLE_NAME    = module.dynamodb.registrations_table_name,
+    COURSES_TABLE_NAME          = module.dynamodb.courses_table_name,
+    EVENTS_TABLE_NAME           = module.dynamodb.events_table_name,
+    COMPETITIONS_TABLE_NAME     = module.dynamodb.competitions_table_name
+    COGNITO_USER_POOL_ID        = module.cognito.user_pool_id
+    COGNITO_USER_POOL_CLIENT_ID = module.cognito.user_pool_client_id
+    PERMISSIONS_TABLE_NAME      = module.dynamodb.permissions_table_name
+    ENABLE_AUTH                 = "false" # Set to "true" when ready to enable authentication
   }
 
   dynamodb_table_arns = [
     module.dynamodb.registrations_table_arn,
     module.dynamodb.courses_table_arn,
     module.dynamodb.events_table_arn,
-    module.dynamodb.competitions_table_arn
+    module.dynamodb.competitions_table_arn,
+    module.dynamodb.permissions_table_arn
   ]
 
   tags = local.common_tags
@@ -608,10 +772,17 @@ module "registrations_put_lambda" {
   ]
 
   environment_variables = {
-    REGISTRATIONS_TABLE_NAME = module.dynamodb.registrations_table_name
+    REGISTRATIONS_TABLE_NAME    = module.dynamodb.registrations_table_name
+    COGNITO_USER_POOL_ID        = module.cognito.user_pool_id
+    COGNITO_USER_POOL_CLIENT_ID = module.cognito.user_pool_client_id
+    PERMISSIONS_TABLE_NAME      = module.dynamodb.permissions_table_name
+    ENABLE_AUTH                 = "false" # Set to "true" when ready to enable authentication
   }
 
-  dynamodb_table_arns = [module.dynamodb.registrations_table_arn]
+  dynamodb_table_arns = [
+    module.dynamodb.registrations_table_arn,
+    module.dynamodb.permissions_table_arn
+  ]
 
   tags = local.common_tags
 }
@@ -631,10 +802,17 @@ module "messages_post_lambda" {
   ]
 
   environment_variables = {
-    MESSAGES_TABLE_NAME = module.dynamodb.messages_table_name
+    MESSAGES_TABLE_NAME         = module.dynamodb.messages_table_name
+    COGNITO_USER_POOL_ID        = module.cognito.user_pool_id
+    COGNITO_USER_POOL_CLIENT_ID = module.cognito.user_pool_client_id
+    PERMISSIONS_TABLE_NAME      = module.dynamodb.permissions_table_name
+    ENABLE_AUTH                 = "false" # Set to "true" when ready to enable authentication
   }
 
-  dynamodb_table_arns = [module.dynamodb.messages_table_arn]
+  dynamodb_table_arns = [
+    module.dynamodb.messages_table_arn,
+    module.dynamodb.permissions_table_arn
+  ]
 
   tags = local.common_tags
 }
@@ -653,10 +831,17 @@ module "messages_get_lambda" {
   ]
 
   environment_variables = {
-    MESSAGES_TABLE_NAME = module.dynamodb.messages_table_name
+    MESSAGES_TABLE_NAME         = module.dynamodb.messages_table_name
+    COGNITO_USER_POOL_ID        = module.cognito.user_pool_id
+    COGNITO_USER_POOL_CLIENT_ID = module.cognito.user_pool_client_id
+    PERMISSIONS_TABLE_NAME      = module.dynamodb.permissions_table_name
+    ENABLE_AUTH                 = "false" # Set to "true" when ready to enable authentication
   }
 
-  dynamodb_table_arns = [module.dynamodb.messages_table_arn]
+  dynamodb_table_arns = [
+    module.dynamodb.messages_table_arn,
+    module.dynamodb.permissions_table_arn
+  ]
 
   tags = local.common_tags
 }
@@ -676,12 +861,16 @@ module "admin_stats_get_lambda" {
   ]
 
   environment_variables = {
-    EVENTS_TABLE_NAME        = module.dynamodb.events_table_name
-    COMPETITIONS_TABLE_NAME  = module.dynamodb.competitions_table_name
-    VOLUNTEERS_TABLE_NAME    = module.dynamodb.volunteers_table_name
-    COURSES_TABLE_NAME       = module.dynamodb.courses_table_name
-    REGISTRATIONS_TABLE_NAME = module.dynamodb.registrations_table_name
-    MESSAGES_TABLE_NAME      = module.dynamodb.messages_table_name
+    EVENTS_TABLE_NAME           = module.dynamodb.events_table_name
+    COMPETITIONS_TABLE_NAME     = module.dynamodb.competitions_table_name
+    VOLUNTEERS_TABLE_NAME       = module.dynamodb.volunteers_table_name
+    COURSES_TABLE_NAME          = module.dynamodb.courses_table_name
+    REGISTRATIONS_TABLE_NAME    = module.dynamodb.registrations_table_name
+    MESSAGES_TABLE_NAME         = module.dynamodb.messages_table_name
+    COGNITO_USER_POOL_ID        = module.cognito.user_pool_id
+    COGNITO_USER_POOL_CLIENT_ID = module.cognito.user_pool_client_id
+    PERMISSIONS_TABLE_NAME      = module.dynamodb.permissions_table_name
+    ENABLE_AUTH                 = "false" # Set to "true" when ready to enable authentication
   }
 
   dynamodb_table_arns = [
@@ -690,7 +879,8 @@ module "admin_stats_get_lambda" {
     module.dynamodb.volunteers_table_arn,
     module.dynamodb.courses_table_arn,
     module.dynamodb.registrations_table_arn,
-    module.dynamodb.messages_table_arn
+    module.dynamodb.messages_table_arn,
+    module.dynamodb.permissions_table_arn
   ]
 
   tags = local.common_tags
@@ -711,13 +901,18 @@ module "payments_create_order_lambda" {
   ]
 
   environment_variables = {
-    RAZORPAY_KEY_ID     = var.razorpay_key_id
-    RAZORPAY_KEY_SECRET = var.razorpay_key_secret
-    PAYMENTS_TABLE_NAME = module.dynamodb.payments_table_name
+    RAZORPAY_KEY_ID             = var.razorpay_key_id
+    RAZORPAY_KEY_SECRET         = var.razorpay_key_secret
+    PAYMENTS_TABLE_NAME         = module.dynamodb.payments_table_name
+    COGNITO_USER_POOL_ID        = module.cognito.user_pool_id
+    COGNITO_USER_POOL_CLIENT_ID = module.cognito.user_pool_client_id
+    PERMISSIONS_TABLE_NAME      = module.dynamodb.permissions_table_name
+    ENABLE_AUTH                 = "false" # Set to "true" when ready to enable authentication
   }
 
   dynamodb_table_arns = [
-    module.dynamodb.payments_table_arn
+    module.dynamodb.payments_table_arn,
+    module.dynamodb.permissions_table_arn
   ]
 
   timeout = 30
@@ -739,12 +934,17 @@ module "payments_webhook_lambda" {
   ]
 
   environment_variables = {
-    RAZORPAY_WEBHOOK_SECRET = var.razorpay_webhook_secret
-    PAYMENTS_TABLE_NAME     = module.dynamodb.payments_table_name
+    RAZORPAY_WEBHOOK_SECRET     = var.razorpay_webhook_secret
+    PAYMENTS_TABLE_NAME         = module.dynamodb.payments_table_name
+    COGNITO_USER_POOL_ID        = module.cognito.user_pool_id
+    COGNITO_USER_POOL_CLIENT_ID = module.cognito.user_pool_client_id
+    PERMISSIONS_TABLE_NAME      = module.dynamodb.permissions_table_name
+    ENABLE_AUTH                 = "false" # Set to "true" when ready to enable authentication
   }
 
   dynamodb_table_arns = [
-    module.dynamodb.payments_table_arn
+    module.dynamodb.payments_table_arn,
+    module.dynamodb.permissions_table_arn
   ]
 
   timeout = 30
@@ -831,6 +1031,10 @@ module "efy_api_gateway" {
   payments_create_order_lambda_function_name = module.payments_create_order_lambda.lambda_function_name
   payments_webhook_lambda_arn                = module.payments_webhook_lambda.lambda_invoke_arn
   payments_webhook_lambda_function_name      = module.payments_webhook_lambda.lambda_function_name
+
+  # Cognito Authorizer Configuration
+  cognito_user_pool_arn = module.cognito.user_pool_arn
+  enable_cognito_auth   = false # Set to true when ready to enable authentication
 
   tags = local.common_tags
 }

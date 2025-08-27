@@ -11,6 +11,9 @@
     "bcrypt": "^5.0.1",
     "joi": "^17.6.0",
     "lodash": "^4.17.21",
-    "razorpay": "^2.9.6"
+    "razorpay": "^2.9.6",
+    "jsonwebtoken": "^9.0.2",
+    "jwks-rsa": "^3.1.0",
+    "node-fetch": "^2.7.0"
   }
 }

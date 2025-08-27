@@ -4,6 +4,16 @@ resource "aws_api_gateway_rest_api" "efy_api" {
   tags = var.tags
 }
 
+# Cognito Authorizer (optional)
+resource "aws_api_gateway_authorizer" "cognito" {
+  count = var.enable_cognito_auth ? 1 : 0
+
+  name          = "${var.api_name}-cognito-authorizer"
+  type          = "COGNITO_USER_POOLS"
+  rest_api_id   = aws_api_gateway_rest_api.efy_api.id
+  provider_arns = [var.cognito_user_pool_arn]
+}
+
 # Events Resource
 resource "aws_api_gateway_resource" "events" {
   rest_api_id = aws_api_gateway_rest_api.efy_api.id

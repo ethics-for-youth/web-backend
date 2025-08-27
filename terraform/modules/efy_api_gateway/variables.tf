@@ -292,6 +292,19 @@ variable "payments_webhook_lambda_function_name" {
   type        = string
 }
 
+# Cognito Authorizer Variables
+variable "cognito_user_pool_arn" {
+  description = "ARN of the Cognito User Pool for the authorizer"
+  type        = string
+  default     = ""
+}
+
+variable "enable_cognito_auth" {
+  description = "Enable Cognito authentication for API Gateway"
+  type        = bool
+  default     = false
+}
+
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)
