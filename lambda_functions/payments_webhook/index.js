@@ -5,7 +5,25 @@ const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
 const { DynamoDBDocumentClient, PutCommand, UpdateCommand, GetCommand } = require('@aws-sdk/lib-dynamodb');
 
 const client = new DynamoDBClient({ region: process.env.AWS_REGION });
-const docClient = DynamoDBDocumentClient.from(client);
+const docClient = DynamoDBDocumentClient.from(client, {
+    marshallOptions: {
+        removeUndefinedValues: true // Automatically remove undefined values
+    }
+});
+
+const removeUndefinedValues = (obj) => {
+    const cleanObj = {};
+    for (const key of Object.keys(obj)) {
+        if (obj[key] !== undefined) {
+            if (typeof obj[key] === 'object' && obj[key] !== null) {
+                cleanObj[key] = removeUndefinedValues(obj[key]); // Recursively clean nested objects
+            } else {
+                cleanObj[key] = obj[key];
+            }
+        }
+    }
+    return cleanObj;
+};
 
 // Database helper functions
 const createPaymentRecord = async (orderId, paymentId, paymentData) => {
@@ -18,30 +36,33 @@ const createPaymentRecord = async (orderId, paymentId, paymentData) => {
             amount: paymentData.amount,
             currency: paymentData.currency,
             status: paymentData.status,
-            method: paymentData.method,
+            method: paymentData.method || null,
             razorpayOrderId: orderId,
             razorpayPaymentId: paymentId,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             metadata: {
-                captured_at: paymentData.captured_at,
-                created_at: paymentData.created_at,
+                captured_at: paymentData.captured_at || null,
+                created_at: paymentData.created_at || null,
                 error_code: paymentData.error_code || null,
                 error_description: paymentData.error_description || null,
                 notes: paymentData.notes || {}
             }
         };
 
+        // Clean the paymentRecord to remove undefined values
+        const cleanPaymentRecord = removeUndefinedValues(paymentRecord);
+
         const command = new PutCommand({
             TableName: tableName,
-            Item: paymentRecord,
+            Item: cleanPaymentRecord,
             ConditionExpression: 'attribute_not_exists(paymentId)'
         });
 
         await docClient.send(command);
         console.log(`Payment record created: ${paymentId} for order: ${orderId}`);
 
-        return paymentRecord;
+        return cleanPaymentRecord;
     } catch (error) {
         if (error.name === 'ConditionalCheckFailedException') {
             console.log(`Payment record already exists: ${paymentId}`);
@@ -51,7 +72,6 @@ const createPaymentRecord = async (orderId, paymentId, paymentData) => {
         throw new Error(`Failed to create payment record: ${error.message}`);
     }
 };
-
 const updatePaymentStatus = async (orderId, paymentId, status, paymentData = {}) => {
     try {
         const tableName = process.env.PAYMENTS_TABLE_NAME;
