@@ -2,7 +2,7 @@ name: Deploy to QA Environment
 
 on:
   push:
-    branches: [ qa, bug/109-fix-registration-save-data ]
+    branches: [ qa ]
     paths:
       - 'terraform/**'
       - 'lambda_functions/**'
@@ -47,27 +47,26 @@ jobs:
       razorpay-key-secret: ${{ secrets.RAZORPAY_KEY_SECRET }}
       razorpay-webhook-secret: ${{ secrets.RAZORPAY_WEBHOOK_SECRET }}
 
-  # wait-for-approval:
-  #   name: Wait for QA Deployment Approval
-  #   runs-on: ubuntu-latest
-  #   needs: [validate, plan]
-  #   outputs:
-  #     approved: ${{ steps.approval.outputs.approved }}
-  #   steps:
-  #   - name: Wait for approval
-  #     id: approval
-  #     uses: trstringer/manual-approval@v1
-  #     with:
-  #       secret: ${{ secrets.GITHUB_TOKEN }}
-  #       approvers: mohammadn0man
-  #       minimum-approvals: 1
-  #       exclude-workflow-initiator-as-approver: false
+  wait-for-approval:
+    name: Wait for QA Deployment Approval
+    runs-on: ubuntu-latest
+    needs: [validate, plan]
+    outputs:
+      approved: ${{ steps.approval.outputs.approved }}
+    steps:
+    - name: Wait for approval
+      id: approval
+      uses: trstringer/manual-approval@v1
+      with:
+        secret: ${{ secrets.GITHUB_TOKEN }}
+        approvers: mohammadn0man
+        minimum-approvals: 1
+        exclude-workflow-initiator-as-approver: false
 
   deploy:
     name: Deploy to QA
     uses: ./.github/workflows/terraform-deploy.yml
-    needs: [validate, plan]
-    # needs: [validate, plan, wait-for-approval]
+    needs: [validate, plan, wait-for-approval]
     with:
       environment: qa
       aws-region: ${{ vars.AWS_REGION }}
