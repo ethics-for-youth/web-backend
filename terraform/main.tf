@@ -711,14 +711,23 @@ module "payments_create_order_lambda" {
   ]
 
   environment_variables = {
-    RAZORPAY_KEY_ID     = var.razorpay_key_id
-    RAZORPAY_KEY_SECRET = var.razorpay_key_secret
-    PAYMENTS_TABLE_NAME = module.dynamodb.payments_table_name
+    RAZORPAY_KEY_ID          = var.razorpay_key_id
+    RAZORPAY_KEY_SECRET      = var.razorpay_key_secret
+    PAYMENTS_TABLE_NAME      = module.dynamodb.payments_table_name
+    REGISTRATIONS_TABLE_NAME = module.dynamodb.registrations_table_name,
+    COURSES_TABLE_NAME       = module.dynamodb.courses_table_name,
+    EVENTS_TABLE_NAME        = module.dynamodb.events_table_name,
+    COMPETITIONS_TABLE_NAME  = module.dynamodb.competitions_table_name
   }
 
   dynamodb_table_arns = [
-    module.dynamodb.payments_table_arn
+    module.dynamodb.payments_table_arn,
+    module.dynamodb.registrations_table_arn,
+    module.dynamodb.courses_table_arn,
+    module.dynamodb.events_table_arn,
+    module.dynamodb.competitions_table_arn,
   ]
+
 
   timeout = 30
 
@@ -739,12 +748,14 @@ module "payments_webhook_lambda" {
   ]
 
   environment_variables = {
-    RAZORPAY_WEBHOOK_SECRET = var.razorpay_webhook_secret
-    PAYMENTS_TABLE_NAME     = module.dynamodb.payments_table_name
+    RAZORPAY_WEBHOOK_SECRET  = var.razorpay_webhook_secret
+    PAYMENTS_TABLE_NAME      = module.dynamodb.payments_table_name
+    REGISTRATIONS_TABLE_NAME = module.dynamodb.registrations_table_name
   }
 
   dynamodb_table_arns = [
-    module.dynamodb.payments_table_arn
+    module.dynamodb.payments_table_arn,
+    module.dynamodb.registrations_table_arn
   ]
 
   timeout = 30
