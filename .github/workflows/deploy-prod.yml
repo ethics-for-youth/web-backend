@@ -16,6 +16,11 @@ on:
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}
 
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
 jobs:
   validate:
     uses: ./.github/workflows/terraform-validate.yml
