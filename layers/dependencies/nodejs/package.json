@@ -1,0 +1,16 @@
+{
+  "name": "lambda-dependencies",
+  "version": "1.0.0",
+  "description": "Shared dependencies for Lambda functions",
+  "engines": {
+    "node": ">=18.0.0 <21.0.0"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.x",
+    "@aws-sdk/lib-dynamodb": "^3.x",
+    "bcrypt": "^5.0.1",
+    "joi": "^17.6.0",
+    "lodash": "^4.17.21",
+    "razorpay": "^2.9.6"
+  }
+}

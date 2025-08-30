@@ -1,0 +1,6 @@
+{
+  "name": "competitions-register",
+  "version": "1.0.0",
+  "description": "Lambda function to register for a competition",
+  "main": "index.js"
+}

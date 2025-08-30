@@ -1,0 +1,69 @@
+name: Terraform Validate
+
+on:
+  workflow_call:
+    inputs:
+      aws-region:
+        required: false
+        type: string
+        default: ${{ vars.AWS_REGION }}
+        description: 'AWS region for validation'
+      environment:
+        required: false
+        type: string
+        default: dev
+        description: 'Environment for validation'
+    secrets:
+      aws-access-key-id:
+        required: true
+      aws-secret-access-key:
+        required: true
+      razorpay-key-id:
+        required: true
+      razorpay-key-secret:
+        required: true
+      razorpay-webhook-secret:
+        required: true
+
+jobs:
+  validate:
+    name: Validate Terraform
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: |
+          package-lock.json
+          layers/dependencies/nodejs/package-lock.json
+          layers/utility/nodejs/package-lock.json
+        
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: "1.12.2"
+        
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.aws-access-key-id }}
+        aws-secret-access-key: ${{ secrets.aws-secret-access-key }}
+        aws-region: ${{ inputs.aws-region }}
+        
+    - name: Make scripts executable
+      run: |
+        chmod +x scripts/build.sh
+        
+    - name: Validate Terraform configuration
+      run: |
+        echo "razorpay_key_id         = \"${{ secrets.razorpay-key-id }}\"" >> terraform/terraform.tfvars
+        echo "razorpay_key_secret     = \"${{ secrets.razorpay-key-secret }}\"" >> terraform/terraform.tfvars
+        echo "razorpay_webhook_secret = \"${{ secrets.razorpay-webhook-secret }}\"" >> terraform/terraform.tfvars
+        ./scripts/build.sh validate 

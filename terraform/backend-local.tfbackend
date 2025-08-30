@@ -1,0 +1,2 @@
+# This file is used only for validation when AWS credentials are not available
+# It will be used with a temporary backend.tf that uses local backend

@@ -1,0 +1,10 @@
+{
+  "name": "lambda-utility",
+  "version": "1.0.0",
+  "description": "Shared utility functions for Lambda functions",
+  "main": "utils.js",
+  "engines": {
+    "node": ">=18.0.0 <21.0.0"
+  },
+  "dependencies": {}
+}

@@ -1,0 +1,5 @@
+bucket         = "efy-web-backend-dev-terraform-state-030382357640"
+key            = "terraform.tfstate"
+region         = "ap-south-1"
+use_lockfile   = true
+encrypt        = true

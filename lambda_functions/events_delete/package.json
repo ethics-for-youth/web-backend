@@ -1,0 +1,6 @@
+{
+  "name": "events-delete",
+  "version": "1.0.0",
+  "description": "Lambda function to delete an event",
+  "main": "index.js"
+}

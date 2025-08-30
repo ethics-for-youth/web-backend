@@ -1,0 +1,6 @@
+{
+  "name": "volunteers-put",
+  "version": "1.0.0",
+  "description": "Lambda function to update volunteer status",
+  "main": "index.js"
+}
