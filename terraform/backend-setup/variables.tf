@@ -26,13 +26,11 @@ variable "environment_configs" {
   description = "Environment-specific configurations"
   type = map(object({
     state_bucket_name   = string
-    dynamodb_table_name = string
     tags                = map(string)
   }))
   default = {
     dev = {
       state_bucket_name   = "efy-web-backend-dev-terraform-state-030382357640"
-      dynamodb_table_name = "efy-web-backend-dev-terraform-locks"
       tags = {
         Environment = "dev"
         CostCenter  = "development"
@@ -40,15 +38,13 @@ variable "environment_configs" {
     }
     qa = {
       state_bucket_name   = "efy-web-backend-qa-terraform-state-030382357640"
-      dynamodb_table_name = "efy-web-backend-qa-terraform-locks"
       tags = {
         Environment = "qa"
         CostCenter  = "testing"
       }
     }
     prod = {
-      state_bucket_name   = "efy-web-backend-prod-terraform-state-030382357640"
-      dynamodb_table_name = "efy-web-backend-prod-terraform-locks"
+      state_bucket_name   = "efy-web-backend-prod-terraform-state-657197742641"
       tags = {
         Environment = "prod"
         CostCenter  = "production"
