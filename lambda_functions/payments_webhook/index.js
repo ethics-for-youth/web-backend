@@ -151,12 +151,19 @@ const updateRegistrationStatus = async (registrationId, paymentStatus, status, p
 
         const tableName = process.env.REGISTRATIONS_TABLE_NAME;
 
-        let updateExpression = 'SET paymentStatus = :paymentStatus, status=:status, updatedAt = :updatedAt, paymentId = :paymentId';
+        // Use placeholder for reserved keyword 'status'
+        let updateExpression = 'SET paymentStatus = :paymentStatus, #status = :status, updatedAt = :updatedAt, paymentId = :paymentId';
+
         const expressionAttributeValues = {
             ':paymentStatus': paymentStatus,
             ':updatedAt': new Date().toISOString(),
             ':paymentId': paymentId,
             ':status': status
+        };
+
+        // Define ExpressionAttributeNames to handle reserved word
+        const expressionAttributeNames = {
+            '#status': 'status'
         };
 
         if (additionalData.error_description) {
@@ -169,6 +176,7 @@ const updateRegistrationStatus = async (registrationId, paymentStatus, status, p
             Key: { id: registrationId },
             UpdateExpression: updateExpression,
             ExpressionAttributeValues: expressionAttributeValues,
+            ExpressionAttributeNames: expressionAttributeNames, // <-- Added here
             ConditionExpression: 'attribute_exists(id)', // Ensure registration exists
             ReturnValues: 'ALL_NEW'
         });
@@ -176,11 +184,13 @@ const updateRegistrationStatus = async (registrationId, paymentStatus, status, p
         const result = await docClient.send(command);
         console.log(`Registration updated: ${registrationId} -> paymentStatus: ${paymentStatus}, paymentId: ${paymentId}`);
         return result.Attributes;
+
     } catch (error) {
         console.error('Error updating registration:', error);
         return null; // Don't throw; webhook should succeed for payment updates
     }
 };
+
 
 const createRefundRecord = async (refundData) => {
     try {

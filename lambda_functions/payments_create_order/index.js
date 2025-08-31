@@ -56,7 +56,7 @@ const storeOrderRecord = async (order, originalAmount, notes) => {
             originalAmount: originalAmount, // Store original amount in major currency unit
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
-            // notes: notes || {},
+            notes: notes || {},
             metadata: {
                 receipt: order.receipt,
                 razorpay_created_at: order.created_at,
