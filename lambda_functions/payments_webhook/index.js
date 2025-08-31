@@ -142,7 +142,7 @@ const getPaymentRecord = async (orderId, paymentId) => {
 };
 
 
-const updateRegistrationStatus = async (registrationId, paymentStatus, paymentId, additionalData = {}) => {
+const updateRegistrationStatus = async (registrationId, paymentStatus, status, paymentId, additionalData = {}) => {
     try {
         if (!registrationId) {
             console.warn('No registrationId provided; skipping registration update');
@@ -151,11 +151,12 @@ const updateRegistrationStatus = async (registrationId, paymentStatus, paymentId
 
         const tableName = process.env.REGISTRATIONS_TABLE_NAME;
 
-        let updateExpression = 'SET paymentStatus = :paymentStatus, updatedAt = :updatedAt, paymentId = :paymentId';
+        let updateExpression = 'SET paymentStatus = :paymentStatus, status=:status, updatedAt = :updatedAt, paymentId = :paymentId';
         const expressionAttributeValues = {
             ':paymentStatus': paymentStatus,
             ':updatedAt': new Date().toISOString(),
-            ':paymentId': paymentId
+            ':paymentId': paymentId,
+            ':status': status
         };
 
         if (additionalData.error_description) {
@@ -299,7 +300,7 @@ const handlePaymentCaptured = async (payment) => {
         }
 
         const registrationId = payment.notes?.registrationId;
-        await updateRegistrationStatus(registrationId, 'paid', payment.id, payment);
+        await updateRegistrationStatus(registrationId, 'paid', 'registered', payment.id, payment);
 
         console.log('Payment captured and saved to database:', paymentRecord);
         return paymentRecord;
@@ -330,7 +331,7 @@ const handlePaymentFailed = async (payment) => {
         }
 
         const registrationId = payment.notes?.registrationId;
-        await updateRegistrationStatus(registrationId, 'failed', payment.id, payment);
+        await updateRegistrationStatus(registrationId, 'failed', 'failed', payment.id, payment);
 
         console.log('Payment failure saved to database:', paymentRecord);
         return paymentRecord;
@@ -360,7 +361,7 @@ const handlePaymentAuthorized = async (payment) => {
         }
 
         const registrationId = payment.notes?.registrationId;
-        await updateRegistrationStatus(registrationId, 'pending', payment.id, payment);
+        await updateRegistrationStatus(registrationId, 'pending', 'pending', payment.id, payment);
 
         console.log('Payment authorization saved to database:', paymentRecord);
         return paymentRecord;
@@ -393,7 +394,7 @@ const handleOrderPaid = async (order, payment) => {
         });
 
         const registrationId = order.notes?.registrationId || payment.notes?.registrationId;
-        await updateRegistrationStatus(registrationId, 'paid', payment.id, { ...order, ...payment });
+        await updateRegistrationStatus(registrationId, 'paid', 'registered', payment.id, { ...order, ...payment });
 
         console.log('Order paid status saved to database:', paymentRecord);
         return paymentRecord;
@@ -418,7 +419,7 @@ const handleRefundCreated = async (refund) => {
 
         const originalPayment = await getPaymentRecord(refund.order_id || 'unknown', refund.payment_id);
         const registrationId = originalPayment?.metadata?.notes?.registrationId;
-        await updateRegistrationStatus(registrationId, 'refunded', `refund_${refund.id}`, refund);
+        await updateRegistrationStatus(registrationId, 'refunded', 'refunded', `refund_${refund.id}`, refund);
 
         console.log('Refund saved to database:', refundRecord);
         return refundRecord;

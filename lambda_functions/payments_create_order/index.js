@@ -56,9 +56,9 @@ const storeOrderRecord = async (order, originalAmount, notes) => {
             originalAmount: originalAmount, // Store original amount in major currency unit
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
+            notes: notes || {},
             metadata: {
                 receipt: order.receipt,
-                notes: notes || {},
                 razorpay_created_at: order.created_at,
                 order_status: 'created'
             }
@@ -96,7 +96,7 @@ const storeRegistrationRecord = async (body, registrationId) => {
             registrationFee: body.amount || 0,
             paymentStatus: 'pending',
             paymentId: null,
-            status: 'registered',
+            status: 'pending',
             notes: body.notes || null,
             registeredAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
