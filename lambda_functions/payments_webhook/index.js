@@ -49,7 +49,6 @@ const createPaymentRecord = async (orderId, paymentId, paymentData) => {
             }
         };
 
-        // Clean the paymentRecord to remove undefined values
         const cleanPaymentRecord = removeUndefinedValues(paymentRecord);
 
         const command = new PutCommand({
@@ -71,6 +70,7 @@ const createPaymentRecord = async (orderId, paymentId, paymentData) => {
         throw new Error(`Failed to create payment record: ${error.message}`);
     }
 };
+
 const updatePaymentStatus = async (orderId, paymentId, status, paymentData = {}) => {
     try {
         const tableName = process.env.PAYMENTS_TABLE_NAME;
@@ -81,7 +81,8 @@ const updatePaymentStatus = async (orderId, paymentId, status, paymentData = {})
             ':status': status,
             ':updatedAt': new Date().toISOString()
         };
-        // Initialize metadata as a map if it doesn't exist
+
+        // Initialize metadata if it doesn't exist
         const existingRecord = await getPaymentRecord(orderId, paymentId);
         if (!existingRecord?.metadata) {
             updateExpression += ', metadata = :metadata';
@@ -115,7 +116,8 @@ const updatePaymentStatus = async (orderId, paymentId, status, paymentData = {})
 
         // Update method if provided
         if (paymentData.method) {
-            updateExpression += ', method = :method';
+            updateExpression += ', #method = :method';
+            expressionAttributeNames['#method'] = 'method'; // Handle reserved keyword
             expressionAttributeValues[':method'] = paymentData.method;
         }
 
@@ -172,7 +174,6 @@ const updateRegistrationStatus = async (registrationId, paymentStatus, status, p
 
         // Use placeholder for reserved keyword 'status'
         let updateExpression = 'SET paymentStatus = :paymentStatus, #status = :status, updatedAt = :updatedAt, paymentId = :paymentId';
-
         const expressionAttributeValues = {
             ':paymentStatus': paymentStatus,
             ':updatedAt': new Date().toISOString(),
@@ -325,18 +326,26 @@ const handlePaymentCaptured = async (payment) => {
                 ...payment,
                 order_status: 'paid',
                 razorpayPaymentId: payment.id,
-                method: payment.method || 'unknown'
+                method: payment.method || 'unknown',
+                notes: { ...paymentRecord.notes, ...payment.notes }
             });
             console.log('Updated existing payment record:', paymentRecord);
         } else {
             paymentRecord = await getPaymentRecord(payment.order_id, payment.id);
             if (!paymentRecord) {
-                paymentRecord = await createPaymentRecord(payment.order_id, payment.id, payment);
+                console.log(`No record found for order_${payment.order_id}; creating new record with paymentId: ${payment.id}`);
+                paymentRecord = await createPaymentRecord(payment.order_id, payment.id, {
+                    ...payment,
+                    notes: payment.notes || {},
+                    originalAmount: payment.amount / 100
+                });
             } else {
                 paymentRecord = await updatePaymentStatus(payment.order_id, payment.id, 'captured', {
                     ...payment,
-                    order_status: 'paid'
+                    order_status: 'paid',
+                    notes: { ...paymentRecord.notes, ...payment.notes }
                 });
+                console.log('Updated existing payment record with actual paymentId:', paymentRecord);
             }
         }
 
@@ -369,15 +378,25 @@ const handlePaymentFailed = async (payment) => {
             paymentRecord = await updatePaymentStatus(payment.order_id, `order_${payment.order_id}`, 'failed', {
                 ...payment,
                 razorpayPaymentId: payment.id,
-                method: payment.method || 'unknown'
+                method: payment.method || 'unknown',
+                notes: { ...paymentRecord.notes, ...payment.notes }
             });
             console.log('Updated existing payment record:', paymentRecord);
         } else {
             paymentRecord = await getPaymentRecord(payment.order_id, payment.id);
             if (!paymentRecord) {
-                paymentRecord = await createPaymentRecord(payment.order_id, payment.id, payment);
+                console.log(`No record found for order_${payment.order_id}; creating new record with paymentId: ${payment.id}`);
+                paymentRecord = await createPaymentRecord(payment.order_id, payment.id, {
+                    ...payment,
+                    notes: payment.notes || {},
+                    originalAmount: payment.amount / 100
+                });
             } else {
-                paymentRecord = await updatePaymentStatus(payment.order_id, payment.id, 'failed', payment);
+                paymentRecord = await updatePaymentStatus(payment.order_id, payment.id, 'failed', {
+                    ...payment,
+                    notes: { ...paymentRecord.notes, ...payment.notes }
+                });
+                console.log('Updated existing payment record with actual paymentId:', paymentRecord);
             }
         }
 
@@ -409,15 +428,25 @@ const handlePaymentAuthorized = async (payment) => {
             paymentRecord = await updatePaymentStatus(payment.order_id, `order_${payment.order_id}`, 'authorized', {
                 ...payment,
                 razorpayPaymentId: payment.id,
-                method: payment.method || 'unknown'
+                method: payment.method || 'unknown',
+                notes: { ...paymentRecord.notes, ...payment.notes }
             });
             console.log('Updated existing payment record:', paymentRecord);
         } else {
             paymentRecord = await getPaymentRecord(payment.order_id, payment.id);
             if (!paymentRecord) {
-                paymentRecord = await createPaymentRecord(payment.order_id, payment.id, payment);
+                console.log(`No record found for order_${payment.order_id}; creating new record with paymentId: ${payment.id}`);
+                paymentRecord = await createPaymentRecord(payment.order_id, payment.id, {
+                    ...payment,
+                    notes: payment.notes || {},
+                    originalAmount: payment.amount / 100
+                });
             } else {
-                paymentRecord = await updatePaymentStatus(payment.order_id, payment.id, 'authorized', payment);
+                paymentRecord = await updatePaymentStatus(payment.order_id, payment.id, 'authorized', {
+                    ...payment,
+                    notes: { ...paymentRecord.notes, ...payment.notes }
+                });
+                console.log('Updated existing payment record with actual paymentId:', paymentRecord);
             }
         }
 
@@ -445,24 +474,33 @@ const handleOrderPaid = async (order, payment) => {
     try {
         let paymentRecord = await getPaymentRecord(order.id, `order_${order.id}`);
         if (paymentRecord) {
+            // Condition 1: Update existing record
             paymentRecord = await updatePaymentStatus(order.id, `order_${order.id}`, 'paid', {
                 ...payment,
                 order_status: 'paid',
                 razorpayPaymentId: payment.id,
                 method: payment.method || 'unknown',
-                notes: payment.notes || paymentRecord.notes // Preserve or update notes
+                notes: { ...paymentRecord.notes, ...payment.notes } // Merge existing and new notes
             });
             console.log('Updated existing payment record:', paymentRecord);
         } else {
+            // Condition 2: Create new record if no temporary record exists
             paymentRecord = await getPaymentRecord(order.id, payment.id);
             if (!paymentRecord) {
-                paymentRecord = await createPaymentRecord(order.id, payment.id, payment);
+                console.log(`No record found for order_${order.id}; creating new record with paymentId: ${payment.id}`);
+                paymentRecord = await createPaymentRecord(order.id, payment.id, {
+                    ...payment,
+                    notes: payment.notes || {},
+                    originalAmount: order.amount / 100 // Convert to major currency unit
+                });
             } else {
+                // Update existing record with actual paymentId (rare case)
                 paymentRecord = await updatePaymentStatus(order.id, payment.id, 'paid', {
                     ...payment,
                     order_status: 'paid',
-                    notes: payment.notes || paymentRecord.notes
+                    notes: { ...paymentRecord.notes, ...payment.notes }
                 });
+                console.log('Updated existing payment record with actual paymentId:', paymentRecord);
             }
         }
 
@@ -545,7 +583,6 @@ exports.handler = async (event) => {
         console.log('Webhook processed successfully:', result);
 
         return successResponse(result, 'Webhook processed successfully');
-
     } catch (error) {
         console.error('Error in payments_webhook function:', error);
 
