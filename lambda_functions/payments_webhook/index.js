@@ -350,7 +350,7 @@ const handlePaymentCaptured = async (payment) => {
         }
 
         const registrationId = payment.notes?.registrationId;
-        await updateRegistrationStatus(registrationId, 'paid', 'registered', payment.id, payment);
+        await updateRegistrationStatus(registrationId, 'captured', 'registered', payment.id, payment);
 
         console.log('Payment captured and saved to database:', paymentRecord);
         return paymentRecord;
@@ -401,7 +401,7 @@ const handlePaymentFailed = async (payment) => {
         }
 
         const registrationId = payment.notes?.registrationId;
-        await updateRegistrationStatus(registrationId, 'failed', 'unsuccessfull', payment.id, payment);
+        await updateRegistrationStatus(registrationId, 'failed', 'cancelled', payment.id, payment);
 
         console.log('Payment failure saved to database:', paymentRecord);
         return paymentRecord;
@@ -451,7 +451,7 @@ const handlePaymentAuthorized = async (payment) => {
         }
 
         const registrationId = payment.notes?.registrationId;
-        await updateRegistrationStatus(registrationId, 'pending', 'pending', payment.id, payment);
+        await updateRegistrationStatus(registrationId, 'authorized', 'pending', payment.id, payment);
 
         console.log('Payment authorization saved to database:', paymentRecord);
         return paymentRecord;
