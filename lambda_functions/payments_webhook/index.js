@@ -1,4 +1,3 @@
-// Lambda function for handling Razorpay webhooks
 const { successResponse, errorResponse } = require('/opt/nodejs/utils');
 const crypto = require('crypto');
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
@@ -41,12 +40,12 @@ const createPaymentRecord = async (orderId, paymentId, paymentData) => {
             razorpayPaymentId: paymentId,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
+            notes: paymentData.notes || {},
             metadata: {
                 captured_at: paymentData.captured_at || null,
                 created_at: paymentData.created_at || null,
                 error_code: paymentData.error_code || null,
-                error_description: paymentData.error_description || null,
-                notes: paymentData.notes || {}
+                error_description: paymentData.error_description || null
             }
         };
 
@@ -101,8 +100,29 @@ const updatePaymentStatus = async (orderId, paymentId, status, paymentData = {})
         }
 
         if (paymentData.notes) {
-            updateExpression += ', metadata.notes = :notes';
-            expressionAttributeValues[':notes'] = paymentData.notes;
+            updateExpression += ', notes = :notes';
+            expressionAttributeValues[':notes'] = {
+                ...existingRecord?.notes, // Preserve existing notes
+                ...paymentData.notes // Merge with new notes
+            };
+        }
+
+        // Update razorpayPaymentId if provided
+        if (paymentData.razorpayPaymentId) {
+            updateExpression += ', razorpayPaymentId = :razorpayPaymentId';
+            expressionAttributeValues[':razorpayPaymentId'] = paymentData.razorpayPaymentId;
+        }
+
+        // Update method if provided
+        if (paymentData.method) {
+            updateExpression += ', method = :method';
+            expressionAttributeValues[':method'] = paymentData.method;
+        }
+
+        // Update order_status in metadata if provided
+        if (paymentData.order_status) {
+            updateExpression += ', metadata.order_status = :order_status';
+            expressionAttributeValues[':order_status'] = paymentData.order_status;
         }
 
         const command = new UpdateCommand({
@@ -140,7 +160,6 @@ const getPaymentRecord = async (orderId, paymentId) => {
         throw new Error(`Failed to retrieve payment record: ${error.message}`);
     }
 };
-
 
 const updateRegistrationStatus = async (registrationId, paymentStatus, status, paymentId, additionalData = {}) => {
     try {
@@ -207,11 +226,11 @@ const createRefundRecord = async (refundData) => {
             razorpayPaymentId: refundData.payment_id,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
+            notes: originalPayment?.notes || {},
             metadata: {
                 refund_status: refundData.status,
                 created_at: refundData.created_at,
-                original_payment_id: refundData.payment_id,
-                notes: originalPayment?.metadata?.notes || {} // Carry over notes
+                original_payment_id: refundData.payment_id
             }
         };
 
@@ -300,11 +319,25 @@ const handlePaymentCaptured = async (payment) => {
     });
 
     try {
-        let paymentRecord = await getPaymentRecord(payment.order_id, payment.id);
-        if (!paymentRecord) {
-            paymentRecord = await createPaymentRecord(payment.order_id, payment.id, payment);
+        let paymentRecord = await getPaymentRecord(payment.order_id, `order_${payment.order_id}`);
+        if (paymentRecord) {
+            paymentRecord = await updatePaymentStatus(payment.order_id, `order_${payment.order_id}`, 'captured', {
+                ...payment,
+                order_status: 'paid',
+                razorpayPaymentId: payment.id,
+                method: payment.method || 'unknown'
+            });
+            console.log('Updated existing payment record:', paymentRecord);
         } else {
-            paymentRecord = await updatePaymentStatus(payment.order_id, payment.id, 'captured', payment);
+            paymentRecord = await getPaymentRecord(payment.order_id, payment.id);
+            if (!paymentRecord) {
+                paymentRecord = await createPaymentRecord(payment.order_id, payment.id, payment);
+            } else {
+                paymentRecord = await updatePaymentStatus(payment.order_id, payment.id, 'captured', {
+                    ...payment,
+                    order_status: 'paid'
+                });
+            }
         }
 
         const registrationId = payment.notes?.registrationId;
@@ -331,11 +364,21 @@ const handlePaymentFailed = async (payment) => {
     });
 
     try {
-        let paymentRecord = await getPaymentRecord(payment.order_id, payment.id);
-        if (!paymentRecord) {
-            paymentRecord = await createPaymentRecord(payment.order_id, payment.id, payment);
+        let paymentRecord = await getPaymentRecord(payment.order_id, `order_${payment.order_id}`);
+        if (paymentRecord) {
+            paymentRecord = await updatePaymentStatus(payment.order_id, `order_${payment.order_id}`, 'failed', {
+                ...payment,
+                razorpayPaymentId: payment.id,
+                method: payment.method || 'unknown'
+            });
+            console.log('Updated existing payment record:', paymentRecord);
         } else {
-            paymentRecord = await updatePaymentStatus(payment.order_id, payment.id, 'failed', payment);
+            paymentRecord = await getPaymentRecord(payment.order_id, payment.id);
+            if (!paymentRecord) {
+                paymentRecord = await createPaymentRecord(payment.order_id, payment.id, payment);
+            } else {
+                paymentRecord = await updatePaymentStatus(payment.order_id, payment.id, 'failed', payment);
+            }
         }
 
         const registrationId = payment.notes?.registrationId;
@@ -361,11 +404,21 @@ const handlePaymentAuthorized = async (payment) => {
     });
 
     try {
-        let paymentRecord = await getPaymentRecord(payment.order_id, payment.id);
-        if (!paymentRecord) {
-            paymentRecord = await createPaymentRecord(payment.order_id, payment.id, payment);
+        let paymentRecord = await getPaymentRecord(payment.order_id, `order_${payment.order_id}`);
+        if (paymentRecord) {
+            paymentRecord = await updatePaymentStatus(payment.order_id, `order_${payment.order_id}`, 'authorized', {
+                ...payment,
+                razorpayPaymentId: payment.id,
+                method: payment.method || 'unknown'
+            });
+            console.log('Updated existing payment record:', paymentRecord);
         } else {
-            paymentRecord = await updatePaymentStatus(payment.order_id, payment.id, 'authorized', payment);
+            paymentRecord = await getPaymentRecord(payment.order_id, payment.id);
+            if (!paymentRecord) {
+                paymentRecord = await createPaymentRecord(payment.order_id, payment.id, payment);
+            } else {
+                paymentRecord = await updatePaymentStatus(payment.order_id, payment.id, 'authorized', payment);
+            }
         }
 
         const registrationId = payment.notes?.registrationId;
@@ -390,16 +443,28 @@ const handleOrderPaid = async (order, payment) => {
     });
 
     try {
-        let paymentRecord = await getPaymentRecord(order.id, payment.id);
-        if (!paymentRecord) {
-            // Create a new payment record if it doesn't exist
-            paymentRecord = await createPaymentRecord(order.id, payment.id, payment);
+        let paymentRecord = await getPaymentRecord(order.id, `order_${order.id}`);
+        if (paymentRecord) {
+            paymentRecord = await updatePaymentStatus(order.id, `order_${order.id}`, 'paid', {
+                ...payment,
+                order_status: 'paid',
+                razorpayPaymentId: payment.id,
+                method: payment.method || 'unknown',
+                notes: payment.notes || paymentRecord.notes // Preserve or update notes
+            });
+            console.log('Updated existing payment record:', paymentRecord);
+        } else {
+            paymentRecord = await getPaymentRecord(order.id, payment.id);
+            if (!paymentRecord) {
+                paymentRecord = await createPaymentRecord(order.id, payment.id, payment);
+            } else {
+                paymentRecord = await updatePaymentStatus(order.id, payment.id, 'paid', {
+                    ...payment,
+                    order_status: 'paid',
+                    notes: payment.notes || paymentRecord.notes
+                });
+            }
         }
-        // Update the payment status
-        paymentRecord = await updatePaymentStatus(order.id, payment.id, 'paid', {
-            ...payment,
-            order_status: 'paid'
-        });
 
         const registrationId = order.notes?.registrationId || payment.notes?.registrationId;
         await updateRegistrationStatus(registrationId, 'paid', 'registered', payment.id, { ...order, ...payment });
@@ -426,7 +491,7 @@ const handleRefundCreated = async (refund) => {
         const refundRecord = await createRefundRecord(refund);
 
         const originalPayment = await getPaymentRecord(refund.order_id || 'unknown', refund.payment_id);
-        const registrationId = originalPayment?.metadata?.notes?.registrationId;
+        const registrationId = originalPayment?.notes?.registrationId;
         await updateRegistrationStatus(registrationId, 'refunded', 'refunded', `refund_${refund.id}`, refund);
 
         console.log('Refund saved to database:', refundRecord);
