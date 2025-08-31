@@ -1,6 +1,7 @@
 name: Deploy to QA Environment
 
 on:
+  workflow_dispatch:
   push:
     branches: [ qa, bug/109-fix-registration-save-data ]
     paths:
