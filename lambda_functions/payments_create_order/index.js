@@ -56,7 +56,7 @@ const storeOrderRecord = async (order, originalAmount, notes) => {
             originalAmount: originalAmount, // Store original amount in major currency unit
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
-            notes: notes || {},
+            // notes: notes || {},
             metadata: {
                 receipt: order.receipt,
                 razorpay_created_at: order.created_at,
@@ -174,10 +174,9 @@ exports.handler = async (event) => {
             currency: body.currency?.toUpperCase() || 'INR',
             receipt: body.receipt || `receipt_${Date.now()}`,
             notes: {
-                ...body.notes,
                 registrationId: registrationId,
                 created_via: 'efy_backend_lambda',
-                created_at: new Date().toISOString()
+                created_at: new Date().toISOString(),
             }
         };
 
