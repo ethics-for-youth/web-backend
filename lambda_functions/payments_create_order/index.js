@@ -97,7 +97,7 @@ const storeRegistrationRecord = async (body, registrationId) => {
             paymentStatus: 'pending',
             paymentId: null,
             status: 'pending',
-            notes: body.notes || null,
+            notes: body.notes.details || null,
             registeredAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
         };
@@ -174,9 +174,10 @@ exports.handler = async (event) => {
             currency: body.currency?.toUpperCase() || 'INR',
             receipt: body.receipt || `receipt_${Date.now()}`,
             notes: {
+                ...body.notes,
                 registrationId: registrationId,
                 created_via: 'efy_backend_lambda',
-                created_at: new Date().toISOString(),
+                created_at: new Date().toISOString()
             }
         };
 

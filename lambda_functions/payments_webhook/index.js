@@ -184,13 +184,11 @@ const updateRegistrationStatus = async (registrationId, paymentStatus, status, p
         const result = await docClient.send(command);
         console.log(`Registration updated: ${registrationId} -> paymentStatus: ${paymentStatus}, paymentId: ${paymentId}`);
         return result.Attributes;
-
     } catch (error) {
         console.error('Error updating registration:', error);
         return null; // Don't throw; webhook should succeed for payment updates
     }
 };
-
 
 const createRefundRecord = async (refundData) => {
     try {
@@ -341,7 +339,7 @@ const handlePaymentFailed = async (payment) => {
         }
 
         const registrationId = payment.notes?.registrationId;
-        await updateRegistrationStatus(registrationId, 'failed', 'failed', payment.id, payment);
+        await updateRegistrationStatus(registrationId, 'failed', 'unsuccessfull', payment.id, payment);
 
         console.log('Payment failure saved to database:', paymentRecord);
         return paymentRecord;
