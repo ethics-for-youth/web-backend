@@ -57,6 +57,7 @@ exports.handler = async (event) => {
             rules: body.rules || [],
             prizes: body.prizes || [],
             maxParticipants: body.maxParticipants || null,
+            registrationFee: body.registrationFee || 0,
             isPublish: false,
             status: 'open',
             participants: [],

@@ -33,6 +33,11 @@ variable "messages_table_name" {
   type        = string
 }
 
+variable "payments_table_name" {
+  description = "Name of the Payments DynamoDB table"
+  type        = string
+}
+
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)

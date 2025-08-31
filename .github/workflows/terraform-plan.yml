@@ -17,13 +17,22 @@ on:
         required: true
       aws-secret-access-key:
         required: true
+      razorpay-key-id:
+        required: true
+      razorpay-key-secret:
+        required: true
+      razorpay-webhook-secret:
+        required: true
 
 jobs:
   plan:
     name: Plan Terraform Changes
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
     outputs:
       plan-file: ${{ steps.plan.outputs.plan-file }}
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -57,6 +66,9 @@ jobs:
     - name: Plan Terraform changes
       id: plan
       run: |
+        echo "razorpay_key_id         = \"${{ secrets.razorpay-key-id }}\"" >> terraform/terraform.tfvars
+        echo "razorpay_key_secret     = \"${{ secrets.razorpay-key-secret }}\"" >> terraform/terraform.tfvars
+        echo "razorpay_webhook_secret = \"${{ secrets.razorpay-webhook-secret }}\"" >> terraform/terraform.tfvars
         ./scripts/build.sh plan ${{ inputs.environment }}
         echo "plan-file=terraform/terraform-plan-${{ inputs.environment }}.tfplan" >> $GITHUB_OUTPUT
       

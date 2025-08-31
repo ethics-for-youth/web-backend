@@ -63,6 +63,7 @@ module "dynamodb" {
   courses_table_name       = "${var.project_name}-${local.current_environment}-courses"
   registrations_table_name = "${var.project_name}-${local.current_environment}-registrations"
   messages_table_name      = "${var.project_name}-${local.current_environment}-messages"
+  payments_table_name      = "${var.project_name}-${local.current_environment}-payments"
 
   tags = local.common_tags
 }
@@ -310,13 +311,13 @@ module "competitions_results_lambda" {
 }
 
 # Volunteers Lambda Functions
-module "volunteers_join_lambda" {
+module "volunteers_apply_lambda" {
   source = "./modules/lambda"
 
-  function_name = "${var.project_name}-${local.current_environment}-volunteers-join"
+  function_name = "${var.project_name}-${local.current_environment}-volunteers-apply"
   handler       = "index.handler"
   runtime       = "nodejs18.x"
-  source_dir    = "../lambda_functions/volunteers_join"
+  source_dir    = "../lambda_functions/volunteers_apply"
 
   layers = [
     module.dependencies_layer.layer_arn,
@@ -547,10 +548,18 @@ module "registrations_post_lambda" {
   ]
 
   environment_variables = {
-    REGISTRATIONS_TABLE_NAME = module.dynamodb.registrations_table_name
+    REGISTRATIONS_TABLE_NAME = module.dynamodb.registrations_table_name,
+    COURSES_TABLE_NAME       = module.dynamodb.courses_table_name,
+    EVENTS_TABLE_NAME        = module.dynamodb.events_table_name,
+    COMPETITIONS_TABLE_NAME  = module.dynamodb.competitions_table_name
   }
 
-  dynamodb_table_arns = [module.dynamodb.registrations_table_arn]
+  dynamodb_table_arns = [
+    module.dynamodb.registrations_table_arn,
+    module.dynamodb.courses_table_arn,
+    module.dynamodb.events_table_arn,
+    module.dynamodb.competitions_table_arn
+  ]
 
   tags = local.common_tags
 }
@@ -569,10 +578,18 @@ module "registrations_get_lambda" {
   ]
 
   environment_variables = {
-    REGISTRATIONS_TABLE_NAME = module.dynamodb.registrations_table_name
+    REGISTRATIONS_TABLE_NAME = module.dynamodb.registrations_table_name,
+    COURSES_TABLE_NAME       = module.dynamodb.courses_table_name,
+    EVENTS_TABLE_NAME        = module.dynamodb.events_table_name,
+    COMPETITIONS_TABLE_NAME  = module.dynamodb.competitions_table_name
   }
 
-  dynamodb_table_arns = [module.dynamodb.registrations_table_arn]
+  dynamodb_table_arns = [
+    module.dynamodb.registrations_table_arn,
+    module.dynamodb.courses_table_arn,
+    module.dynamodb.events_table_arn,
+    module.dynamodb.competitions_table_arn
+  ]
 
   tags = local.common_tags
 }
@@ -679,6 +696,72 @@ module "admin_stats_get_lambda" {
   tags = local.common_tags
 }
 
+# Payment Lambda Functions
+module "payments_create_order_lambda" {
+  source = "./modules/lambda"
+
+  function_name = "${var.project_name}-${local.current_environment}-payments-create-order"
+  handler       = "index.handler"
+  runtime       = "nodejs18.x"
+  source_dir    = "../lambda_functions/payments_create_order"
+
+  layers = [
+    module.dependencies_layer.layer_arn,
+    module.utility_layer.layer_arn
+  ]
+
+  environment_variables = {
+    RAZORPAY_KEY_ID          = var.razorpay_key_id
+    RAZORPAY_KEY_SECRET      = var.razorpay_key_secret
+    PAYMENTS_TABLE_NAME      = module.dynamodb.payments_table_name
+    REGISTRATIONS_TABLE_NAME = module.dynamodb.registrations_table_name,
+    COURSES_TABLE_NAME       = module.dynamodb.courses_table_name,
+    EVENTS_TABLE_NAME        = module.dynamodb.events_table_name,
+    COMPETITIONS_TABLE_NAME  = module.dynamodb.competitions_table_name
+  }
+
+  dynamodb_table_arns = [
+    module.dynamodb.payments_table_arn,
+    module.dynamodb.registrations_table_arn,
+    module.dynamodb.courses_table_arn,
+    module.dynamodb.events_table_arn,
+    module.dynamodb.competitions_table_arn,
+  ]
+
+  timeout = 30
+
+  tags = local.common_tags
+}
+
+module "payments_webhook_lambda" {
+  source = "./modules/lambda"
+
+  function_name = "${var.project_name}-${local.current_environment}-payments-webhook"
+  handler       = "index.handler"
+  runtime       = "nodejs18.x"
+  source_dir    = "../lambda_functions/payments_webhook"
+
+  layers = [
+    module.dependencies_layer.layer_arn,
+    module.utility_layer.layer_arn
+  ]
+
+  environment_variables = {
+    RAZORPAY_WEBHOOK_SECRET  = var.razorpay_webhook_secret
+    PAYMENTS_TABLE_NAME      = module.dynamodb.payments_table_name
+    REGISTRATIONS_TABLE_NAME = module.dynamodb.registrations_table_name
+  }
+
+  dynamodb_table_arns = [
+    module.dynamodb.payments_table_arn,
+    module.dynamodb.registrations_table_arn
+  ]
+
+  timeout = 30
+
+  tags = local.common_tags
+}
+
 # API Gateway for EFY Platform
 module "efy_api_gateway" {
   source = "./modules/efy_api_gateway"
@@ -710,12 +793,12 @@ module "efy_api_gateway" {
   competitions_results_lambda_function_name   = module.competitions_results_lambda.lambda_function_name
 
   # Volunteers Lambda ARNs and Function Names
-  volunteers_join_lambda_arn           = module.volunteers_join_lambda.lambda_invoke_arn
-  volunteers_join_lambda_function_name = module.volunteers_join_lambda.lambda_function_name
-  volunteers_get_lambda_arn            = module.volunteers_get_lambda.lambda_invoke_arn
-  volunteers_get_lambda_function_name  = module.volunteers_get_lambda.lambda_function_name
-  volunteers_put_lambda_arn            = module.volunteers_put_lambda.lambda_invoke_arn
-  volunteers_put_lambda_function_name  = module.volunteers_put_lambda.lambda_function_name
+  volunteers_apply_lambda_arn           = module.volunteers_apply_lambda.lambda_invoke_arn
+  volunteers_apply_lambda_function_name = module.volunteers_apply_lambda.lambda_function_name
+  volunteers_get_lambda_arn             = module.volunteers_get_lambda.lambda_invoke_arn
+  volunteers_get_lambda_function_name   = module.volunteers_get_lambda.lambda_function_name
+  volunteers_put_lambda_arn             = module.volunteers_put_lambda.lambda_invoke_arn
+  volunteers_put_lambda_function_name   = module.volunteers_put_lambda.lambda_function_name
 
   # Suggestions Lambda ARNs and Function Names
   suggestions_post_lambda_arn           = module.suggestions_post_lambda.lambda_invoke_arn
@@ -752,6 +835,12 @@ module "efy_api_gateway" {
   # Admin Stats Lambda ARNs and Function Names
   admin_stats_get_lambda_arn           = module.admin_stats_get_lambda.lambda_invoke_arn
   admin_stats_get_lambda_function_name = module.admin_stats_get_lambda.lambda_function_name
+
+  # Payment Lambda ARNs and Function Names
+  payments_create_order_lambda_arn           = module.payments_create_order_lambda.lambda_invoke_arn
+  payments_create_order_lambda_function_name = module.payments_create_order_lambda.lambda_function_name
+  payments_webhook_lambda_arn                = module.payments_webhook_lambda.lambda_invoke_arn
+  payments_webhook_lambda_function_name      = module.payments_webhook_lambda.lambda_function_name
 
   tags = local.common_tags
 }

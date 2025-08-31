@@ -92,9 +92,9 @@ output "competitions_lambda_arns" {
 output "volunteers_lambda_arns" {
   description = "ARNs of all Volunteers Lambda functions"
   value = {
-    join = module.volunteers_join_lambda.lambda_arn
-    get  = module.volunteers_get_lambda.lambda_arn
-    put  = module.volunteers_put_lambda.lambda_arn
+    apply = module.volunteers_apply_lambda.lambda_arn
+    get   = module.volunteers_get_lambda.lambda_arn
+    put   = module.volunteers_put_lambda.lambda_arn
   }
 }
 

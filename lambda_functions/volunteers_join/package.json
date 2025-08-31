@@ -1,6 +1,0 @@
-{
-  "name": "volunteers-join",
-  "version": "1.0.0",
-  "description": "Lambda function to submit volunteer join request",
-  "main": "index.js"
-}

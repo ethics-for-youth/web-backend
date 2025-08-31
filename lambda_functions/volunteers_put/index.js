@@ -80,7 +80,6 @@ exports.handler = async (event) => {
             name: result.Attributes.name,
             email: result.Attributes.email,
             status: result.Attributes.status,
-            assignedRole: result.Attributes.assignedRole || null,
             team: result.Attributes.team || null,
             approvedAt: result.Attributes.approvedAt || null,
             updatedAt: result.Attributes.updatedAt

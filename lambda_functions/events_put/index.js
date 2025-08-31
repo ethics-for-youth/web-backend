@@ -44,6 +44,7 @@ exports.handler = async (event) => {
             'category',
             'maxParticipants',
             'registrationDeadline',
+            'registrationFee',
             'status'
         ];
 

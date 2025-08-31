@@ -1,0 +1,195 @@
+# =============================================================================
+# CLAUDE IGNORE FILE
+# =============================================================================
+# This file tells Claude which files and directories to ignore
+# when analyzing or processing your codebase
+
+# =============================================================================
+# SENSITIVE FILES & SECRETS
+# =============================================================================
+
+# Terraform files with secrets
+terraform/terraform.tfvars
+terraform/terraform.*.tfvars
+terraform/backend-*.tfbackend
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.staging
+.env.development
+
+# AWS credentials
+.aws/
+aws-credentials.json
+aws-config.json
+
+# API Keys and Secrets
+secrets.json
+config/secrets.json
+keys/
+*.key
+*.pem
+*.p12
+
+# =============================================================================
+# BUILD ARTIFACTS & DEPENDENCIES
+# =============================================================================
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Terraform
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/backend-setup/.terraform/
+*.tfplan
+*.tfstate
+*.tfstate.backup
+terraform/terraform.tfstate.d/
+
+# Lambda builds
+terraform/builds/
+*.zip
+lambda_functions/*/node_modules/
+
+# =============================================================================
+# LOGS & TEMPORARY FILES
+# =============================================================================
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+.temp/
+
+# =============================================================================
+# IDE & EDITOR FILES
+# =============================================================================
+
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# =============================================================================
+# OS GENERATED FILES
+# =============================================================================
+
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# =============================================================================
+# LARGE FILES & BINARIES
+# =============================================================================
+
+# Images and media
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.svg
+*.ico
+*.mp4
+*.avi
+*.mov
+*.wmv
+
+# Documents
+*.pdf
+*.doc
+*.docx
+*.xls
+*.xlsx
+*.ppt
+*.pptx
+
+# Archives
+*.zip
+*.tar
+*.gz
+*.rar
+*.7z
+
+# =============================================================================
+# TEST FILES & COVERAGE
+# =============================================================================
+
+# Test files
+test/
+tests/
+__tests__/
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts
+
+# Coverage reports
+coverage/
+.nyc_output/
+*.lcov
+
+# =============================================================================
+# DEPLOYMENT & CI/CD
+# =============================================================================
+
+# Deployment artifacts
+dist/
+build/
+out/
+.next/
+.nuxt/
+
+# CI/CD
+.github/workflows/.cache/
+.github/workflows/logs/
+
+# =============================================================================
+# DATABASE & DATA FILES
+# =============================================================================
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Data files
+data/
+datasets/
+*.csv
+*.json
+*.xml
+
+# =============================================================================
+# CUSTOM IGNORES FOR THIS PROJECT
+# =============================================================================
+
+# EFY specific ignores
+scripts/test_data/
+scripts/sample_data/
+docs/drafts/
+docs/internal/
+
+# Payment gateway test data
+test_payments/
+sample_orders/
