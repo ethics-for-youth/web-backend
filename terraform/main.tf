@@ -728,7 +728,6 @@ module "payments_create_order_lambda" {
     module.dynamodb.competitions_table_arn,
   ]
 
-
   timeout = 30
 
   tags = local.common_tags
