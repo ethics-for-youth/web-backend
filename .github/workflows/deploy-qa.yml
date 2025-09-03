@@ -3,22 +3,22 @@ name: Deploy to QA Environment
 on:
   workflow_dispatch:
   push:
-    branches: [qa]
+    branches: [ qa ]
     paths:
-      - "terraform/**"
-      - "lambda_functions/**"
-      - "layers/**"
-      - "scripts/**"
-      - ".github/workflows/terraform-plan.yml"
-      - ".github/workflows/terraform-validate.yml"
-      - ".github/workflows/terraform-deploy.yml"
-      - ".github/workflows/deploy-qa.yml"
+      - 'terraform/**'
+      - 'lambda_functions/**'
+      - 'layers/**'
+      - 'scripts/**'
+      - '.github/workflows/terraform-plan.yml'
+      - '.github/workflows/terraform-validate.yml'
+      - '.github/workflows/terraform-deploy.yml'
+      - '.github/workflows/deploy-qa.yml'
 
 permissions:
   contents: read
   pull-requests: write
   issues: write
-
+      
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}
 
@@ -55,14 +55,14 @@ jobs:
     outputs:
       approved: ${{ steps.approval.outputs.approved }}
     steps:
-      - name: Wait for approval
-        id: approval
-        uses: trstringer/manual-approval@v1
-        with:
-          secret: ${{ secrets.GITHUB_TOKEN }}
-          approvers: mohammadn0man
-          minimum-approvals: 1
-          exclude-workflow-initiator-as-approver: false
+    - name: Wait for approval
+      id: approval
+      uses: trstringer/manual-approval@v1
+      with:
+        secret: ${{ secrets.GITHUB_TOKEN }}
+        approvers: mohammadn0man
+        minimum-approvals: 1
+        exclude-workflow-initiator-as-approver: false
 
   deploy:
     name: Deploy to QA
@@ -74,4 +74,4 @@ jobs:
       plan-file: ${{ needs.plan.outputs.plan-file }}
     secrets:
       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }} 
