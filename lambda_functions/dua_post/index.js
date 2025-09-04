@@ -1,4 +1,3 @@
-// Lambda: dua_post.js text working
 const { successResponse, errorResponse, validateRequired, parseJSON } = require('/opt/nodejs/utils');
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
 const { DynamoDBDocumentClient, PutCommand } = require('@aws-sdk/lib-dynamodb');
@@ -30,7 +29,7 @@ async function uploadToS3(file, type, bucketName) {
   const command = new PutObjectCommand({
     Bucket: bucketName,
     Key: key,
-    Body: file.content, // content is a Buffer
+    Body: file.content,
     ContentType: type === 'audio' ? 'audio/mpeg' : `image/${ext}`,
   });
 
@@ -42,26 +41,43 @@ exports.handler = async (event) => {
   try {
     console.log('Event:', JSON.stringify(event));
 
+    // Prepare event body
+    let bodyString = event.isBase64Encoded
+      ? Buffer.from(event.body, 'base64').toString('latin1')
+      : event.body;
+
     // Parse multipart/form-data
-    let parsed;
-if (event.isBase64Encoded) {
-    // Convert base64 to buffer
-    const buffer = Buffer.from(event.body, 'base64');
+    const parsed = multipart.parse(
+      { ...event, body: bodyString },
+      true
+    );
 
-    // Convert buffer to UTF-8 string for parser (text fields)
-    parsed = multipart.parse({ ...event, body: buffer.toString('utf8') }, true);
-} else {
-    parsed = multipart.parse(event, true);
-}
-
-    // Extract fields
+    // Convert text fields to UTF-8 and fix encoding for Arabic, Hindi, Urdu
     const body = {
-      title: parsed.title,
-      arabicText: parsed.arabicText,
-      week: parsed.week,
-      transcription: parsed.transcription ? parseJSON(parsed.transcription) : {},
-      translation: parsed.translation ? parseJSON(parsed.translation) : {}
+      title: parsed.title?.toString('utf8') || '',
+      arabicText: parsed.arabicText
+        ? Buffer.from(parsed.arabicText.toString('latin1'), 'latin1').toString('utf8')
+        : '',
+      week: parsed.week?.toString('utf8') || '',
+      transcription: parsed.transcription
+        ? parseJSON(parsed.transcription.toString('utf8'))
+        : {},
+      translation: parsed.translation
+        ? parseJSON(parsed.translation.toString('utf8'))
+        : {}
     };
+
+    // Fix Hindi & Urdu encoding in transcription
+    if (body.transcription.hindi)
+      body.transcription.hindi = Buffer.from(body.transcription.hindi, 'latin1').toString('utf8');
+    if (body.transcription.urdu)
+      body.transcription.urdu = Buffer.from(body.transcription.urdu, 'latin1').toString('utf8');
+
+    // Fix Hindi & Urdu encoding in translation
+    if (body.translation.hindi)
+      body.translation.hindi = Buffer.from(body.translation.hindi, 'latin1').toString('utf8');
+    if (body.translation.urdu)
+      body.translation.urdu = Buffer.from(body.translation.urdu, 'latin1').toString('utf8');
 
     validateRequired(body, ['title', 'arabicText', 'week']);
 
@@ -73,6 +89,7 @@ if (event.isBase64Encoded) {
     const audioUrl = parsed.audio ? await uploadToS3(parsed.audio, 'audio', bucketName) : null;
     const imageUrl = parsed.image ? await uploadToS3(parsed.image, 'image', bucketName) : null;
 
+    // Prepare DynamoDB item
     const duaItem = {
       id: duaId,
       title: body.title,
