@@ -5,30 +5,32 @@ const { DynamoDBDocumentClient, QueryCommand } = require('@aws-sdk/lib-dynamodb'
 
 const client = new DynamoDBClient({ region: process.env.AWS_REGION });
 const docClient = DynamoDBDocumentClient.from(client);
-
+const { ScanCommand } = require('@aws-sdk/lib-dynamodb');
 exports.handler = async (event) => {
     try {
         console.log('Event: ', JSON.stringify(event, null, 2));
 
         const tableName = process.env.DUA_TABLE_NAME;
 
-        const command = new QueryCommand({
+        const command = new ScanCommand({
             TableName: tableName,
-            IndexName: 'StatusIndex',
-            KeyConditionExpression: 'status = :status',
+            FilterExpression: '#st = :active',
+            ExpressionAttributeNames: {
+                '#st': 'status'
+            },
             ExpressionAttributeValues: {
-                ':status': 'active'
+                ':active': 'active'
             }
         });
-
+        
         const response = await docClient.send(command);
-
         const data = {
             duas: response.Items || [],
             count: response.Count || 0,
             requestId: event.requestContext?.requestId,
             timestamp: new Date().toISOString()
         };
+        
 
         return successResponse(data, 'Duas retrieved successfully');
 
