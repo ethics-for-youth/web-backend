@@ -1,7 +1,7 @@
 resource "aws_api_gateway_rest_api" "efy_api" {
-  name = var.api_name
-
-  tags = var.tags
+  name               = var.api_name
+  binary_media_types = ["multipart/form-data"] # Add this to support file uploads
+  tags               = var.tags
 }
 
 # Events Resource
@@ -905,6 +905,7 @@ resource "aws_api_gateway_integration" "dua_post" {
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = var.dua_post_lambda_arn
+  content_handling        = "CONVERT_TO_BINARY" # Add this for multipart/form-data
 }
 
 # Duas Lambda Permissions
