@@ -163,3 +163,23 @@ resource "aws_s3_bucket_policy" "main" {
 
   depends_on = [aws_s3_bucket_public_access_block.main]
 }
+
+# S3 Bucket Policy for Public Read Access (for media buckets)
+resource "aws_s3_bucket_policy" "public_read" {
+  count  = var.block_public_policy ? 0 : 1
+  bucket = aws_s3_bucket.main.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = "*"
+        Action    = "s3:GetObject"
+        Resource  = "${aws_s3_bucket.main.arn}/*"
+      }
+    ]
+  })
+
+  depends_on = [aws_s3_bucket_public_access_block.main]
+}

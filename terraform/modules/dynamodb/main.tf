@@ -140,3 +140,47 @@ resource "aws_dynamodb_table" "payments" {
 
   tags = var.tags
 }
+
+# Duas Table
+resource "aws_dynamodb_table" "duas" {
+  name         = var.duas_table_name
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "id"
+
+  attribute {
+    name = "id"
+    type = "S"
+  }
+
+  attribute {
+    name = "week"
+    type = "S"
+  }
+  attribute {
+    name = "status"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "StatusIndex"
+    hash_key        = "status"
+    projection_type = "ALL"
+  }
+  # Global Secondary Index for querying by week
+  global_secondary_index {
+    name            = "WeekIndex"
+    hash_key        = "week"
+    projection_type = "ALL"
+  }
+
+  tags = var.tags
+}
+
+# Output for Duas Table
+output "duas_table_name" {
+  value = aws_dynamodb_table.duas.name
+}
+
+output "duas_table_arn" {
+  value = aws_dynamodb_table.duas.arn
+}

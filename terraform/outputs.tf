@@ -45,6 +45,27 @@ output "app_s3_bucket_region" {
   value       = module.app_s3_bucket.bucket_region
 }
 
+# Media S3 Bucket Outputs
+output "media_s3_bucket_name" {
+  description = "Name of the media S3 bucket"
+  value       = module.media_s3_bucket.bucket_id
+}
+
+output "media_s3_bucket_arn" {
+  description = "ARN of the media S3 bucket"
+  value       = module.media_s3_bucket.bucket_arn
+}
+
+output "media_s3_bucket_domain_name" {
+  description = "Domain name of the media S3 bucket"
+  value       = module.media_s3_bucket.bucket_domain_name
+}
+
+output "media_s3_bucket_region" {
+  description = "Region of the media S3 bucket"
+  value       = module.media_s3_bucket.bucket_region
+}
+
 # DynamoDB Table Names
 output "events_table_name" {
   description = "Name of the Events DynamoDB table"
@@ -64,6 +85,12 @@ output "volunteers_table_name" {
 output "suggestions_table_name" {
   description = "Name of the Suggestions DynamoDB table"
   value       = module.dynamodb.suggestions_table_name
+}
+
+# DynamoDB Table Names 
+output "duas_table_name" {
+  description = "Name of the Duas DynamoDB table"
+  value       = module.dynamodb.duas_table_name
 }
 
 # Lambda Function ARNs
@@ -106,6 +133,14 @@ output "suggestions_lambda_arns" {
   }
 }
 
+# Dua Lambda Function ARNs
+output "dua_lambda_arns" {
+  description = "ARNs of all Dua Lambda functions"
+    value = {
+    post = module.dua_post_lambda.lambda_arn
+    get  = module.dua_get_lambda.lambda_arn
+  }
+}
 output "common_tags" {
   description = "Common tags applied to all resources"
   value       = local.common_tags

@@ -52,6 +52,34 @@ module "app_s3_bucket" {
   tags = local.common_tags
 }
 
+# S3 Bucket for Media Storage (Dua Audio and Images)
+module "media_s3_bucket" {
+  source = "./modules/s3_bucket"
+
+  bucket_name = "${var.project_name}-${local.current_environment}-media-${local.env_config.s3_bucket_suffix}"
+
+  enable_versioning = local.env_config.s3_enable_versioning
+  sse_algorithm     = local.env_config.s3_sse_algorithm
+  kms_master_key_id = local.env_config.s3_kms_key_id
+
+  # Security settings (allowing public read for media files)
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+
+  # CORS configuration for web applications
+  enable_cors          = local.env_config.s3_enable_cors
+  cors_allowed_origins = local.env_config.s3_cors_allowed_origins
+  cors_allowed_methods = ["GET", "PUT", "POST", "HEAD"]
+  cors_allowed_headers = ["*"]
+
+  # Lifecycle rules for cost optimization
+  lifecycle_rules = local.env_config.s3_lifecycle_rules
+
+  tags = local.common_tags
+}
+
 # DynamoDB Tables
 module "dynamodb" {
   source = "./modules/dynamodb"
@@ -64,7 +92,7 @@ module "dynamodb" {
   registrations_table_name = "${var.project_name}-${local.current_environment}-registrations"
   messages_table_name      = "${var.project_name}-${local.current_environment}-messages"
   payments_table_name      = "${var.project_name}-${local.current_environment}-payments"
-
+  duas_table_name          = "${var.project_name}-${local.current_environment}-duas"
   tags = local.common_tags
 }
 
@@ -762,6 +790,53 @@ module "payments_webhook_lambda" {
   tags = local.common_tags
 }
 
+# Dua Lambda Functions
+module "dua_post_lambda" {
+  source = "./modules/lambda"
+
+  function_name = "${var.project_name}-${local.current_environment}-dua-post"
+  handler       = "index.handler"
+  runtime       = "nodejs18.x"
+  source_dir    = "../lambda_functions/dua_post"
+
+  layers = [
+    module.dependencies_layer.layer_arn,
+    module.utility_layer.layer_arn
+  ]
+
+  environment_variables = {
+    DUA_TABLE_NAME    = module.dynamodb.duas_table_name
+    MEDIA_BUCKET_NAME = module.media_s3_bucket.bucket_id
+  }
+
+  dynamodb_table_arns = [module.dynamodb.duas_table_arn]
+  s3_bucket_arns      = [module.media_s3_bucket.bucket_arn]
+
+  tags = local.common_tags
+}
+
+module "dua_get_lambda" {
+  source = "./modules/lambda"
+
+  function_name = "${var.project_name}-${local.current_environment}-dua-get"
+  handler       = "index.handler"
+  runtime       = "nodejs18.x"
+  source_dir    = "../lambda_functions/dua_get"
+
+  layers = [
+    module.dependencies_layer.layer_arn,
+    module.utility_layer.layer_arn
+  ]
+
+  environment_variables = {
+    DUA_TABLE_NAME = module.dynamodb.duas_table_name
+  }
+
+  dynamodb_table_arns = [module.dynamodb.duas_table_arn]
+
+  tags = local.common_tags
+}
+
 # API Gateway for EFY Platform
 module "efy_api_gateway" {
   source = "./modules/efy_api_gateway"
@@ -841,6 +916,13 @@ module "efy_api_gateway" {
   payments_create_order_lambda_function_name = module.payments_create_order_lambda.lambda_function_name
   payments_webhook_lambda_arn                = module.payments_webhook_lambda.lambda_invoke_arn
   payments_webhook_lambda_function_name      = module.payments_webhook_lambda.lambda_function_name
+
+# Dua Lambda ARNs and Function Names
+  dua_post_lambda_arn           = module.dua_post_lambda.lambda_invoke_arn
+  dua_post_lambda_function_name = module.dua_post_lambda.lambda_function_name
+
+  dua_get_lambda_arn           = module.dua_get_lambda.lambda_invoke_arn
+  dua_get_lambda_function_name = module.dua_get_lambda.lambda_function_name
 
   tags = local.common_tags
 }

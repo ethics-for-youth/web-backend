@@ -881,6 +881,66 @@ resource "aws_lambda_permission" "payments_webhook_post" {
   source_arn    = "${aws_api_gateway_rest_api.efy_api.execution_arn}/*/*"
 }
 
+# Duas Resource
+resource "aws_api_gateway_resource" "duas" {
+  rest_api_id = aws_api_gateway_rest_api.efy_api.id
+  parent_id   = aws_api_gateway_rest_api.efy_api.root_resource_id
+  path_part   = "duas"
+}
+
+# Duas Methods
+resource "aws_api_gateway_method" "dua_post" {
+  rest_api_id   = aws_api_gateway_rest_api.efy_api.id
+  resource_id   = aws_api_gateway_resource.duas.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+# Duas Integrations
+resource "aws_api_gateway_integration" "dua_post" {
+  rest_api_id = aws_api_gateway_rest_api.efy_api.id
+  resource_id = aws_api_gateway_resource.duas.id
+  http_method = aws_api_gateway_method.dua_post.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.dua_post_lambda_arn
+}
+
+# Duas Lambda Permissions
+resource "aws_lambda_permission" "dua_post" {
+  statement_id  = "AllowExecutionFromAPIGateway-dua-post"
+  action        = "lambda:InvokeFunction"
+  function_name = var.dua_post_lambda_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.efy_api.execution_arn}/*/POST/duas"
+}
+
+resource "aws_api_gateway_method" "dua_get" {
+  rest_api_id   = aws_api_gateway_rest_api.efy_api.id
+  resource_id   = aws_api_gateway_resource.duas.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "dua_get" {
+  rest_api_id = aws_api_gateway_rest_api.efy_api.id
+  resource_id = aws_api_gateway_resource.duas.id
+  http_method = aws_api_gateway_method.dua_get.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.dua_get_lambda_arn
+}
+
+resource "aws_lambda_permission" "dua_get" {
+  statement_id  = "AllowExecutionFromAPIGateway-dua-get"
+  action        = "lambda:InvokeFunction"
+  function_name = var.dua_get_lambda_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.efy_api.execution_arn}/*/GET/duas"
+}
+
 # API Gateway deployment
 resource "aws_api_gateway_deployment" "efy_api_deployment" {
   depends_on = [
@@ -911,7 +971,9 @@ resource "aws_api_gateway_deployment" "efy_api_deployment" {
     aws_api_gateway_integration.messages_get,
     aws_api_gateway_integration.admin_stats_get,
     aws_api_gateway_integration.payments_create_order_post,
-    aws_api_gateway_integration.payments_webhook_post
+    aws_api_gateway_integration.payments_webhook_post,
+    aws_api_gateway_integration.dua_post,
+    aws_api_gateway_integration.dua_get,
   ]
 
   rest_api_id = aws_api_gateway_rest_api.efy_api.id
@@ -949,6 +1011,8 @@ resource "aws_api_gateway_deployment" "efy_api_deployment" {
       aws_api_gateway_integration.admin_stats_get.id,
       aws_api_gateway_integration.payments_create_order_post.id,
       aws_api_gateway_integration.payments_webhook_post.id,
+      aws_api_gateway_integration.dua_post.id,
+      aws_api_gateway_integration.dua_get.id,
     ]))
   }
 

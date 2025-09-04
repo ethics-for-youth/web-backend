@@ -292,6 +292,22 @@ variable "payments_webhook_lambda_function_name" {
   type        = string
 }
 
+variable "dua_post_lambda_arn" {
+  type = string
+}
+
+variable "dua_post_lambda_function_name" {
+  type = string
+}
+
+variable "dua_get_lambda_arn" {
+  type = string
+}
+
+variable "dua_get_lambda_function_name" {
+  type = string
+}
+
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)
