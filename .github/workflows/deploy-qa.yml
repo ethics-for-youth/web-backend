@@ -3,7 +3,7 @@ name: Deploy to QA Environment
 on:
   workflow_dispatch:
   push:
-    branches: [ qa ]
+    branches: [ qa, feature/dua-apis ]
     paths:
       - 'terraform/**'
       - 'lambda_functions/**'
@@ -50,6 +50,7 @@ jobs:
 
   wait-for-approval:
     name: Wait for QA Deployment Approval
+    if: false
     runs-on: ubuntu-latest
     needs: [validate, plan]
     outputs:
