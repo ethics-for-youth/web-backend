@@ -9,16 +9,16 @@ const docClient = DynamoDBDocumentClient.from(client);
 exports.handler = async (event) => {
     try {
         console.log('Event: ', JSON.stringify(event, null, 2));
-        
+
         // Parse request body
         const body = parseJSON(event.body || '{}');
-        
+
         // Validate required fields
         validateRequired(body, ['title', 'description', 'instructor', 'duration']);
-        
+
         const tableName = process.env.COURSES_TABLE_NAME;
         const courseId = `course_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-        
+
         const courseItem = {
             id: courseId,
             title: body.title,
@@ -33,26 +33,28 @@ exports.handler = async (event) => {
             schedule: body.schedule || null, // e.g., "Sundays 2-4 PM"
             materials: body.materials || null, // Required materials or resources
             registrationFee: body.registrationFee || 0,
+            requirements: Array.isArray(body.requirements) ? body.requirements : [],
+            whatYouWillLearn: Array.isArray(body.whatYouWillLearn) ? body.whatYouWillLearn : [],
             status: 'active',
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
         };
-        
+
         const command = new PutCommand({
             TableName: tableName,
             Item: courseItem
         });
-        
+
         await docClient.send(command);
-        
+
         const data = {
             course: courseItem,
             requestId: event.requestContext?.requestId,
             timestamp: new Date().toISOString()
         };
-        
+
         return successResponse(data, 'Course created successfully');
-        
+
     } catch (error) {
         console.error('Error in courses_post function:', error);
         return errorResponse(error, error.message.includes('Missing required') ? 400 : 500);
