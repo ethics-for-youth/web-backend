@@ -60,6 +60,7 @@ jobs:
       razorpay-webhook-secret: ${{ secrets.RAZORPAY_WEBHOOK_SECRET }}
 
   deploy:
+    if: false
     name: Deploy to Dev
     uses: ./.github/workflows/terraform-deploy.yml
     needs: [validate, plan]
