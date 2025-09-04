@@ -4,7 +4,6 @@ const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
 const { DynamoDBDocumentClient, PutCommand } = require('@aws-sdk/lib-dynamodb');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const crypto = require('crypto');
-const multer = require('multer');
 const parseMultipart = require('aws-lambda-multipart-parser');
 
 const ddbClient = new DynamoDBClient({ region: process.env.AWS_REGION });
@@ -16,30 +15,27 @@ const ALLOWED_AUDIO_EXT = ['mp3'];
 const ALLOWED_IMAGE_EXT = ['jpg', 'jpeg', 'png'];
 const MAX_AUDIO_SIZE = 5 * 1024 * 1024; // 5MB
 
-// Configure multer for in-memory file storage
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: MAX_AUDIO_SIZE },
-  fileFilter: (req, file, cb) => {
-    const ext = file.originalname.split('.').pop().toLowerCase();
-    if (file.fieldname === 'audio' && !ALLOWED_AUDIO_EXT.includes(ext)) {
-      return cb(new Error('Invalid audio format. Only MP3 is allowed'));
-    }
-    if (file.fieldname === 'image' && !ALLOWED_IMAGE_EXT.includes(ext)) {
-      return cb(new Error('Invalid image format. Only JPG, JPEG, or PNG allowed'));
-    }
-    cb(null, true);
-  }
-}).fields([
-  { name: 'audio', maxCount: 1 },
-  { name: 'image', maxCount: 1 }
-]);
-
 async function uploadToS3(file, fileType, bucketName) {
-  if (!file || !file.buffer) return null;
+  if (!file || !file.content) {
+    return null;
+  }
 
-  const buffer = file.buffer;
-  const ext = file.originalname.split('.').pop().toLowerCase();
+  const buffer = file.content;
+  const ext = file.filename.split('.').pop().toLowerCase();
+
+  // Validate extension
+  if (fileType === 'audio' && !ALLOWED_AUDIO_EXT.includes(ext)) {
+    throw new Error('Invalid audio format. Only MP3 is allowed');
+  }
+  if (fileType === 'image' && !ALLOWED_IMAGE_EXT.includes(ext)) {
+    throw new Error('Invalid image format. Only JPG, JPEG, or PNG allowed');
+  }
+
+  // File size check
+  if (fileType === 'audio' && buffer.length > MAX_AUDIO_SIZE) {
+    throw new Error('Audio file size exceeds 5MB limit');
+  }
+
   const key = `${crypto.randomBytes(16).toString('hex')}.${ext}`;
 
   const command = new PutObjectCommand({
@@ -54,12 +50,18 @@ async function uploadToS3(file, fileType, bucketName) {
   return `https://${bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
 }
 
-exports.handler = async (event, context, callback) => {
+exports.handler = async (event) => {
   try {
     console.log('Event: ', JSON.stringify(event, null, 2));
 
-    // Parse multipart/form-data using aws-lambda-multipart-parser
-    const parsed = await parseMultipart(event);
+    // Parse multipart/form-data
+    let parsed;
+    try {
+      parsed = parseMultipart(event);
+    } catch (parseError) {
+      console.error('Multipart parsing error:', parseError);
+      throw new Error('Failed to parse multipart/form-data');
+    }
 
     // Extract form fields
     const body = {
@@ -78,8 +80,8 @@ exports.handler = async (event, context, callback) => {
     const duaId = crypto.randomUUID();
 
     // Upload audio and image if provided
-    const audioFile = parsed.files.find(f => f.fieldName === 'audio');
-    const imageFile = parsed.files.find(f => f.fieldName === 'image');
+    const audioFile = parsed.files?.find(f => f.fieldName === 'audio');
+    const imageFile = parsed.files?.find(f => f.fieldName === 'image');
     const audioUrl = await uploadToS3(audioFile, 'audio', bucketName);
     const imageUrl = await uploadToS3(imageFile, 'image', bucketName);
 
@@ -123,6 +125,6 @@ exports.handler = async (event, context, callback) => {
 
   } catch (error) {
     console.error('Error in dua_post function:', error);
-    return errorResponse(error, error.message.includes('Missing required') || error.message.includes('Invalid') ? 400 : 500);
+    return errorResponse(error, error.message.includes('Missing required') || error.message.includes('Invalid') || error.message.includes('Failed to parse') ? 400 : 500);
   }
 };
