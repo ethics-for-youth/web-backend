@@ -93,7 +93,7 @@ module "dynamodb" {
   messages_table_name      = "${var.project_name}-${local.current_environment}-messages"
   payments_table_name      = "${var.project_name}-${local.current_environment}-payments"
   duas_table_name          = "${var.project_name}-${local.current_environment}-duas"
-  tags = local.common_tags
+  tags                     = local.common_tags
 }
 
 # Dependencies Layer
@@ -917,7 +917,7 @@ module "efy_api_gateway" {
   payments_webhook_lambda_arn                = module.payments_webhook_lambda.lambda_invoke_arn
   payments_webhook_lambda_function_name      = module.payments_webhook_lambda.lambda_function_name
 
-# Dua Lambda ARNs and Function Names
+  # Dua Lambda ARNs and Function Names
   dua_post_lambda_arn           = module.dua_post_lambda.lambda_invoke_arn
   dua_post_lambda_function_name = module.dua_post_lambda.lambda_function_name
 

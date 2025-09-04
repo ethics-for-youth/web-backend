@@ -136,7 +136,7 @@ output "suggestions_lambda_arns" {
 # Dua Lambda Function ARNs
 output "dua_lambda_arns" {
   description = "ARNs of all Dua Lambda functions"
-    value = {
+  value = {
     post = module.dua_post_lambda.lambda_arn
     get  = module.dua_get_lambda.lambda_arn
   }
