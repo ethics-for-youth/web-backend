@@ -9,24 +9,28 @@ const docClient = DynamoDBDocumentClient.from(client);
 exports.handler = async (event) => {
     try {
         console.log('Event: ', JSON.stringify(event, null, 2));
-        
+
         const tableName = process.env.COURSES_TABLE_NAME;
-        
+
         const command = new ScanCommand({
             TableName: tableName
         });
-        
+
         const result = await docClient.send(command);
-        
+
+        const courses = (result.Items || []).sort((a, b) => {
+            return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+
         const data = {
-            courses: result.Items || [],
+            courses,
             count: result.Count || 0,
             requestId: event.requestContext?.requestId,
             timestamp: new Date().toISOString()
         };
-        
+
         return successResponse(data, 'Courses retrieved successfully');
-        
+
     } catch (error) {
         console.error('Error in courses_get function:', error);
         return errorResponse(error, 500);

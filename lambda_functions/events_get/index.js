@@ -9,24 +9,27 @@ const docClient = DynamoDBDocumentClient.from(client);
 exports.handler = async (event) => {
     try {
         console.log('Event: ', JSON.stringify(event, null, 2));
-        
+
         const tableName = process.env.EVENTS_TABLE_NAME;
-        
+
         const command = new ScanCommand({
             TableName: tableName
         });
-        
+
         const result = await docClient.send(command);
-        
+        const events = (result.Items || []).sort((a, b) => {
+            return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+
         const data = {
-            events: result.Items || [],
+            events,
             count: result.Count || 0,
             requestId: event.requestContext?.requestId,
             timestamp: new Date().toISOString()
         };
-        
+
         return successResponse(data, 'Events retrieved successfully');
-        
+
     } catch (error) {
         console.error('Error in events_get function:', error);
         return errorResponse(error, 500);
