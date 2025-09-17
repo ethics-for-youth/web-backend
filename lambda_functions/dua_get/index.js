@@ -1,11 +1,24 @@
 // Import from utility layer
 const { successResponse, errorResponse } = require('/opt/nodejs/utils');
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
-const { DynamoDBDocumentClient, QueryCommand } = require('@aws-sdk/lib-dynamodb');
+const { DynamoDBDocumentClient, ScanCommand } = require('@aws-sdk/lib-dynamodb');
+const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 
 const client = new DynamoDBClient({ region: process.env.AWS_REGION });
 const docClient = DynamoDBDocumentClient.from(client);
-const { ScanCommand } = require('@aws-sdk/lib-dynamodb');
+const s3Client = new S3Client({ region: process.env.AWS_REGION });
+
+const bucketName = process.env.S3_BUCKET_NAME;
+
+const generatePresignedUrl = async (key) => {
+    if (!key) return null;
+    return await getSignedUrl(s3Client, new GetObjectCommand({
+        Bucket: bucketName,
+        Key: key
+    }), { expiresIn: 3600 }); // URL valid for 1 hour
+};
+
 exports.handler = async (event) => {
     try {
         console.log('Event: ', JSON.stringify(event, null, 2));
@@ -22,17 +35,21 @@ exports.handler = async (event) => {
                 ':active': 'active'
             }
         });
-        
+
         const response = await docClient.send(command);
-        const data = {
-            duas: response.Items || [],
-            count: response.Count || 0,
+
+        const duas = await Promise.all((response.Items || []).map(async item => {
+            item.audioUrl = await generatePresignedUrl(item.audioKey);
+            item.imageUrl = await generatePresignedUrl(item.imageKey);
+            return item;
+        }));
+
+        return successResponse({
+            duas,
+            count: duas.length,
             requestId: event.requestContext?.requestId,
             timestamp: new Date().toISOString()
-        };
-        
-
-        return successResponse(data, 'Duas retrieved successfully');
+        }, 'Duas retrieved successfully');
 
     } catch (error) {
         console.error('Error in dua_get function:', error);

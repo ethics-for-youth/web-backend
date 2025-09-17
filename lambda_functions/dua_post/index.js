@@ -34,7 +34,7 @@ async function uploadToS3(file, type, bucketName) {
   });
 
   await s3Client.send(command);
-  return `https://${bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+  return key; // Store only the object key
 }
 
 exports.handler = async (event) => {
@@ -82,12 +82,12 @@ exports.handler = async (event) => {
     validateRequired(body, ['title', 'arabicText', 'week']);
 
     const tableName = process.env.DUA_TABLE_NAME;
-    const bucketName = process.env.MEDIA_BUCKET_NAME;
+    const bucketName = process.env.S3_BUCKET_NAME;
     const duaId = crypto.randomUUID();
 
-    // Upload files
-    const audioUrl = parsed.audio ? await uploadToS3(parsed.audio, 'audio', bucketName) : null;
-    const imageUrl = parsed.image ? await uploadToS3(parsed.image, 'image', bucketName) : null;
+    // Upload files and store keys only
+    const audioKey = parsed.audio ? await uploadToS3(parsed.audio, 'audio', bucketName) : null;
+    const imageKey = parsed.image ? await uploadToS3(parsed.image, 'image', bucketName) : null;
 
     // Prepare DynamoDB item
     const duaItem = {
@@ -105,8 +105,8 @@ exports.handler = async (event) => {
         urdu: body.translation.urdu || '',
         romanUrdu: body.translation.romanUrdu || ''
       },
-      audioUrl,
-      imageUrl,
+      audioKey,
+      imageKey,
       status: 'active',
       week: body.week,
       createdAt: new Date().toISOString(),

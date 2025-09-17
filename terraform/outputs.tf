@@ -45,27 +45,6 @@ output "app_s3_bucket_region" {
   value       = module.app_s3_bucket.bucket_region
 }
 
-# Media S3 Bucket Outputs
-output "media_s3_bucket_name" {
-  description = "Name of the media S3 bucket"
-  value       = module.media_s3_bucket.bucket_id
-}
-
-output "media_s3_bucket_arn" {
-  description = "ARN of the media S3 bucket"
-  value       = module.media_s3_bucket.bucket_arn
-}
-
-output "media_s3_bucket_domain_name" {
-  description = "Domain name of the media S3 bucket"
-  value       = module.media_s3_bucket.bucket_domain_name
-}
-
-output "media_s3_bucket_region" {
-  description = "Region of the media S3 bucket"
-  value       = module.media_s3_bucket.bucket_region
-}
-
 # DynamoDB Table Names
 output "events_table_name" {
   description = "Name of the Events DynamoDB table"

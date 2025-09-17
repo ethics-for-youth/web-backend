@@ -52,33 +52,6 @@ module "app_s3_bucket" {
   tags = local.common_tags
 }
 
-# S3 Bucket for Media Storage (Dua Audio and Images)
-module "media_s3_bucket" {
-  source = "./modules/s3_bucket"
-
-  bucket_name = "${var.project_name}-${local.current_environment}-media-${local.env_config.s3_bucket_suffix}"
-
-  enable_versioning = local.env_config.s3_enable_versioning
-  sse_algorithm     = local.env_config.s3_sse_algorithm
-  kms_master_key_id = local.env_config.s3_kms_key_id
-
-  # Security settings (allowing public read for media files)
-  block_public_acls       = false
-  block_public_policy     = false
-  ignore_public_acls      = false
-  restrict_public_buckets = false
-
-  # CORS configuration for web applications
-  enable_cors          = local.env_config.s3_enable_cors
-  cors_allowed_origins = local.env_config.s3_cors_allowed_origins
-  cors_allowed_methods = ["GET", "PUT", "POST", "HEAD"]
-  cors_allowed_headers = ["*"]
-
-  # Lifecycle rules for cost optimization
-  lifecycle_rules = local.env_config.s3_lifecycle_rules
-
-  tags = local.common_tags
-}
 
 # DynamoDB Tables
 module "dynamodb" {
@@ -805,12 +778,12 @@ module "dua_post_lambda" {
   ]
 
   environment_variables = {
-    DUA_TABLE_NAME    = module.dynamodb.duas_table_name
-    MEDIA_BUCKET_NAME = module.media_s3_bucket.bucket_id
+    DUA_TABLE_NAME = module.dynamodb.duas_table_name
+    S3_BUCKET_NAME = module.app_s3_bucket.bucket_id
   }
 
   dynamodb_table_arns = [module.dynamodb.duas_table_arn]
-  s3_bucket_arns      = [module.media_s3_bucket.bucket_arn]
+  s3_bucket_arns      = [module.app_s3_bucket.bucket_arn]
 
   tags = local.common_tags
 }
@@ -830,12 +803,15 @@ module "dua_get_lambda" {
 
   environment_variables = {
     DUA_TABLE_NAME = module.dynamodb.duas_table_name
+    S3_BUCKET_NAME = module.app_s3_bucket.bucket_id # Add bucket env variable
   }
 
   dynamodb_table_arns = [module.dynamodb.duas_table_arn]
+  s3_bucket_arns      = [module.app_s3_bucket.bucket_arn] # Add bucket ARN for IAM permissions
 
   tags = local.common_tags
 }
+
 
 # API Gateway for EFY Platform
 module "efy_api_gateway" {
