@@ -96,12 +96,37 @@ exports.handler = async (event) => {
                 reg => reg.itemTitle && reg.itemTitle.toLowerCase().includes(searchTitle)
             );
         }
+        // ---- Stats by itemType ----
+        const statsByType = registrations.reduce((acc, r) => {
+            acc[r.itemType] = (acc[r.itemType] || 0) + 1;
+            return acc;
+        }, {});
+
+        // ---- Stats by itemId ----
+        const statsByItem = registrations.reduce((acc, r) => {
+            const key = r.itemId;
+            acc[key] = (acc[key] || 0) + 1;
+            return acc;
+        }, {});
+
+        // ---- Stats by itemTitle (if attached) ----
+        const statsByTitle = registrations.reduce((acc, r) => {
+            if (r.itemTitle) {
+                acc[r.itemTitle] = (acc[r.itemTitle] || 0) + 1;
+            }
+            return acc;
+        }, {});
 
         const data = {
             registrations,
             count: registrations.length,
             availableTitles: titlesList,
             filters: queryParams,
+            stats: {
+                byType: statsByType,
+                byItem: statsByItem,
+                byTitle: statsByTitle
+            },
             requestId: event.requestContext?.requestId,
             timestamp: new Date().toISOString()
         };
