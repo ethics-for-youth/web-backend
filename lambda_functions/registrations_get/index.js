@@ -96,37 +96,47 @@ exports.handler = async (event) => {
                 reg => reg.itemTitle && reg.itemTitle.toLowerCase().includes(searchTitle)
             );
         }
-        // ---- Stats by itemType ----
-        const statsByType = registrations.reduce((acc, r) => {
+
+        // ---- Overall Stats ----
+        const totalByType = registrations.reduce((acc, r) => {
             acc[r.itemType] = (acc[r.itemType] || 0) + 1;
             return acc;
         }, {});
 
-        // ---- Stats by itemId ----
-        const statsByItem = registrations.reduce((acc, r) => {
-            const key = r.itemId;
-            acc[key] = (acc[key] || 0) + 1;
+        const totalByItem = registrations.reduce((acc, r) => {
+            acc[r.itemId] = (acc[r.itemId] || 0) + 1;
             return acc;
         }, {});
 
-        // ---- Stats by itemTitle (if attached) ----
-        const statsByTitle = registrations.reduce((acc, r) => {
-            if (r.itemTitle) {
-                acc[r.itemTitle] = (acc[r.itemTitle] || 0) + 1;
-            }
+        const totalByTitle = registrations.reduce((acc, r) => {
+            if (r.itemTitle) acc[r.itemTitle] = (acc[r.itemTitle] || 0) + 1;
             return acc;
         }, {});
 
+        // ---- Filtered Stats (when specific item selected) ----
+        let filteredStatsByStatus = null;
+        if (queryParams.itemType && queryParams.itemId) {
+            const filteredRegs = registrations.filter(
+                r => r.itemType === queryParams.itemType && r.itemId === queryParams.itemId
+            );
+            filteredStatsByStatus = filteredRegs.reduce((acc, r) => {
+                acc[r.status] = (acc[r.status] || 0) + 1;
+                return acc;
+            }, {});
+        }
+
+        // ---- Response ----
         const data = {
             registrations,
             count: registrations.length,
             availableTitles: titlesList,
             filters: queryParams,
-            stats: {
-                byType: statsByType,
-                byItem: statsByItem,
-                byTitle: statsByTitle
+            totalCounts: {
+                byType: totalByType,
+                byItem: totalByItem,
+                byTitle: totalByTitle
             },
+            filteredCounts: filteredStatsByStatus,
             requestId: event.requestContext?.requestId,
             timestamp: new Date().toISOString()
         };
