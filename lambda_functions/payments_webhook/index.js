@@ -398,7 +398,7 @@ const handlePaymentAuthorized = async (payment) => {
         }
 
         const registrationId = payment.notes?.registrationId;
-        await updateRegistrationStatus(registrationId, 'authorized', 'Sent but not received', payment.id, payment);
+        await updateRegistrationStatus(registrationId, 'authorized', 'authorized', payment.id, payment);
 
         console.log('Payment authorization saved to database:', paymentRecord);
         return paymentRecord;
