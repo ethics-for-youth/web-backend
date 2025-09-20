@@ -97,49 +97,52 @@ exports.handler = async (event) => {
             );
         }
 
-        // ---- Overall Stats ----
-        const totalByType = registrations.reduce((acc, r) => {
-            acc[r.itemType] = (acc[r.itemType] || 0) + 1;
-            return acc;
-        }, {});
+        // -------------------------------
+        // STEP 3: Build stats (conditional)
+        // -------------------------------
+        let totalRegistrations = registrations.length;
+        let statsByType = {};
+        let statsByItem = {};
 
-        const totalByItem = registrations.reduce((acc, r) => {
-            acc[r.itemId] = (acc[r.itemId] || 0) + 1;
-            return acc;
-        }, {});
+        if (queryParams.itemType) {
+            // 👉 Only stats for this itemType
+            statsByType = registrations.reduce((acc, reg) => {
+                acc[reg.itemType] = (acc[reg.itemType] || 0) + 1;
+                return acc;
+            }, {});
 
-        const totalByTitle = registrations.reduce((acc, r) => {
-            if (r.itemTitle) acc[r.itemTitle] = (acc[r.itemTitle] || 0) + 1;
-            return acc;
-        }, {});
+            statsByItem = registrations.reduce((acc, reg) => {
+                const key = `${reg.itemTitle || reg.itemId}`;
+                acc[key] = (acc[key] || 0) + 1;
+                return acc;
+            }, {});
+        } else {
+            // 👉 Global stats across all types
+            statsByType = registrations.reduce((acc, reg) => {
+                acc[reg.itemType] = (acc[reg.itemType] || 0) + 1;
+                return acc;
+            }, {});
 
-        // ---- Filtered Stats (when specific item selected) ----
-        let filteredStatsByStatus = null;
-        if (queryParams.itemType && queryParams.itemId) {
-            const filteredRegs = registrations.filter(
-                r => r.itemType === queryParams.itemType && r.itemId === queryParams.itemId
-            );
-            filteredStatsByStatus = filteredRegs.reduce((acc, r) => {
-                acc[r.status] = (acc[r.status] || 0) + 1;
+            statsByItem = registrations.reduce((acc, reg) => {
+                const key = `${reg.itemTitle || reg.itemId}`;
+                acc[key] = (acc[key] || 0) + 1;
                 return acc;
             }, {});
         }
 
-        // ---- Response ----
         const data = {
             registrations,
-            count: registrations.length,
+            count: totalRegistrations,
+            stats: {
+                byType: statsByType,
+                byItem: statsByItem
+            },
             availableTitles: titlesList,
             filters: queryParams,
-            totalCounts: {
-                byType: totalByType,
-                byItem: totalByItem,
-                byTitle: totalByTitle
-            },
-            filteredCounts: filteredStatsByStatus,
             requestId: event.requestContext?.requestId,
             timestamp: new Date().toISOString()
         };
+
 
         return successResponse(data, 'Registrations retrieved successfully');
 
