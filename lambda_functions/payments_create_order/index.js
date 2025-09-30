@@ -40,7 +40,7 @@ async function validateItemExists(itemId, itemType) {
 }
 
 // Database helper function for order storage
-const storeOrderRecord = async (order, originalAmount, notes) => {
+const storeOrderRecord = async (order, originalAmount, notes, body) => {
     try {
         const tableName = process.env.PAYMENTS_TABLE_NAME;
 
@@ -51,6 +51,10 @@ const storeOrderRecord = async (order, originalAmount, notes) => {
             currency: order.currency,
             status: 'created',
             method: 'pending',
+            userGender: body.userGender,
+            userAge: body.userAge,
+            userEducation: body.userEducation,
+            userJoinCommunity: body.userJoinCommunity || false,
             razorpayOrderId: order.id,
             razorpayPaymentId: null, // Will be updated when payment is made
             originalAmount: originalAmount, // Store original amount in major currency unit
@@ -93,6 +97,10 @@ const storeRegistrationRecord = async (body, registrationId) => {
             userEmail: body.userEmail,
             userName: body.userName,
             userPhone: body.userPhone || null,
+            userGender: body.userGender,
+            userAge: body.userAge,
+            userEducation: body.userEducation,
+            userJoinCommunity: body.userJoinCommunity || false,
             registrationFee: body.amount || 0,
             paymentStatus: 'pending',
             paymentId: null,
@@ -146,7 +154,7 @@ exports.handler = async (event) => {
         const body = parseJSON(event.body);
 
         // Validate required fields for both order and registration
-        validateRequired(body, ['amount', 'userId', 'itemId', 'itemType', 'userEmail', 'userName']);
+        validateRequired(body, ['amount', 'userId', 'itemId', 'itemType', 'userEmail', 'userPhone', 'userName', 'userGender', 'userAge', 'userJoinCommunity', 'userEducation']);
 
         // Validate amount
         if (!body.amount || body.amount <= 0) {
@@ -189,7 +197,7 @@ exports.handler = async (event) => {
         console.log('Order created successfully:', order);
 
         // Store order record in database (non-blocking)
-        await storeOrderRecord(order, body.amount, orderOptions.notes);
+        await storeOrderRecord(order, body.amount, orderOptions.notes, body);
 
         // Prepare response data
         const responseData = {
