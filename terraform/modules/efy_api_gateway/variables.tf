@@ -308,6 +308,30 @@ variable "dua_get_lambda_function_name" {
   type = string
 }
 
+variable "dua_get_by_status_lambda_arn" {
+  type = string
+}
+
+variable "dua_get_by_status_lambda_function_name" {
+  type = string
+}
+
+variable "dua_put_lambda_arn" {
+  type = string
+}
+
+variable "dua_put_lambda_function_name" {
+  type = string
+}
+
+variable "dua_delete_lambda_arn" {
+  type = string
+}
+
+variable "dua_delete_lambda_function_name" {
+  type = string
+}
+
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)
