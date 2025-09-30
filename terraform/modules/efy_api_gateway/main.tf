@@ -970,7 +970,7 @@ resource "aws_lambda_permission" "dua_get_by_status" {
   action        = "lambda:InvokeFunction"
   function_name = var.dua_get_by_status_lambda_function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.efy_api.execution_arn}/*/GET/duas"
+  source_arn    = "${aws_api_gateway_rest_api.efy_api.execution_arn}/*/GET/duas/active"
 }
 
 # PATCH /duas  (Update Dua fields)
