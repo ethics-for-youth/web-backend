@@ -849,12 +849,12 @@ module "efy_api_gateway" {
   courses_delete_lambda_function_name    = module.courses_delete_lambda.lambda_function_name
 
   # Registrations Lambda ARNs and Function Names
-  registrations_post_lambda_arn           = module.registrations_post_lambda.lambda_invoke_arn
-  registrations_post_lambda_function_name = module.registrations_post_lambda.lambda_function_name
-  registrations_get_lambda_arn            = module.registrations_get_lambda.lambda_invoke_arn
-  registrations_get_lambda_function_name  = module.registrations_get_lambda.lambda_function_name
-  registrations_put_lambda_arn            = module.registrations_put_lambda.lambda_invoke_arn
-  registrations_put_lambda_function_name  = module.registrations_put_lambda.lambda_function_name
+  registrations_post_lambda_arn                        = module.registrations_post_lambda.lambda_invoke_arn
+  registrations_post_lambda_function_name              = module.registrations_post_lambda.lambda_function_name
+  registrations_get_lambda_arn                         = module.registrations_get_lambda.lambda_invoke_arn
+  registrations_get_lambda_function_name               = module.registrations_get_lambda.lambda_function_name
+  registrations_put_lambda_arn                         = module.registrations_put_lambda.lambda_invoke_arn
+  registrations_put_lambda_function_name               = module.registrations_put_lambda.lambda_function_name
   registrations_via_whatsapp_post_lambda_arn           = module.registrations_via_whatsapp_post_lambda.lambda_invoke_arn
   registrations_via_whatsapp_post_lambda_function_name = module.registrations_via_whatsapp_post_lambda.lambda_function_name
 
