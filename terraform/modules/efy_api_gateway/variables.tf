@@ -239,6 +239,16 @@ variable "registrations_put_lambda_function_name" {
   type        = string
 }
 
+#registrations via whatsapp payment
+variable "registrations_via_whatsapp_post_lambda_arn" {
+  description = "ARN of the Registrations WhatsApp Payment Lambda function"
+  type        = string
+}
+variable "registrations_via_whatsapp_post_lambda_function_name" {
+  description = "Function name of the Registrations WhatsApp Payment Lambda"
+  type        = string
+}
+
 # Messages Lambda Variables
 variable "messages_post_lambda_arn" {
   description = "ARN of the Messages POST Lambda function"

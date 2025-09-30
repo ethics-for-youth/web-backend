@@ -616,6 +616,36 @@ module "registrations_put_lambda" {
   tags = local.common_tags
 }
 
+module "registrations_via_whatsapp_post_lambda" {
+  source = "./modules/lambda"
+
+  function_name = "${var.project_name}-${local.current_environment}-registrations-whatsapp-post"
+  handler       = "index.handler"
+  runtime       = "nodejs18.x"
+  source_dir    = "../lambda_functions/registrations_via_whatsapp_post"
+
+  layers = [
+    module.dependencies_layer.layer_arn,
+    module.utility_layer.layer_arn
+  ]
+
+  environment_variables = {
+    REGISTRATIONS_TABLE_NAME = module.dynamodb.registrations_table_name,
+    COURSES_TABLE_NAME       = module.dynamodb.courses_table_name,
+    EVENTS_TABLE_NAME        = module.dynamodb.events_table_name,
+    COMPETITIONS_TABLE_NAME  = module.dynamodb.competitions_table_name,
+  }
+
+  dynamodb_table_arns = [
+    module.dynamodb.registrations_table_arn,
+    module.dynamodb.courses_table_arn,
+    module.dynamodb.events_table_arn,
+    module.dynamodb.competitions_table_arn,
+  ]
+
+  tags = local.common_tags
+
+}
 # Messages Lambda Functions
 module "messages_post_lambda" {
   source = "./modules/lambda"
@@ -825,6 +855,8 @@ module "efy_api_gateway" {
   registrations_get_lambda_function_name  = module.registrations_get_lambda.lambda_function_name
   registrations_put_lambda_arn            = module.registrations_put_lambda.lambda_invoke_arn
   registrations_put_lambda_function_name  = module.registrations_put_lambda.lambda_function_name
+  registrations_via_whatsapp_post_lambda_arn           = module.registrations_via_whatsapp_post_lambda.lambda_invoke_arn
+  registrations_via_whatsapp_post_lambda_function_name = module.registrations_via_whatsapp_post_lambda.lambda_function_name
 
   # Messages Lambda ARNs and Function Names
   messages_post_lambda_arn           = module.messages_post_lambda.lambda_invoke_arn
