@@ -3,7 +3,7 @@ name: Deploy to QA Environment
 on:
   workflow_dispatch:
   push:
-    branches: [ qa ]
+    branches: [qa, bug/133-add-more-fields-in-registration]
     paths:
       - 'terraform/**'
       - 'lambda_functions/**'
@@ -48,21 +48,21 @@ jobs:
       razorpay-key-secret: ${{ secrets.RAZORPAY_KEY_SECRET }}
       razorpay-webhook-secret: ${{ secrets.RAZORPAY_WEBHOOK_SECRET }}
 
-  wait-for-approval:
-    name: Wait for QA Deployment Approval
-    runs-on: ubuntu-latest
-    needs: [validate, plan]
-    outputs:
-      approved: ${{ steps.approval.outputs.approved }}
-    steps:
-    - name: Wait for approval
-      id: approval
-      uses: trstringer/manual-approval@v1
-      with:
-        secret: ${{ secrets.GITHUB_TOKEN }}
-        approvers: mohammadn0man
-        minimum-approvals: 1
-        exclude-workflow-initiator-as-approver: false
+  # wait-for-approval:
+  #   name: Wait for QA Deployment Approval
+  #   runs-on: ubuntu-latest
+  #   needs: [validate, plan]
+  #   outputs:
+  #     approved: ${{ steps.approval.outputs.approved }}
+  #   steps:
+  #     - name: Wait for approval
+  #       id: approval
+  #       uses: trstringer/manual-approval@v1
+  #       with:
+  #         secret: ${{ secrets.GITHUB_TOKEN }}
+  #         approvers: mohammadn0man
+  #         minimum-approvals: 1
+  #         exclude-workflow-initiator-as-approver: false
 
   deploy:
     name: Deploy to QA
