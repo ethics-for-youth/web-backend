@@ -812,28 +812,6 @@ module "dua_get_lambda" {
   tags = local.common_tags
 }
 
-# GET Active Duas Lambda
-module "dua_get_by_status_lambda" {
-  source = "./modules/lambda"
-
-  function_name = "${var.project_name}-${local.current_environment}-dua-get-by-status"
-  handler       = "index.handler"
-  runtime       = "nodejs18.x"
-  source_dir    = "../lambda_functions/dua_get_by_status"
-
-  layers = [
-    module.dependencies_layer.layer_arn,
-    module.utility_layer.layer_arn
-  ]
-
-  environment_variables = {
-    DUA_TABLE_NAME = module.dynamodb.duas_table_name
-  }
-
-  dynamodb_table_arns = [module.dynamodb.duas_table_arn]
-  tags                = local.common_tags
-}
-
 # UPDATE Status Lambda
 module "dua_put_lambda" {
   source = "./modules/lambda"
@@ -967,9 +945,6 @@ module "efy_api_gateway" {
 
   dua_get_lambda_arn           = module.dua_get_lambda.lambda_invoke_arn
   dua_get_lambda_function_name = module.dua_get_lambda.lambda_function_name
-
-  dua_get_by_status_lambda_arn           = module.dua_get_by_status_lambda.lambda_invoke_arn
-  dua_get_by_status_lambda_function_name = module.dua_get_by_status_lambda.lambda_function_name
 
   dua_put_lambda_arn           = module.dua_put_lambda.lambda_invoke_arn
   dua_put_lambda_function_name = module.dua_put_lambda.lambda_function_name

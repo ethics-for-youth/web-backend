@@ -922,6 +922,10 @@ resource "aws_api_gateway_method" "dua_get" {
   resource_id   = aws_api_gateway_resource.duas.id
   http_method   = "GET"
   authorization = "NONE"
+
+  request_parameters = {
+    "method.request.querystring.status" = false # optional query param
+  }
 }
 
 resource "aws_api_gateway_integration" "dua_get" {
@@ -940,37 +944,6 @@ resource "aws_lambda_permission" "dua_get" {
   function_name = var.dua_get_lambda_function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_api_gateway_rest_api.efy_api.execution_arn}/*/GET/duas"
-}
-
-# Duas by Status Method
-resource "aws_api_gateway_method" "dua_get_by_status" {
-  rest_api_id   = aws_api_gateway_rest_api.efy_api.id
-  resource_id   = aws_api_gateway_resource.duas.id
-  http_method   = "GET"
-  authorization = "NONE"
-
-  request_parameters = {
-    "method.request.querystring.status" = true
-  }
-}
-
-# Duas by Status Integration
-resource "aws_api_gateway_integration" "dua_get_by_status" {
-  rest_api_id             = aws_api_gateway_rest_api.efy_api.id
-  resource_id             = aws_api_gateway_resource.duas.id
-  http_method             = aws_api_gateway_method.dua_get_by_status.http_method
-  integration_http_method = "POST"
-  type                    = "AWS_PROXY"
-  uri                     = var.dua_get_by_status_lambda_arn
-}
-
-# Duas by Status Lambda Permission
-resource "aws_lambda_permission" "dua_get_by_status" {
-  statement_id  = "AllowExecutionFromAPIGateway-dua-get-by-status"
-  action        = "lambda:InvokeFunction"
-  function_name = var.dua_get_by_status_lambda_function_name
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.efy_api.execution_arn}/*/GET/duas/active"
 }
 
 # PATCH /duas  (Update Dua fields)
@@ -998,7 +971,6 @@ resource "aws_lambda_permission" "dua_put" {
   source_arn    = "${aws_api_gateway_rest_api.efy_api.execution_arn}/*/PATCH/duas"
 }
 
-# -------------------------------
 # DELETE /duas/{id}
 resource "aws_api_gateway_resource" "duas_id" {
   rest_api_id = aws_api_gateway_rest_api.efy_api.id
@@ -1064,7 +1036,6 @@ resource "aws_api_gateway_deployment" "efy_api_deployment" {
     aws_api_gateway_integration.payments_webhook_post,
     aws_api_gateway_integration.dua_post,
     aws_api_gateway_integration.dua_get,
-    aws_api_gateway_integration.dua_get_by_status,
     aws_api_gateway_integration.dua_put,
     aws_api_gateway_integration.dua_delete,
   ]
@@ -1106,7 +1077,6 @@ resource "aws_api_gateway_deployment" "efy_api_deployment" {
       aws_api_gateway_integration.payments_webhook_post.id,
       aws_api_gateway_integration.dua_post.id,
       aws_api_gateway_integration.dua_get.id,
-      aws_api_gateway_integration.dua_get_by_status.id,
       aws_api_gateway_integration.dua_put.id,
       aws_api_gateway_integration.dua_delete.id,
     ]))
