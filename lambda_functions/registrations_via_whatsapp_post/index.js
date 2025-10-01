@@ -1,7 +1,7 @@
 // Lambda function for creating Razorpay orders
 const { successResponse, errorResponse, validateRequired, parseJSON } = require('/opt/nodejs/utils');
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
-const { DynamoDBDocumentClient, PutCommand } = require('@aws-sdk/lib-dynamodb');
+const { DynamoDBDocumentClient, PutCommand, GetCommand } = require('@aws-sdk/lib-dynamodb');
 
 const client = new DynamoDBClient({ region: process.env.AWS_REGION });
 const docClient = DynamoDBDocumentClient.from(client);
@@ -52,6 +52,7 @@ const storeRegistrationRecord = async (body, registrationId) => {
             paymentStatus: 'pending',
             paymentId: null,
             status: 'pending',
+            paymentVia: 'whatsapp',
             notes: body.notes.details || null,
             registeredAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
@@ -60,7 +61,7 @@ const storeRegistrationRecord = async (body, registrationId) => {
         const command = new PutCommand({
             TableName: tableName,
             Item: registrationItem,
-            ConditionExpression: 'attribute_not_exists(id)' // Prevent overwriting
+            ConditionExpression: 'attribute_not_exists(id)'
         });
 
         await docClient.send(command);
