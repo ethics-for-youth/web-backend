@@ -97,6 +97,7 @@ const storeRegistrationRecord = async (body, registrationId) => {
             paymentStatus: 'pending',
             paymentId: null,
             status: 'pending',
+            paymentVia: 'razorpay',
             notes: body.notes.details || null,
             registeredAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
