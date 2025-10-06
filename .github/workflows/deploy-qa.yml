@@ -67,7 +67,7 @@ jobs:
   deploy:
     name: Deploy to QA
     uses: ./.github/workflows/terraform-deploy.yml
-    needs: [validate, plan, wait-for-approval]
+    needs: [validate, plan]
     with:
       environment: qa
       aws-region: ${{ vars.AWS_REGION }}
