@@ -418,31 +418,24 @@ const processWebhookEvent = async (event, eventData) => {
 
     switch (eventType) {
         case 'payment.captured':
-            await handlePaymentCaptured(payload.payment.entity);
-            break;
+            return await handlePaymentCaptured(payload.payment.entity);
         case 'payment.failed':
-            await handlePaymentFailed(payload.payment.entity);
-            break;
+            return await handlePaymentFailed(payload.payment.entity);
         case 'payment.authorized':
-            await handlePaymentAuthorized(payload.payment.entity);
-            break;
+            return await handlePaymentAuthorized(payload.payment.entity);
         case 'order.paid':
-            await handleOrderPaid(payload.order.entity, payload.payment.entity);
-            break;
+            return await handleOrderPaid(payload.order.entity, payload.payment.entity);
         case 'refund.created':
-            await handleRefundCreated(payload.refund.entity);
-            break;
+            return await handleRefundCreated(payload.refund.entity);
         default:
             console.log(`Unhandled webhook event type: ${eventType}`);
-            break;
+            return {
+                eventType,
+                processed: true,
+                timestamp: new Date().toISOString(),
+                requestId: event.requestContext?.requestId
+            };
     }
-
-    return {
-        eventType,
-        processed: true,
-        timestamp: new Date().toISOString(),
-        requestId: event.requestContext?.requestId
-    };
 };
 
 // Event handlers with database integration
@@ -570,15 +563,20 @@ const handlePaymentAuthorized = async (payment) => {
     });
 
     try {
+        const registrationId = payment.notes?.registrationId;
+        const registrationData = await getRegistrationRecord(registrationId);
+        const invoiceData = await generateInvoicePDF(payment, registrationData);
+
         let paymentRecord = await getPaymentRecord(payment.order_id, `order_${payment.order_id}`);
         if (paymentRecord) {
             paymentRecord = await updatePaymentStatus(payment.order_id, `order_${payment.order_id}`, 'authorized', {
                 ...payment,
                 razorpayPaymentId: payment.id,
                 method: payment.method || 'unknown',
-                notes: { ...paymentRecord.notes, ...payment.notes }
+                notes: { ...paymentRecord.notes, ...payment.notes },
+                invoice_url: invoiceData.presignedUrl
             });
-            console.log('Updated existing payment record:', paymentRecord);
+            console.log('Updated existing payment record with invoice URL:', paymentRecord);
         } else {
             paymentRecord = await getPaymentRecord(payment.order_id, payment.id);
             if (!paymentRecord) {
@@ -586,22 +584,26 @@ const handlePaymentAuthorized = async (payment) => {
                 paymentRecord = await createPaymentRecord(payment.order_id, payment.id, {
                     ...payment,
                     notes: payment.notes || {},
-                    originalAmount: payment.amount / 100
+                    originalAmount: payment.amount / 100,
+                    invoice_url: invoiceData.presignedUrl
                 });
             } else {
                 paymentRecord = await updatePaymentStatus(payment.order_id, payment.id, 'authorized', {
                     ...payment,
-                    notes: { ...paymentRecord.notes, ...payment.notes }
+                    notes: { ...paymentRecord.notes, ...payment.notes },
+                    invoice_url: invoiceData.presignedUrl
                 });
-                console.log('Updated existing payment record with actual paymentId:', paymentRecord);
+                console.log('Updated existing payment record with actual paymentId and invoice URL:', paymentRecord);
             }
         }
 
-        const registrationId = payment.notes?.registrationId;
         await updateRegistrationStatus(registrationId, 'authorized', 'pending', payment.id, payment);
 
         console.log('Payment authorization saved to database:', paymentRecord);
-        return paymentRecord;
+        return {
+            ...paymentRecord,
+            invoiceUrl: invoiceData.presignedUrl
+        };
     } catch (error) {
         console.error('Error handling payment authorized event:', error);
         throw error;
