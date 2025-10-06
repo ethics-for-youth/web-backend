@@ -37,9 +37,42 @@ const generateInvoicePDF = async (payment, registrationData) => {
             }
 
             const doc = new PDFDocument({ margin: 50 });
-            let buffers = [];
-            doc.on("data", buffers.push.bind(buffers));
-            doc.on("end", () => { });
+            const buffers = [];
+
+            // Collect PDF data chunks
+            doc.on('data', (chunk) => buffers.push(chunk));
+            doc.on('end', async () => {
+                try {
+                    const pdfBuffer = Buffer.concat(buffers);
+
+                    // Validate buffer size
+                    if (pdfBuffer.length === 0) {
+                        throw new Error('Generated PDF buffer is empty');
+                    }
+
+                    const key = `invoices/${payment.id}.pdf`;
+
+                    // Upload to S3
+                    await s3Client.send(new PutObjectCommand({
+                        Bucket: bucketName,
+                        Key: key,
+                        Body: pdfBuffer,
+                        ContentType: 'application/pdf'
+                    }));
+
+                    // Generate presigned URL
+                    const presignedUrl = await getSignedUrl(
+                        s3Client,
+                        new GetObjectCommand({ Bucket: bucketName, Key: key }),
+                        { expiresIn: 3600 }
+                    );
+
+                    resolve({ key, presignedUrl });
+                } catch (err) {
+                    reject(new Error(`Failed to upload PDF to S3: ${err.message}`));
+                }
+            });
+            doc.on('error', (err) => reject(new Error(`PDF generation failed: ${err.message}`)));
 
             // Header
             doc
@@ -93,27 +126,10 @@ const generateInvoicePDF = async (payment, registrationData) => {
                 align: "center",
             });
 
+            // Finalize the PDF
             doc.end();
-
-            const pdfBuffer = Buffer.concat(buffers);
-            const key = `invoices/${payment.id}.pdf`;
-
-            await s3Client.send(new PutObjectCommand({
-                Bucket: bucketName,
-                Key: key,
-                Body: pdfBuffer,
-                ContentType: 'application/pdf'
-            }));
-
-            const presignedUrl = await getSignedUrl(
-                s3Client,
-                new GetObjectCommand({ Bucket: bucketName, Key: key }),
-                { expiresIn: 3600 }
-            );
-
-            resolve({ key, presignedUrl });
         } catch (err) {
-            reject(err);
+            reject(new Error(`PDF generation error: ${err.message}`));
         }
     });
 };
