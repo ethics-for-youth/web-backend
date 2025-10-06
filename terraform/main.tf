@@ -751,12 +751,15 @@ module "payments_webhook_lambda" {
     RAZORPAY_WEBHOOK_SECRET  = var.razorpay_webhook_secret
     PAYMENTS_TABLE_NAME      = module.dynamodb.payments_table_name
     REGISTRATIONS_TABLE_NAME = module.dynamodb.registrations_table_name
+    # LOGO_S3_KEY              = var.logo_s3_key                  # New environment variable for logo
+    S3_BUCKET_NAME = module.app_s3_bucket.bucket_id
   }
 
   dynamodb_table_arns = [
     module.dynamodb.payments_table_arn,
     module.dynamodb.registrations_table_arn
   ]
+  s3_bucket_arns = [module.app_s3_bucket.bucket_arn]
 
   timeout = 30
 

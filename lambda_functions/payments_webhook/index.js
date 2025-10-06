@@ -2,6 +2,121 @@ const { successResponse, errorResponse } = require('/opt/nodejs/utils');
 const crypto = require('crypto');
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
 const { DynamoDBDocumentClient, PutCommand, UpdateCommand, GetCommand } = require('@aws-sdk/lib-dynamodb');
+const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+const PDFDocument = require('pdfkit');
+
+const s3Client = new S3Client({ region: process.env.AWS_REGION });
+const bucketName = process.env.S3_BUCKET_NAME;
+const logoKey = process.env.LOGO_S3_KEY; // e.g., 'logos/ethics-logo.png'
+
+const streamToBuffer = (stream) => {
+    return new Promise((resolve, reject) => {
+        const chunks = [];
+        stream.on('data', (chunk) => chunks.push(chunk));
+        stream.on('end', () => resolve(Buffer.concat(chunks)));
+        stream.on('error', reject);
+    });
+};
+
+const generateInvoicePDF = async (payment, registrationData) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            // Fetch logo if key is provided
+            let logoBuffer = null;
+            if (logoKey) {
+                try {
+                    const logoResponse = await s3Client.send(new GetObjectCommand({
+                        Bucket: bucketName,
+                        Key: logoKey
+                    }));
+                    logoBuffer = await streamToBuffer(logoResponse.Body);
+                } catch (logoError) {
+                    console.warn('Failed to fetch logo:', logoError);
+                }
+            }
+
+            const doc = new PDFDocument({ margin: 50 });
+            let buffers = [];
+            doc.on("data", buffers.push.bind(buffers));
+            doc.on("end", () => { });
+
+            // Header
+            doc
+                .fillColor("#4B703D")
+                .fontSize(20)
+                .text("Ethics For Youth", { align: "center" })
+                .moveDown(0.5);
+
+            // Add logo if available
+            if (logoBuffer) {
+                doc.image(logoBuffer, {
+                    width: 100,
+                    align: "center"
+                });
+                doc.moveDown(0.5);
+            }
+
+            doc
+                .fontSize(12)
+                .fillColor("black")
+                .text("Invoice", { align: "center" })
+                .moveDown(1);
+
+            // Invoice details
+            doc.fontSize(10).text(`Invoice No: INV-${payment.id}`);
+            doc.text(`Date: ${new Date(payment.created_at || Date.now()).toLocaleDateString()}`);
+            doc.text(`Payment ID: ${payment.id}`);
+            doc.text(`Order ID: ${payment.order_id}`);
+            doc.moveDown();
+
+            // Customer details
+            doc.fontSize(12).fillColor("#4B703D").text("Customer Details:");
+            doc.fontSize(10).fillColor("black");
+            doc.text(`Name: ${registrationData.name || payment.notes?.customer_name || "N/A"}`);
+            doc.text(`Email: ${registrationData.email || payment.notes?.customer_email || "N/A"}`);
+            doc.text(`Phone: ${payment.notes?.customer_phone || "N/A"}`);
+            doc.moveDown();
+
+            // Item details
+            doc.fontSize(12).fillColor("#4B703D").text("Order Details:");
+            doc.fontSize(10).fillColor("black");
+            doc.text(`Item: ${payment.notes?.item_name || "Registration Fee"}`);
+            doc.text(`Amount: ₹${(payment.amount / 100).toFixed(2)} ${payment.currency}`);
+            doc.text(`Status: ${payment.status}`);
+            doc.text(`Method: ${payment.method}`);
+            doc.moveDown();
+
+            // Footer
+            doc.moveDown(2);
+            doc.fontSize(10).fillColor("gray").text("Thank you for your registration!", {
+                align: "center",
+            });
+
+            doc.end();
+
+            const pdfBuffer = Buffer.concat(buffers);
+            const key = `invoices/${payment.id}.pdf`;
+
+            await s3Client.send(new PutObjectCommand({
+                Bucket: bucketName,
+                Key: key,
+                Body: pdfBuffer,
+                ContentType: 'application/pdf'
+            }));
+
+            const presignedUrl = await getSignedUrl(
+                s3Client,
+                new GetObjectCommand({ Bucket: bucketName, Key: key }),
+                { expiresIn: 3600 }
+            );
+
+            resolve({ key, presignedUrl });
+        } catch (err) {
+            reject(err);
+        }
+    });
+};
 
 const client = new DynamoDBClient({ region: process.env.AWS_REGION });
 const docClient = DynamoDBDocumentClient.from(client, {
@@ -45,7 +160,8 @@ const createPaymentRecord = async (orderId, paymentId, paymentData) => {
                 captured_at: paymentData.captured_at || null,
                 created_at: paymentData.created_at || null,
                 error_code: paymentData.error_code || null,
-                error_description: paymentData.error_description || null
+                error_description: paymentData.error_description || null,
+                invoice_url: paymentData.invoice_url || null
             }
         };
 
@@ -127,6 +243,11 @@ const updatePaymentStatus = async (orderId, paymentId, status, paymentData = {})
             expressionAttributeValues[':order_status'] = paymentData.order_status;
         }
 
+        if (paymentData.invoice_url) {
+            updateExpression += ', metadata.invoice_url = :invoice_url';
+            expressionAttributeValues[':invoice_url'] = paymentData.invoice_url;
+        }
+
         const command = new UpdateCommand({
             TableName: tableName,
             Key: { orderId, paymentId },
@@ -160,6 +281,23 @@ const getPaymentRecord = async (orderId, paymentId) => {
     } catch (error) {
         console.error('Error retrieving payment record:', error);
         throw new Error(`Failed to retrieve payment record: ${error.message}`);
+    }
+};
+
+const getRegistrationRecord = async (registrationId) => {
+    try {
+        const tableName = process.env.REGISTRATIONS_TABLE_NAME;
+
+        const command = new GetCommand({
+            TableName: tableName,
+            Key: { id: registrationId }
+        });
+
+        const result = await docClient.send(command);
+        return result.Item || null;
+    } catch (error) {
+        console.error('Error retrieving registration record:', error);
+        throw new Error(`Failed to retrieve registration record: ${error.message}`);
     }
 };
 
@@ -320,6 +458,10 @@ const handlePaymentCaptured = async (payment) => {
     });
 
     try {
+        const registrationId = payment.notes?.registrationId;
+        const registrationData = await getRegistrationRecord(registrationId);
+        const invoiceData = await generateInvoicePDF(payment, registrationData);
+
         let paymentRecord = await getPaymentRecord(payment.order_id, `order_${payment.order_id}`);
         if (paymentRecord) {
             paymentRecord = await updatePaymentStatus(payment.order_id, `order_${payment.order_id}`, 'captured', {
@@ -327,9 +469,10 @@ const handlePaymentCaptured = async (payment) => {
                 order_status: 'paid',
                 razorpayPaymentId: payment.id,
                 method: payment.method || 'unknown',
-                notes: { ...paymentRecord.notes, ...payment.notes }
+                notes: { ...paymentRecord.notes, ...payment.notes },
+                invoice_url: invoiceData.presignedUrl
             });
-            console.log('Updated existing payment record:', paymentRecord);
+            console.log('Updated existing payment record with invoice URL:', paymentRecord);
         } else {
             paymentRecord = await getPaymentRecord(payment.order_id, payment.id);
             if (!paymentRecord) {
@@ -337,23 +480,27 @@ const handlePaymentCaptured = async (payment) => {
                 paymentRecord = await createPaymentRecord(payment.order_id, payment.id, {
                     ...payment,
                     notes: payment.notes || {},
-                    originalAmount: payment.amount / 100
+                    originalAmount: payment.amount / 100,
+                    invoice_url: invoiceData.presignedUrl
                 });
             } else {
                 paymentRecord = await updatePaymentStatus(payment.order_id, payment.id, 'captured', {
                     ...payment,
                     order_status: 'paid',
-                    notes: { ...paymentRecord.notes, ...payment.notes }
+                    notes: { ...paymentRecord.notes, ...payment.notes },
+                    invoice_url: invoiceData.presignedUrl
                 });
-                console.log('Updated existing payment record with actual paymentId:', paymentRecord);
+                console.log('Updated existing payment record with actual paymentId and invoice URL:', paymentRecord);
             }
         }
 
-        const registrationId = payment.notes?.registrationId;
         await updateRegistrationStatus(registrationId, 'captured', 'registered', payment.id, payment);
 
         console.log('Payment captured and saved to database:', paymentRecord);
-        return paymentRecord;
+        return {
+            ...paymentRecord,
+            invoiceUrl: invoiceData.presignedUrl
+        };
     } catch (error) {
         console.error('Error handling payment captured event:', error);
         throw error;
@@ -472,43 +619,49 @@ const handleOrderPaid = async (order, payment) => {
     });
 
     try {
+        const registrationId = order.notes?.registrationId || payment.notes?.registrationId;
+        const registrationData = await getRegistrationRecord(registrationId);
+        const invoiceData = await generateInvoicePDF(payment, registrationData);
+
         let paymentRecord = await getPaymentRecord(order.id, `order_${order.id}`);
         if (paymentRecord) {
-            // Condition 1: Update existing record
             paymentRecord = await updatePaymentStatus(order.id, `order_${order.id}`, 'paid', {
                 ...payment,
                 order_status: 'paid',
                 razorpayPaymentId: payment.id,
                 method: payment.method || 'unknown',
-                notes: { ...paymentRecord.notes, ...payment.notes } // Merge existing and new notes
+                notes: { ...paymentRecord.notes, ...payment.notes },
+                invoice_url: invoiceData.presignedUrl
             });
-            console.log('Updated existing payment record:', paymentRecord);
+            console.log('Updated existing payment record with invoice URL:', paymentRecord);
         } else {
-            // Condition 2: Create new record if no temporary record exists
             paymentRecord = await getPaymentRecord(order.id, payment.id);
             if (!paymentRecord) {
                 console.log(`No record found for order_${order.id}; creating new record with paymentId: ${payment.id}`);
                 paymentRecord = await createPaymentRecord(order.id, payment.id, {
                     ...payment,
                     notes: payment.notes || {},
-                    originalAmount: order.amount / 100 // Convert to major currency unit
+                    originalAmount: order.amount / 100,
+                    invoice_url: invoiceData.presignedUrl
                 });
             } else {
-                // Update existing record with actual paymentId (rare case)
                 paymentRecord = await updatePaymentStatus(order.id, payment.id, 'paid', {
                     ...payment,
                     order_status: 'paid',
-                    notes: { ...paymentRecord.notes, ...payment.notes }
+                    notes: { ...paymentRecord.notes, ...payment.notes },
+                    invoice_url: invoiceData.presignedUrl
                 });
-                console.log('Updated existing payment record with actual paymentId:', paymentRecord);
+                console.log('Updated existing payment record with actual paymentId and invoice URL:', paymentRecord);
             }
         }
 
-        const registrationId = order.notes?.registrationId || payment.notes?.registrationId;
         await updateRegistrationStatus(registrationId, 'paid', 'registered', payment.id, { ...order, ...payment });
 
         console.log('Order paid status saved to database:', paymentRecord);
-        return paymentRecord;
+        return {
+            ...paymentRecord,
+            invoiceUrl: invoiceData.presignedUrl
+        };
     } catch (error) {
         console.error('Error handling order paid event:', error);
         throw error;
