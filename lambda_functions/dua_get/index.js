@@ -33,7 +33,7 @@ exports.handler = async (event) => {
 
         const command = new ScanCommand({
             TableName: tableName,
-            FilterExpression: filterExpression,              // undefined if no status
+            FilterExpression: filterExpression,
             ExpressionAttributeNames: filterExpression ? { '#st': 'status' } : undefined,
             ExpressionAttributeValues: expressionAttributeValues
         });
@@ -41,6 +41,13 @@ exports.handler = async (event) => {
         const response = await docClient.send(command);
 
         const duas = await Promise.all((response.Items || []).map(async item => {
+            if (item.labelValue) {
+                const label = typeof item.labelValue === 'string'
+                    ? item.labelValue
+                    : JSON.stringify(item.labelValue);
+                item.labelParts = label.split(' ');
+            }
+
             item.audioUrl = await generatePresignedUrl(item.audioKey);
             item.imageUrl = await generatePresignedUrl(item.imageKey);
             return item;
