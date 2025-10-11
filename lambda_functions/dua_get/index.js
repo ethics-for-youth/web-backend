@@ -23,17 +23,19 @@ exports.handler = async (event) => {
     try {
         console.log('Event: ', JSON.stringify(event, null, 2));
 
+        let filterExpression, expressionAttributeValues;
         const tableName = process.env.DUA_TABLE_NAME;
+
+        if (event.queryStringParameters?.status) {
+            filterExpression = '#st = :status';
+            expressionAttributeValues = { ':status': event.queryStringParameters.status };
+        }
 
         const command = new ScanCommand({
             TableName: tableName,
-            FilterExpression: '#st = :active',
-            ExpressionAttributeNames: {
-                '#st': 'status'
-            },
-            ExpressionAttributeValues: {
-                ':active': 'active'
-            }
+            FilterExpression: filterExpression,              // undefined if no status
+            ExpressionAttributeNames: filterExpression ? { '#st': 'status' } : undefined,
+            ExpressionAttributeValues: expressionAttributeValues
         });
 
         const response = await docClient.send(command);
