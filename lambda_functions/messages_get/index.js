@@ -63,7 +63,7 @@ exports.handler = async (event) => {
             timestamp: new Date().toISOString()
         };
         
-        return successResponse(data, 'Messages retrieved successfully');
+        return successResponse(data, 'Messages retrieved successfully from the database');
         
     } catch (error) {
         console.error('Error in messages_get function:', error);
