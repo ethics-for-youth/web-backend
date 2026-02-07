@@ -378,7 +378,7 @@ resource "aws_api_gateway_method" "events_post" {
 
 #### Volunteer Management Endpoints:
 ```
-POST   /volunteers/apply          # Apply for volunteer position
+POST   /volunteers/join          # Join for volunteer position
 GET    /volunteers/applications   # Get volunteer applications (admin)
 PUT    /volunteers/applications/{id} # Update application status
 GET    /volunteers/tasks          # Get assigned tasks (volunteer)
