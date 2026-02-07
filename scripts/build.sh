@@ -113,6 +113,90 @@ install_layer_dependencies() {
     print_status "Layer dependencies installation completed"
 }
 
+# Function to build reproducible layer zips
+build_layer_zips() {
+    print_header "Building Reproducible Layer Zips"
+    
+    # Create builds directory if it doesn't exist
+    mkdir -p terraform/builds
+    
+    # Set SOURCE_DATE_EPOCH for reproducible builds (fixed timestamp)
+    export SOURCE_DATE_EPOCH=1
+    export TZ=UTC
+    
+    # Build dependencies layer
+    if [ -d "layers/dependencies" ]; then
+        print_status "Creating reproducible zip for dependencies layer..."
+        cd layers/dependencies
+        
+        # Remove any existing zip
+        rm -f ../../terraform/builds/dependencies-layer.zip
+        
+        # Create zip with fixed timestamps (-X removes extra file attributes)
+        # Use -r for recursive, -q for quiet
+        zip -X -r -q ../../terraform/builds/dependencies-layer.zip . -x "*.zip"
+        
+        print_status "Dependencies layer zip created: $(du -h ../../terraform/builds/dependencies-layer.zip | cut -f1)"
+        cd - > /dev/null
+    fi
+    
+    # Build utility layer
+    if [ -d "layers/utility" ]; then
+        print_status "Creating reproducible zip for utility layer..."
+        cd layers/utility
+        
+        # Remove any existing zip
+        rm -f ../../terraform/builds/utility-layer.zip
+        
+        # Create zip with fixed timestamps
+        zip -X -r -q ../../terraform/builds/utility-layer.zip . -x "*.zip"
+        
+        print_status "Utility layer zip created: $(du -h ../../terraform/builds/utility-layer.zip | cut -f1)"
+        cd - > /dev/null
+    fi
+    
+    print_status "Layer zip creation completed"
+}
+
+# Function to build reproducible lambda function zips
+build_lambda_zips() {
+    print_header "Building Reproducible Lambda Function Zips"
+    
+    # Create builds directory if it doesn't exist
+    mkdir -p terraform/builds
+    
+    # Set SOURCE_DATE_EPOCH for reproducible builds (fixed timestamp)
+    export SOURCE_DATE_EPOCH=1
+    export TZ=UTC
+    
+    # Count lambda functions
+    local lambda_count=0
+    
+    # Build each lambda function
+    if [ -d "lambda_functions" ]; then
+        for lambda_dir in lambda_functions/*/; do
+            if [ -d "$lambda_dir" ]; then
+                lambda_name=$(basename "$lambda_dir")
+                
+                print_status "Creating reproducible zip for $lambda_name..."
+                cd "$lambda_dir"
+                
+                # Remove any existing zip
+                rm -f "../../terraform/builds/${lambda_name}.zip"
+                
+                # Create zip with fixed timestamps
+                zip -X -r -q "../../terraform/builds/${lambda_name}.zip" . -x "*.zip"
+                
+                lambda_count=$((lambda_count + 1))
+                cd - > /dev/null
+            fi
+        done
+    fi
+    
+    print_status "Created $lambda_count lambda function zips"
+    print_status "Lambda function zip creation completed"
+}
+
 # Function to clean build artifacts
 clean_build() {
     print_header "Cleaning Build Artifacts"
@@ -421,14 +505,18 @@ main() {
             ;;
         "plan")
             install_layer_dependencies
+            build_layer_zips
+            build_lambda_zips
             plan_terraform "$environment"
             ;;
         "apply")
             # Skip dependency installation if using pre-built artifacts
             if [ -d "terraform/builds" ] && [ -n "$3" ]; then
-                print_status "Using pre-built artifacts, skipping dependency installation"
+                print_status "Using pre-built artifacts, skipping dependency installation and build"
             else
                 install_layer_dependencies
+                build_layer_zips
+                build_lambda_zips
             fi
             apply_terraform "$environment" "$3"
             ;;

@@ -1,23 +1,29 @@
-# Automatically create zip file from source directory
-data "archive_file" "lambda_zip" {
-  type        = "zip"
-  source_dir  = var.source_dir
-  output_path = "./builds/${var.function_name}.zip"
+# Use pre-built lambda zip with reproducible timestamps
+# The zip is created by build.sh script with SOURCE_DATE_EPOCH=1
+# This ensures the hash only changes when actual content changes, not timestamps
 
-  # This ensures Terraform detects code changes
-  excludes = ["*.zip"]
+locals {
+  # Extract just the lambda function name from the full function name
+  # e.g., "efy-dev-events-get" -> "events_get"
+  lambda_base_name = replace(replace(var.function_name, "/^.*-(dev|qa|prod)-/", ""), "-", "_")
+  zip_path         = "${path.root}/builds/${local.lambda_base_name}.zip"
+}
+
+# Compute hash from the pre-built zip file
+data "local_file" "lambda_zip" {
+  filename = local.zip_path
 }
 
 resource "aws_lambda_function" "this" {
-  filename      = data.archive_file.lambda_zip.output_path
+  filename      = local.zip_path
   function_name = var.function_name
   role          = aws_iam_role.lambda_role.arn
   handler       = var.handler
   runtime       = var.runtime
   timeout       = var.timeout
 
-  # This hash ensures function updates when code changes
-  source_code_hash = data.archive_file.lambda_zip.output_base64sha256
+  # Use filebase64sha256 to compute hash from the pre-built zip
+  source_code_hash = filebase64sha256(local.zip_path)
 
   layers = var.layers
 
@@ -29,7 +35,7 @@ resource "aws_lambda_function" "this" {
 
   depends_on = [
     aws_iam_role_policy_attachment.lambda_basic,
-    data.archive_file.lambda_zip
+    data.local_file.lambda_zip
   ]
 }
 
