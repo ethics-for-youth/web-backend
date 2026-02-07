@@ -4,8 +4,8 @@
 
 locals {
   # Extract just the layer type (e.g., "efy-dev-dependencies-layer" -> "dependencies-layer")
-  # Remove everything up to and including the environment prefix
-  layer_base_name = regex("(dependencies|utility)-layer$", var.layer_name)[0]
+  # The build script creates zips as "dependencies-layer.zip" and "utility-layer.zip"
+  layer_base_name = regex("((dependencies|utility)-layer)$", var.layer_name)[0]
   zip_path        = "${path.root}/builds/${local.layer_base_name}.zip"
 }
 

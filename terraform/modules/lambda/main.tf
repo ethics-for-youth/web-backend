@@ -4,9 +4,9 @@
 
 locals {
   # Extract just the lambda function name from the full function name
-  # e.g., "efy-dev-events-get" -> "events_get"
-  # Remove the project name and environment prefix, then convert dashes to underscores
-  function_without_prefix = regex("[^-]+-[^-]+-(.*)", var.function_name)[0]
+  # e.g., "efy-web-backend-dev-events-get" -> "events_get"
+  # Match everything after "-(dev|qa|prod)-" and convert dashes to underscores
+  function_without_prefix = regex("-(dev|qa|prod)-(.*)", var.function_name)[1]
   lambda_base_name        = replace(local.function_without_prefix, "-", "_")
   zip_path                = "${path.root}/builds/${local.lambda_base_name}.zip"
 }
