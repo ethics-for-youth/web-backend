@@ -23,7 +23,7 @@ exports.handler = async (event) => {
         return successResponse(data, 'Admin statistics retrieved successfully');
         
     } catch (error) {
-        console.error('Error in admin_stats_get function:', error);
+        console.error('Error in admin_stats_get function: ', error);
         return errorResponse(error, 500);
     }
 };
@@ -85,7 +85,7 @@ async function gatherStats() {
             }
         };
     } catch (error) {
-        console.error('Error gathering stats:', error);
+        console.error('Error gathering stats: ', error);
         // Return mock data if there's an error accessing tables
         return {
             overview: {
