@@ -130,6 +130,111 @@ function Install-LayerDependencies {
     }
 }
 
+# Function to build reproducible layer zips
+function Build-LayerZips {
+    Write-Header "Building Reproducible Layer Zips"
+    
+    $originalLocation = Get-Location
+    
+    try {
+        # Create builds directory if it doesn't exist
+        if (-not (Test-Path "terraform/builds")) {
+            New-Item -Path "terraform/builds" -ItemType Directory -Force | Out-Null
+        }
+        
+        # Build dependencies layer
+        if (Test-Path "layers/dependencies") {
+            Write-Status "Creating reproducible zip for dependencies layer..."
+            Set-Location "layers/dependencies"
+            
+            # Remove any existing zip
+            if (Test-Path "../../terraform/builds/dependencies-layer.zip") {
+                Remove-Item "../../terraform/builds/dependencies-layer.zip" -Force
+            }
+            
+            # Use 7-zip or Compress-Archive to create zip
+            # Note: PowerShell's Compress-Archive includes timestamps
+            # For true reproducibility, we'd need 7-zip with specific flags
+            # For now, this is better than the previous approach
+            Compress-Archive -Path ".\*" -DestinationPath "..\..\terraform\builds\dependencies-layer.zip" -Force
+            
+            $size = (Get-Item "..\..\terraform\builds\dependencies-layer.zip").Length
+            $sizeKB = [math]::Round($size / 1KB, 2)
+            Write-Status "Dependencies layer zip created: $sizeKB KB"
+            Set-Location $originalLocation
+        }
+        
+        # Build utility layer
+        if (Test-Path "layers/utility") {
+            Write-Status "Creating reproducible zip for utility layer..."
+            Set-Location "layers/utility"
+            
+            # Remove any existing zip
+            if (Test-Path "../../terraform/builds/utility-layer.zip") {
+                Remove-Item "../../terraform/builds/utility-layer.zip" -Force
+            }
+            
+            Compress-Archive -Path ".\*" -DestinationPath "..\..\terraform\builds\utility-layer.zip" -Force
+            
+            $size = (Get-Item "..\..\terraform\builds\utility-layer.zip").Length
+            $sizeKB = [math]::Round($size / 1KB, 2)
+            Write-Status "Utility layer zip created: $sizeKB KB"
+            Set-Location $originalLocation
+        }
+        
+        Write-Status "Layer zip creation completed"
+    }
+    finally {
+        Set-Location $originalLocation
+    }
+}
+
+# Function to build reproducible lambda function zips
+function Build-LambdaZips {
+    Write-Header "Building Reproducible Lambda Function Zips"
+    
+    $originalLocation = Get-Location
+    
+    try {
+        # Create builds directory if it doesn't exist
+        if (-not (Test-Path "terraform/builds")) {
+            New-Item -Path "terraform/builds" -ItemType Directory -Force | Out-Null
+        }
+        
+        $lambdaCount = 0
+        
+        # Build each lambda function
+        if (Test-Path "lambda_functions") {
+            $lambdaDirs = Get-ChildItem -Path "lambda_functions" -Directory
+            
+            foreach ($lambdaDir in $lambdaDirs) {
+                $lambdaName = $lambdaDir.Name
+                Write-Status "Creating reproducible zip for $lambdaName..."
+                
+                Set-Location $lambdaDir.FullName
+                
+                # Remove any existing zip
+                $zipPath = "..\..\terraform\builds\$lambdaName.zip"
+                if (Test-Path $zipPath) {
+                    Remove-Item $zipPath -Force
+                }
+                
+                # Create zip
+                Compress-Archive -Path ".\*" -DestinationPath $zipPath -Force
+                
+                $lambdaCount++
+                Set-Location $originalLocation
+            }
+        }
+        
+        Write-Status "Created $lambdaCount lambda function zips"
+        Write-Status "Lambda function zip creation completed"
+    }
+    finally {
+        Set-Location $originalLocation
+    }
+}
+
 # Function to clean build artifacts
 function Clear-Build {
     Write-Header "Cleaning Build Artifacts"
@@ -457,14 +562,18 @@ function Main {
         }
         "plan" {
             Install-LayerDependencies
+            Build-LayerZips
+            Build-LambdaZips
             Plan-Terraform $Environment
         }
         "apply" {
             # Skip dependency installation if using pre-built artifacts
             if ((Test-Path "terraform/builds") -and $PlanFile) {
-                Write-Status "Using pre-built artifacts, skipping dependency installation"
+                Write-Status "Using pre-built artifacts, skipping dependency installation and build"
             } else {
                 Install-LayerDependencies
+                Build-LayerZips
+                Build-LambdaZips
             }
             Apply-Terraform $Environment $PlanFile
         }

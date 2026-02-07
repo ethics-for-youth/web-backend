@@ -3,8 +3,9 @@
 # This ensures the hash only changes when actual content changes, not timestamps
 
 locals {
-  # Extract just the layer name (e.g., "dependencies-layer" or "utility-layer")
-  layer_base_name = replace(var.layer_name, "/^.*-(dependencies|utility)-layer$/", "$1-layer")
+  # Extract just the layer type (e.g., "efy-dev-dependencies-layer" -> "dependencies-layer")
+  # Remove everything up to and including the environment prefix
+  layer_base_name = regex("(dependencies|utility)-layer$", var.layer_name)[0]
   zip_path        = "${path.root}/builds/${local.layer_base_name}.zip"
 }
 
