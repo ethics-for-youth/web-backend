@@ -9,7 +9,7 @@ const ddbClient = new DynamoDBClient({ region: process.env.AWS_REGION });
 const docClient = DynamoDBDocumentClient.from(ddbClient);
 const s3Client = new S3Client({ region: process.env.AWS_REGION });
 
-const ALLOWED_AUDIO_EXT = ['mp3'];
+const ALLOWED_AUDIO_EXT = ['mp3','wav', 'm4a', 'ogg','mpeg'];
 const ALLOWED_IMAGE_EXT = ['jpg', 'jpeg', 'png'];
 const MAX_AUDIO_SIZE = 5 * 1024 * 1024; // 5MB
 
