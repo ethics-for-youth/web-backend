@@ -24,7 +24,7 @@ paths:
       tags:
         - Events
       responses:
-        "200":
+        '200':
           description: Events retrieved successfully
           content:
             application/json:
@@ -43,13 +43,13 @@ paths:
                       events:
                         type: array
                         items:
-                          $ref: "#/components/schemas/Event"
+                          $ref: '#/components/schemas/Event'
                       count:
                         type: integer
                         example: 5
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    
     post:
       summary: Create a new event
       description: Creates a new event for the EFY platform
@@ -92,7 +92,7 @@ paths:
                   format: date-time
                   example: "2024-02-10T23:59:59Z"
       responses:
-        "200":
+        '200':
           description: Event created successfully
           content:
             application/json:
@@ -109,11 +109,11 @@ paths:
                     type: object
                     properties:
                       event:
-                        $ref: "#/components/schemas/Event"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
+                        $ref: '#/components/schemas/Event'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /events/{id}:
     get:
@@ -130,7 +130,7 @@ paths:
             type: string
           example: "event_1706123456_abc123"
       responses:
-        "200":
+        '200':
           description: Event retrieved successfully
           content:
             application/json:
@@ -147,12 +147,12 @@ paths:
                     type: object
                     properties:
                       event:
-                        $ref: "#/components/schemas/Event"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
+                        $ref: '#/components/schemas/Event'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    
     put:
       summary: Update an event
       description: Updates an existing event
@@ -193,7 +193,7 @@ paths:
                   type: string
                   enum: [active, cancelled, completed]
       responses:
-        "200":
+        '200':
           description: Event updated successfully
           content:
             application/json:
@@ -210,14 +210,14 @@ paths:
                     type: object
                     properties:
                       event:
-                        $ref: "#/components/schemas/Event"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
+                        $ref: '#/components/schemas/Event'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    
     delete:
       summary: Delete an event
       description: Deletes an event
@@ -232,7 +232,7 @@ paths:
             type: string
           example: "event_1706123456_abc123"
       responses:
-        "200":
+        '200':
           description: Event deleted successfully
           content:
             application/json:
@@ -251,10 +251,10 @@ paths:
                       deletedEventId:
                         type: string
                         example: "event_1706123456_abc123"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   # Competitions Endpoints
   /competitions:
@@ -265,7 +265,7 @@ paths:
       tags:
         - Competitions
       responses:
-        "200":
+        '200':
           description: Competitions retrieved successfully
           content:
             application/json:
@@ -284,13 +284,13 @@ paths:
                       competitions:
                         type: array
                         items:
-                          $ref: "#/components/schemas/Competition"
+                          $ref: '#/components/schemas/Competition'
                       count:
                         type: integer
                         example: 3
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    
     post:
       summary: Create a new competition
       description: Creates a new competition
@@ -335,26 +335,17 @@ paths:
                   type: array
                   items:
                     type: string
-                  example:
-                    [
-                      "Participants must be between 13-25 years old",
-                      "Maximum 5 minutes recitation",
-                    ]
+                  example: ["Participants must be between 13-25 years old", "Maximum 5 minutes recitation"]
                 prizes:
                   type: array
                   items:
                     type: string
-                  example:
-                    [
-                      "First Place: $500",
-                      "Second Place: $300",
-                      "Third Place: $200",
-                    ]
+                  example: ["First Place: $500", "Second Place: $300", "Third Place: $200"]
                 maxParticipants:
                   type: integer
                   example: 50
       responses:
-        "200":
+        '200':
           description: Competition created successfully
           content:
             application/json:
@@ -371,11 +362,11 @@ paths:
                     type: object
                     properties:
                       competition:
-                        $ref: "#/components/schemas/Competition"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
+                        $ref: '#/components/schemas/Competition'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /competitions/{id}:
     get:
@@ -392,7 +383,7 @@ paths:
             type: string
           example: "comp_1706123456_xyz789"
       responses:
-        "200":
+        '200':
           description: Competition retrieved successfully
           content:
             application/json:
@@ -409,11 +400,11 @@ paths:
                     type: object
                     properties:
                       competition:
-                        $ref: "#/components/schemas/Competition"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
+                        $ref: '#/components/schemas/Competition'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /competitions/{id}/register:
     post:
@@ -450,7 +441,7 @@ paths:
                   type: string
                   example: "+1234567890"
       responses:
-        "200":
+        '200':
           description: Successfully registered for competition
           content:
             application/json:
@@ -467,7 +458,7 @@ paths:
                     type: object
                     properties:
                       participant:
-                        $ref: "#/components/schemas/Participant"
+                        $ref: '#/components/schemas/Participant'
                       competition:
                         type: object
                         properties:
@@ -477,12 +468,12 @@ paths:
                             type: string
                           totalParticipants:
                             type: integer
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /competitions/{id}/results:
     get:
@@ -499,7 +490,7 @@ paths:
             type: string
           example: "comp_1706123456_xyz789"
       responses:
-        "200":
+        '200':
           description: Competition results retrieved successfully
           content:
             application/json:
@@ -516,11 +507,11 @@ paths:
                     type: object
                     properties:
                       results:
-                        $ref: "#/components/schemas/CompetitionResults"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
+                        $ref: '#/components/schemas/CompetitionResults'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   # Volunteers Endpoints
   /volunteers/join:
@@ -572,7 +563,7 @@ paths:
                     type: string
                   example: ["Event Coordinator", "Content Creator"]
       responses:
-        "200":
+        '200':
           description: Volunteer application submitted successfully
           content:
             application/json:
@@ -606,10 +597,10 @@ paths:
                           appliedAt:
                             type: string
                             format: date-time
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /volunteers:
     get:
@@ -619,7 +610,7 @@ paths:
       tags:
         - Volunteers
       responses:
-        "200":
+        '200':
           description: Volunteers retrieved successfully
           content:
             application/json:
@@ -638,7 +629,7 @@ paths:
                       volunteers:
                         type: array
                         items:
-                          $ref: "#/components/schemas/VolunteerBasic"
+                          $ref: '#/components/schemas/VolunteerBasic'
                       count:
                         type: integer
                         example: 12
@@ -657,8 +648,8 @@ paths:
                           inactive:
                             type: integer
                             example: 1
-        "500":
-          $ref: "#/components/responses/InternalServerError"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /volunteers/{id}:
     put:
@@ -698,7 +689,7 @@ paths:
                   type: string
                   example: "admin@efy.org"
       responses:
-        "200":
+        '200':
           description: Volunteer updated successfully
           content:
             application/json:
@@ -715,13 +706,13 @@ paths:
                     type: object
                     properties:
                       volunteer:
-                        $ref: "#/components/schemas/VolunteerBasic"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
+                        $ref: '#/components/schemas/VolunteerBasic'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   # Suggestions Endpoints
   /suggestions:
@@ -769,7 +760,7 @@ paths:
                     type: string
                   example: ["mobile", "technology", "youth-engagement"]
       responses:
-        "200":
+        '200':
           description: Suggestion submitted successfully
           content:
             application/json:
@@ -806,11 +797,11 @@ paths:
                           submittedAt:
                             type: string
                             format: date-time
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    
     get:
       summary: Get all suggestions
       description: Retrieves all submitted suggestions with optional filtering
@@ -831,7 +822,7 @@ paths:
             type: string
             enum: [submitted, under-review, approved, rejected, implemented]
       responses:
-        "200":
+        '200':
           description: Suggestions retrieved successfully
           content:
             application/json:
@@ -850,7 +841,7 @@ paths:
                       suggestions:
                         type: array
                         items:
-                          $ref: "#/components/schemas/Suggestion"
+                          $ref: '#/components/schemas/Suggestion'
                       count:
                         type: integer
                         example: 8
@@ -870,8 +861,8 @@ paths:
                           submitted: 5
                           under-review: 2
                           approved: 1
-        "500":
-          $ref: "#/components/responses/InternalServerError"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   # Courses Endpoints
   /courses:
@@ -882,7 +873,7 @@ paths:
       tags:
         - Courses
       responses:
-        "200":
+        '200':
           description: Courses retrieved successfully
           content:
             application/json:
@@ -901,13 +892,13 @@ paths:
                       courses:
                         type: array
                         items:
-                          $ref: "#/components/schemas/Course"
+                          $ref: '#/components/schemas/Course'
                       count:
                         type: integer
                         example: 5
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    
     post:
       summary: Create a new course
       description: Creates a new course for the EFY platform
@@ -963,7 +954,7 @@ paths:
                   type: string
                   example: "Mushaf, notebook, recording app"
       responses:
-        "200":
+        '200':
           description: Course created successfully
           content:
             application/json:
@@ -980,11 +971,11 @@ paths:
                     type: object
                     properties:
                       course:
-                        $ref: "#/components/schemas/Course"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
+                        $ref: '#/components/schemas/Course'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /courses/{id}:
     get:
@@ -1001,7 +992,7 @@ paths:
             type: string
           example: "course_1706123456_abc123"
       responses:
-        "200":
+        '200':
           description: Course retrieved successfully
           content:
             application/json:
@@ -1018,12 +1009,12 @@ paths:
                     type: object
                     properties:
                       course:
-                        $ref: "#/components/schemas/Course"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
+                        $ref: '#/components/schemas/Course'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    
     put:
       summary: Update a course
       description: Updates an existing course
@@ -1070,7 +1061,7 @@ paths:
                 materials:
                   type: string
       responses:
-        "200":
+        '200':
           description: Course updated successfully
           content:
             application/json:
@@ -1087,14 +1078,14 @@ paths:
                     type: object
                     properties:
                       course:
-                        $ref: "#/components/schemas/Course"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
+                        $ref: '#/components/schemas/Course'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    
     delete:
       summary: Delete a course
       description: Deletes an existing course
@@ -1109,7 +1100,7 @@ paths:
             type: string
           example: "course_1706123456_abc123"
       responses:
-        "200":
+        '200':
           description: Course deleted successfully
           content:
             application/json:
@@ -1126,11 +1117,11 @@ paths:
                     type: object
                     properties:
                       deletedCourse:
-                        $ref: "#/components/schemas/Course"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
+                        $ref: '#/components/schemas/Course'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   # Registrations Endpoints
   /registrations:
@@ -1177,7 +1168,7 @@ paths:
                   type: string
                   example: "First time participant, excited to join!"
       responses:
-        "200":
+        '200':
           description: Registration created successfully
           content:
             application/json:
@@ -1194,12 +1185,12 @@ paths:
                     type: object
                     properties:
                       registration:
-                        $ref: "#/components/schemas/Registration"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
+                        $ref: '#/components/schemas/Registration'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    
     get:
       summary: Get all registrations
       description: Retrieves all registrations with optional filtering
@@ -1219,7 +1210,7 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Registrations retrieved successfully
           content:
             application/json:
@@ -1238,15 +1229,15 @@ paths:
                       registrations:
                         type: array
                         items:
-                          $ref: "#/components/schemas/Registration"
+                          $ref: '#/components/schemas/Registration'
                       count:
                         type: integer
                         example: 25
                       filters:
                         type: object
                         additionalProperties: true
-        "500":
-          $ref: "#/components/responses/InternalServerError"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /registrations/{id}:
     put:
@@ -1277,7 +1268,7 @@ paths:
                   type: string
                   example: "Successfully completed the event"
       responses:
-        "200":
+        '200':
           description: Registration updated successfully
           content:
             application/json:
@@ -1294,13 +1285,13 @@ paths:
                     type: object
                     properties:
                       registration:
-                        $ref: "#/components/schemas/Registration"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
+                        $ref: '#/components/schemas/Registration'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   # Messages Endpoints
   /messages:
@@ -1356,7 +1347,7 @@ paths:
                     type: string
                   example: ["workshop", "history", "positive-feedback"]
       responses:
-        "200":
+        '200':
           description: Message submitted successfully
           content:
             application/json:
@@ -1373,12 +1364,12 @@ paths:
                     type: object
                     properties:
                       message:
-                        $ref: "#/components/schemas/Message"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
+                        $ref: '#/components/schemas/Message'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    
     get:
       summary: Get all messages
       description: Retrieves messages with filtering options (public view or admin view)
@@ -1391,7 +1382,7 @@ paths:
           description: Set to 'true' to view all messages (admin only), defaults to public messages only
           schema:
             type: string
-            enum: ["true", "false"]
+            enum: ['true', 'false']
         - name: messageType
           in: query
           description: Filter by message type
@@ -1411,7 +1402,7 @@ paths:
             type: string
             enum: [low, normal, high, urgent]
       responses:
-        "200":
+        '200':
           description: Messages retrieved successfully
           content:
             application/json:
@@ -1430,15 +1421,15 @@ paths:
                       messages:
                         type: array
                         items:
-                          $ref: "#/components/schemas/Message"
+                          $ref: '#/components/schemas/Message'
                       count:
                         type: integer
                         example: 15
                       filters:
                         type: object
                         additionalProperties: true
-        "500":
-          $ref: "#/components/responses/InternalServerError"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   # Admin Stats Endpoints
   /admin/stats:
@@ -1449,7 +1440,7 @@ paths:
       tags:
         - Admin
       responses:
-        "200":
+        '200':
           description: Admin statistics retrieved successfully
           content:
             application/json:
@@ -1557,8 +1548,8 @@ paths:
                         type: string
                         format: date-time
                         example: "2024-01-25T10:30:00Z"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   # Payment Endpoints
   /payments/create-order:
@@ -1623,7 +1614,7 @@ paths:
                     competition_id: "comp_123"
                     competition_name: "Quran Recitation Competition"
       responses:
-        "201":
+        '201':
           description: Payment order created successfully
           content:
             application/json:
@@ -1637,13 +1628,13 @@ paths:
                     type: string
                     example: "Order created successfully"
                   data:
-                    $ref: "#/components/schemas/PaymentOrder"
-        "400":
+                    $ref: '#/components/schemas/PaymentOrder'
+        '400':
           description: Bad request - Invalid input parameters
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: '#/components/schemas/ErrorResponse'
               examples:
                 missing_amount:
                   summary: Missing required amount field
@@ -1659,12 +1650,12 @@ paths:
                     error:
                       message: "Amount must be a positive number"
                       code: "VALIDATION_ERROR"
-        "500":
+        '500':
           description: Internal server error or Razorpay API error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: '#/components/schemas/ErrorResponse'
               examples:
                 razorpay_error:
                   summary: Razorpay API error
@@ -1710,7 +1701,7 @@ paths:
                 event:
                   type: string
                   description: Type of webhook event
-                  enum:
+                  enum: 
                     - "payment.captured"
                     - "payment.failed"
                     - "payment.authorized"
@@ -1725,17 +1716,17 @@ paths:
                       type: object
                       properties:
                         entity:
-                          $ref: "#/components/schemas/RazorpayPayment"
+                          $ref: '#/components/schemas/RazorpayPayment'
                     order:
                       type: object
                       properties:
                         entity:
-                          $ref: "#/components/schemas/RazorpayOrder"
+                          $ref: '#/components/schemas/RazorpayOrder'
                     refund:
                       type: object
                       properties:
                         entity:
-                          $ref: "#/components/schemas/RazorpayRefund"
+                          $ref: '#/components/schemas/RazorpayRefund'
             examples:
               payment_captured:
                 summary: Payment captured successfully
@@ -1769,7 +1760,7 @@ paths:
                         error_description: "Payment failed"
                         created_at: 1704095940
       responses:
-        "200":
+        '200':
           description: Webhook processed successfully
           content:
             application/json:
@@ -1798,12 +1789,12 @@ paths:
                       requestId:
                         type: string
                         example: "aws-request-id-123"
-        "400":
+        '400':
           description: Bad request - Invalid signature or malformed payload
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: '#/components/schemas/ErrorResponse'
               examples:
                 invalid_signature:
                   summary: Invalid webhook signature
@@ -1826,12 +1817,12 @@ paths:
                     error:
                       message: "Invalid JSON in webhook body"
                       code: "WEBHOOK_ERROR"
-        "500":
+        '500':
           description: Internal server error during webhook processing
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: '#/components/schemas/ErrorResponse'
               examples:
                 configuration_error:
                   summary: Webhook secret not configured
@@ -1942,7 +1933,7 @@ components:
         participants:
           type: array
           items:
-            $ref: "#/components/schemas/Participant"
+            $ref: '#/components/schemas/Participant'
         createdAt:
           type: string
           format: date-time
@@ -2531,7 +2522,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: '#/components/schemas/Error'
           example:
             success: false
             error: "Missing required fields: title, description"
@@ -2541,7 +2532,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: '#/components/schemas/Error'
           example:
             success: false
             error: "Resource not found"
@@ -2551,7 +2542,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: '#/components/schemas/Error'
           example:
             success: false
             error: "Internal server error"
@@ -2579,4 +2570,5 @@ tags:
     description: Community messages, feedback, and communications
   - name: Admin
     description: Administrative endpoints and dashboard metrics
+
 # All endpoints are public - no authentication required
