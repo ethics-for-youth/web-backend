@@ -52,6 +52,7 @@ module "app_s3_bucket" {
   tags = local.common_tags
 }
 
+
 # DynamoDB Tables
 module "dynamodb" {
   source = "./modules/dynamodb"
@@ -64,8 +65,8 @@ module "dynamodb" {
   registrations_table_name = "${var.project_name}-${local.current_environment}-registrations"
   messages_table_name      = "${var.project_name}-${local.current_environment}-messages"
   payments_table_name      = "${var.project_name}-${local.current_environment}-payments"
-
-  tags = local.common_tags
+  duas_table_name          = "${var.project_name}-${local.current_environment}-duas"
+  tags                     = local.common_tags
 }
 
 # Dependencies Layer
@@ -762,6 +763,102 @@ module "payments_webhook_lambda" {
   tags = local.common_tags
 }
 
+# Dua Lambda Functions
+module "dua_post_lambda" {
+  source = "./modules/lambda"
+
+  function_name = "${var.project_name}-${local.current_environment}-dua-post"
+  handler       = "index.handler"
+  runtime       = "nodejs18.x"
+  source_dir    = "../lambda_functions/dua_post"
+
+  layers = [
+    module.dependencies_layer.layer_arn,
+    module.utility_layer.layer_arn
+  ]
+
+  environment_variables = {
+    DUA_TABLE_NAME = module.dynamodb.duas_table_name
+    S3_BUCKET_NAME = module.app_s3_bucket.bucket_id
+  }
+
+  dynamodb_table_arns = [module.dynamodb.duas_table_arn]
+  s3_bucket_arns      = [module.app_s3_bucket.bucket_arn]
+
+  tags = local.common_tags
+}
+
+module "dua_get_lambda" {
+  source = "./modules/lambda"
+
+  function_name = "${var.project_name}-${local.current_environment}-dua-get"
+  handler       = "index.handler"
+  runtime       = "nodejs18.x"
+  source_dir    = "../lambda_functions/dua_get"
+
+  layers = [
+    module.dependencies_layer.layer_arn,
+    module.utility_layer.layer_arn
+  ]
+
+  environment_variables = {
+    DUA_TABLE_NAME = module.dynamodb.duas_table_name
+    S3_BUCKET_NAME = module.app_s3_bucket.bucket_id # Add bucket env variable
+  }
+
+  dynamodb_table_arns = [module.dynamodb.duas_table_arn]
+  s3_bucket_arns      = [module.app_s3_bucket.bucket_arn] # Add bucket ARN for IAM permissions
+
+  tags = local.common_tags
+}
+
+# UPDATE Status Lambda
+module "dua_put_lambda" {
+  source = "./modules/lambda"
+
+  function_name = "${var.project_name}-${local.current_environment}-dua-put"
+  handler       = "index.handler"
+  runtime       = "nodejs18.x"
+  source_dir    = "../lambda_functions/dua_put"
+
+  layers = [
+    module.dependencies_layer.layer_arn,
+    module.utility_layer.layer_arn
+  ]
+
+  environment_variables = {
+    DUA_TABLE_NAME = module.dynamodb.duas_table_name
+  }
+
+  dynamodb_table_arns = [module.dynamodb.duas_table_arn]
+  tags                = local.common_tags
+}
+
+# DELETE Dua Lambda
+module "dua_delete_lambda" {
+  source = "./modules/lambda"
+
+  function_name = "${var.project_name}-${local.current_environment}-dua-delete"
+  handler       = "index.handler"
+  runtime       = "nodejs18.x"
+  source_dir    = "../lambda_functions/dua_delete"
+
+  layers = [
+    module.dependencies_layer.layer_arn,
+    module.utility_layer.layer_arn
+  ]
+
+  environment_variables = {
+    DUA_TABLE_NAME = module.dynamodb.duas_table_name
+    S3_BUCKET_NAME = module.app_s3_bucket.bucket_id
+  }
+
+  dynamodb_table_arns = [module.dynamodb.duas_table_arn]
+  s3_bucket_arns      = [module.app_s3_bucket.bucket_arn]
+  tags                = local.common_tags
+}
+
+
 # API Gateway for EFY Platform
 module "efy_api_gateway" {
   source = "./modules/efy_api_gateway"
@@ -841,6 +938,20 @@ module "efy_api_gateway" {
   payments_create_order_lambda_function_name = module.payments_create_order_lambda.lambda_function_name
   payments_webhook_lambda_arn                = module.payments_webhook_lambda.lambda_invoke_arn
   payments_webhook_lambda_function_name      = module.payments_webhook_lambda.lambda_function_name
+
+  # Dua Lambda ARNs and Function Names
+  dua_post_lambda_arn           = module.dua_post_lambda.lambda_invoke_arn
+  dua_post_lambda_function_name = module.dua_post_lambda.lambda_function_name
+
+  dua_get_lambda_arn           = module.dua_get_lambda.lambda_invoke_arn
+  dua_get_lambda_function_name = module.dua_get_lambda.lambda_function_name
+
+  dua_put_lambda_arn           = module.dua_put_lambda.lambda_invoke_arn
+  dua_put_lambda_function_name = module.dua_put_lambda.lambda_function_name
+
+  dua_delete_lambda_arn           = module.dua_delete_lambda.lambda_invoke_arn
+  dua_delete_lambda_function_name = module.dua_delete_lambda.lambda_function_name
+
 
   tags = local.common_tags
 }

@@ -38,6 +38,10 @@ variable "payments_table_name" {
   type        = string
 }
 
+variable "duas_table_name" {
+  type = string
+}
+
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)

@@ -66,6 +66,12 @@ output "suggestions_table_name" {
   value       = module.dynamodb.suggestions_table_name
 }
 
+# DynamoDB Table Names 
+output "duas_table_name" {
+  description = "Name of the Duas DynamoDB table"
+  value       = module.dynamodb.duas_table_name
+}
+
 # Lambda Function ARNs
 output "events_lambda_arns" {
   description = "ARNs of all Events Lambda functions"
@@ -106,6 +112,14 @@ output "suggestions_lambda_arns" {
   }
 }
 
+# Dua Lambda Function ARNs
+output "dua_lambda_arns" {
+  description = "ARNs of all Dua Lambda functions"
+  value = {
+    post = module.dua_post_lambda.lambda_arn
+    get  = module.dua_get_lambda.lambda_arn
+  }
+}
 output "common_tags" {
   description = "Common tags applied to all resources"
   value       = local.common_tags

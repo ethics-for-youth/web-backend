@@ -24,10 +24,11 @@ const removeUndefinedValues = (obj) => {
     return cleanObj;
 };
 
-// Database helper functions
+// Database helper functions1
 const createPaymentRecord = async (orderId, paymentId, paymentData) => {
     try {
         const tableName = process.env.PAYMENTS_TABLE_NAME;
+
 
         const paymentRecord = {
             orderId: orderId,
