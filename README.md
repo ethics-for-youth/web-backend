@@ -36,7 +36,7 @@ A youth-driven platform for organizing Islamic educational events, competitions,
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/volunteers/apply` | Submit volunteer application |
+| `POST` | `/volunteers/join` | Submit volunteer application |
 | `GET` | `/volunteers` | List volunteers (basic info) |
 | `PUT` | `/volunteers/{id}` | Update volunteer status |
 
@@ -130,7 +130,7 @@ terraform apply terraform-plan-dev.tfplan
 │   ├── competitions_post/     # POST /competitions
 │   ├── competitions_register/ # POST /competitions/{id}/register
 │   ├── competitions_results/  # GET /competitions/{id}/results
-│   ├── volunteers_apply/      # POST /volunteers/apply
+│   ├── volunteers_apply/      # POST /volunteers/join
 │   ├── volunteers_get/        # GET /volunteers
 │   ├── volunteers_put/        # PUT /volunteers/{id}
 │   ├── suggestions_post/      # POST /suggestions
